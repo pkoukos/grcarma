@@ -2101,6 +2101,8 @@ sub auto_window {
             `move carma.fitted.dcd carma.fitted.cluster_0$i.dcd`;
             `carma.exe -v -w -col -cov -dot -norm -super carma.fitted.cluster_0$i.dcd $psf_file` unless ( $res_id_flag );
             `carma.exe -v -w -col -cov -dot -norm -super carma.fitted.cluster_0$i.dcd "selected_residues.psf"` if ( $res_id_flag );
+            `move carma.superposition.pdb superposition.cluster_0$i.pdb`;
+            `move carma.average.pdb average.cluster_0$i.pdb`;
         }
     }
 }
