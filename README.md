@@ -1,12 +1,12 @@
 # **NAME**
 
-*grcarma* - GUI to molecular dynamics trajectories analysis program carma
+grcarma - GUI to molecular dynamics trajectories analysis program carma
 
 # **SYNOPSIS**
 
-grcarma [PSF FILE] [DCD FILE]
+grcarma [ PSF FILE ] [ DCD FILE ]
 
-grcarma.exe [PSF FILE] [DCD FILE]
+grcarma.exe [ PSF FILE ] [ DCD FILE ]
 
 # **DESCRIPTION**
 
