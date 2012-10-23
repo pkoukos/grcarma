@@ -10,7 +10,7 @@ grcarma.exe [PSF FILE] [DCD FILE]
 
 # **DESCRIPTION**
 
-grcarma is a GUI to molecular dynamics trajectories analysis program carma. It is written in Perl and makes use of the Tk module for graphics, and is available for Linux and Windows.
+grcarma is a GUI to molecular dynamics trajectories analysis program [carma](http://utopia.duth.gr/~glykos/Carma.html). It is written in Perl and makes use of the Tk module for graphics, and is available for Linux and Windows.
 
 # **AUTHOR**
 
