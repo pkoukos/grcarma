@@ -1,5 +1,78 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+grcarma - GUI to molecular dynamics trajectories analysis program carma
+
+=head1 SYNOPSIS
+
+grcarma [ PSF FILE ] [ DCD FILE ]
+
+grcarma.exe [ PSF FILE ] [ DCD FILE ]
+
+=head1 DESCRIPTION
+
+grcarma is a GUI to molecular dynamics trajectories analysis program
+B<carma>. It is written in Perl and makes use of the Tk module for
+graphics. It is available for Linux and Windows, and requires the
+carma executable in the same folder ( or in the PATH ). As seen in
+the synopsis the program can be launched with a .psf / .dcd pair of
+files as arguments. Alternatively, the program can be run without any
+arguments and the user will be prompted to specify the files to use
+for the analyses, through a graphical interface.
+
+=head1 AUTHOR
+
+grcarma has been developed by Panagiotis Koukos, under the supervision
+of L<Prof. Nicholas M. Glykos|http://utopia.duth.gr/~glykos/Carma.html>
+at the L<Department of Molecular Biology and Genetics|http://mbg.duth.gr/index.en.shtml>
+of L<Democritus University of Thrace|http://www.duth.gr/index.en.sxhtml>.
+
+=head1 SEE ALSO
+
+For more information, see L<https://github.com/pkoukos/grcarma>
+
+=head1 LICENSE
+
+Copyright (c) 2012, Panagiotis Koukos
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+=over
+
+=item 1.
+
+Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+
+=item 2.
+
+Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+=back
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+=cut
+
 use strict;
 use warnings;
 
@@ -330,14 +403,6 @@ my $cpca_menu = $f1 -> Button( -text => 'Cartesian PCA',
                                ->pack( -side => 'top',
                                        -anchor => 'center' );
 
-# ... the sorting menu                 #
-our $sort_menu = $f1 -> Button( -text => 'Cluster analysis',
-                                -command => \&sort_window,
-                                -width => 20,
-                                -state => 'disabled', )
-                                ->pack( -side => 'top',
-                                        -anchor => 'center' );
-
 # ... the eigen calculations menu      #
 my $eigen_menu = $f1 -> Button( -text => 'Eigen calculations',
                                 -command => \&eigen_window,
@@ -511,6 +576,7 @@ our $text = $f5 -> Scrolled( "Text",
                          ->pack();
 
 $text -> configure( -height => 32, ) if ( $^O eq 'linux' );
+$text -> configure( -width => 85, ) if ( $^O ne 'linux' );
 
 # Define three colored text tags       #
 # to be used for the text displayed    #
@@ -600,7 +666,7 @@ sub open_file {
 
     if ( $^O eq 'linux' ) {
 
-        if ( $_[0] eq 'psf' || $_[0] eq 'sort' ) {
+        if ( $_[0] eq 'psf' ) {
 
             $filetypes = [ ['PSF Files', '.psf'] ];
         }
@@ -614,7 +680,7 @@ sub open_file {
     # differently                          #
     else {
 
-        if ( $_[0] eq 'psf' || $_[0] eq 'sort' ) {
+        if ( $_[0] eq 'psf' ) {
 
             $filetypes = [['PSF FIles',  '.psf'], ['PSF FIles',  '.psf']];
         }
@@ -707,8 +773,6 @@ sub carma {
     our $all_done = 0;
     our $flag =~ s/[\s]\s+/ /g;
 
-    our $remember_psf;
-    our $remember_dcd;
     our $dcd_count;
 
     if ( $^O ne 'linux' ) {
@@ -722,15 +786,6 @@ sub carma {
 
             `carma.exe $flag > carma.out.copy`;
         }
-
-        # If the subroutine was called from    #
-        # the fitting subroutine then perform  #
-        # the carma run only with the dcd file #
-        if ( $_[0] && $_[0] eq 'sort' ) {
-
-            `carma.exe $flag \"$dcd_name.dcd\" > carma.out.copy`;
-        }
-
         # Else if the user has opted to use    #
         # selected residues for calculations   #
         elsif ( $have_custom_psf ) {
@@ -744,8 +799,6 @@ sub carma {
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
                 `carma.exe $flag \"selected_residues.psf\" \"carma_fitted_$dcd_count.dcd\" > carma.out.copy`;
-                $remember_psf = "selected_residues.psf" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "carma_fitted_$dcd_count.dcd" if ( $_[0] && $_[0] eq "pca" );
             }
 
             # otherwise run it with the same .psf  #
@@ -753,8 +806,6 @@ sub carma {
             else {
 
                 `carma.exe $flag \"selected_residues.psf\" \"$dcd_name.dcd\" > carma.out.copy`;
-                $remember_psf = "selected_residues.psf" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "$dcd_name.dcd" if ( $_[0] && $_[0] eq "pca" );
             }
         }
         # Else if none of the above contitions #
@@ -767,16 +818,12 @@ sub carma {
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
                 `carma.exe $flag \"carma_fitted_$dcd_count.psf\" \"carma_fitted_$dcd_count.dcd\" > carma.out.copy`;
-                $remember_psf = "carma_fitted_$dcd_count.psf" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "carma_fitted_$dcd_count.dcd" if ( $_[0] && $_[0] eq "pca" );
             }
             # otherwise run it with the original   #
             # .psf and .dcd files                  #
             else {
 
                 `carma.exe $flag \"psf_file.psf\" \"$dcd_name.dcd\" > carma.out.copy`;
-                $remember_psf = "psf_file.psf" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "$dcd_name.dcd" if ( $_[0] && $_[0] eq "pca" );
             }
         }
     }
@@ -794,23 +841,15 @@ sub carma {
 
             `xterm -geometry 80x25+800+200 -e "carma $flag | tee carma.out.copy"`;
         }
-        elsif ( $_[0] && $_[0] eq 'sort' ) {
-
-            `xterm -geometry 80x25+800+200 -e "carma $flag $remember_dcd | tee carma.out.copy"`;
-        }
         elsif ( $have_custom_psf ) {
 
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
                 `xterm -geometry 80x25+800+200 -e "carma $flag selected_residues.psf carma_fitted_$dcd_count.dcd | tee carma.out.copy"`;
-                $remember_psf = "selected_residues.psf" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "carma_fitted_$dcd_count.dcd" if ( $_[0] && $_[0] eq "pca" );
             }
             else {
 
                 `xterm -geometry 80x25+800+200 -e "carma $flag selected_residues.psf $dcd_file | tee carma.out.copy"`;
-                $remember_psf = "selected_residues.psf" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "$dcd_file" if ( $_[0] && $_[0] eq "pca" );
             }
         }
         else {
@@ -818,14 +857,10 @@ sub carma {
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
                 `xterm -geometry 80x25+800+200 -e "carma $flag carma_fitted_$dcd_count.psf carma_fitted_$dcd_count.dcd | tee carma.out.copy"`;
-                $remember_psf = "carma_fitted_$dcd_count.psf" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "carma_fitted_$dcd_count.dcd" if ( $_[0] && $_[0] eq "pca" );
             }
             else {
 
                 `xterm -geometry 80x25+200+200 -e "carma $flag $psf_file $dcd_file | tee carma.out.copy"`;
-                $remember_psf = "$psf_file" if ( $_[0] && $_[0] eq "pca" );
-                $remember_dcd = "$dcd_file" if ( $_[0] && $_[0] eq "pca" );
             }
         }
     }
@@ -1461,7 +1496,6 @@ sub dpca_window {
                                     $text -> insert( 'end', "\nCalculation finished. Use \"View Images\"\n", 'valid' );
                                     $text -> see( 'end', );
                                     $image_menu -> configure( -state => 'normal', );
-                                    $sort_menu -> configure( -state => 'normal', );
                                     $all_done = '';
                                 }
                                 else {
@@ -1642,7 +1676,6 @@ sub cpca_window {
                                     $text -> insert( 'end', "\nCalculation finished. Use \"View Images\"\n", 'valid' );
                                     $text -> see( 'end', );
                                     $image_menu -> configure( -state => 'normal', );
-                                    $sort_menu -> configure( -state => 'normal', );
                                     $all_done = '';
                                 }
                                 else {
@@ -1808,7 +1841,7 @@ sub auto_window {
             my @chains = split ' -segid ', $seg_id_flag;
             shift @chains;
 
-            if ( $custom_id_flag ) {print '1';
+            if ( $custom_id_flag ) {
 
                 my @selected_atoms = split ' -atmid ', $custom_id_flag;
                 shift @selected_atoms;
@@ -1845,7 +1878,7 @@ sub auto_window {
                     $fit_check = 1;
                 }
             }
-            elsif ( $atm_id_flag ) {print '2';
+            elsif ( $atm_id_flag ) {
 
                 my @selected_atoms = ( 'C', 'CA', 'N', 'O', ) if ( $atm_id =~ /backbone/i );
 
@@ -1900,7 +1933,7 @@ sub auto_window {
                 $heavy = 0;
                 $allid = 0;
             }
-            else {print '3';
+            else {
 
                 my $line_count = 1;
                 my $regex_var = '';
@@ -1937,7 +1970,7 @@ sub auto_window {
         }
         elsif ( $res_id_flag ) {
 
-            if ( $custom_id_flag ) {print '4';
+            if ( $custom_id_flag ) {
 
                 my @selected_atoms = split ' -atmid ', $custom_id_flag;
                 shift @selected_atoms;
@@ -1974,7 +2007,7 @@ sub auto_window {
                     $fit_check = 1;
                 }
             }
-            elsif ( $atm_id_flag ) {print '5';
+            elsif ( $atm_id_flag ) {
 
                 my @selected_atoms = ( 'C', 'CA', 'N', 'O', ) if ( $atm_id =~ /backbone/i );
 
@@ -2029,7 +2062,7 @@ sub auto_window {
                 $heavy = 0;
                 $allid = 0;
             }
-            else {print '6';
+            else {
 
                 my $line_count = 1;
                 my $regex_var = '';
@@ -2064,7 +2097,7 @@ sub auto_window {
                 }
             }
         }
-        elsif ( $custom_id_flag ) {print '7';
+        elsif ( $custom_id_flag ) {
 
             my @selected_atoms = split ' -atmid ', $custom_id_flag;
             shift @selected_atoms;
@@ -2101,7 +2134,7 @@ sub auto_window {
                 $fit_check = 1;
             }
         }
-        elsif ( $atm_id_flag ) {print '8';
+        elsif ( $atm_id_flag ) {
 
             my @selected_atoms = ( 'C', 'CA', 'N', 'O', ) if ( $atm_id =~ /BACKBONE/i );
 
@@ -2156,7 +2189,7 @@ sub auto_window {
             $heavy = 0;
             $allid = 0;
         }
-        else {print '9';
+        else {
 
             my $line_count = 1;
             my $regex_var = '';
@@ -2320,86 +2353,6 @@ sub auto_window {
                                         } );
         }
         $super_check = 0;
-    }
-}
-
-###################################################################################################
-###   Draw the window for sorting DCD files                                                     ###
-###################################################################################################
-
-sub sort_window {
-
-    my $srt_cluster = '';
-    my $top_srt;
-
-    our $remember_psf;
-    our $remember_dcd;
-
-    if ( !Exists ( $top_srt ) ) {
-
-        $top_srt = $mw -> Toplevel( -title => 'Sorting of dcd files', );
-        $top_srt -> geometry("$toplevel_position");
-        $top_srt -> protocol( 'WM_DELETE_WINDOW' => sub { $top_srt -> withdraw }, );
-
-        my $frame_srt1 = $top_srt -> Frame() -> pack( -expand => 1, -fill => 'x', );
-
-        $frame_srt1 -> Label( -text => 'Cluster: ', )-> grid( -row => 1, -column => 1, -sticky => 'w', );
-        $frame_srt1 -> Entry( -textvariable => \$srt_cluster, )-> grid( -row => 1, -column => 2, -sticky => 'w', );
-        $frame_srt1 -> Label( -text => 'PSF file to use: ', )-> grid( -row => 2, -column => 1, -sticky => 'w', );
-        $frame_srt1 -> Entry( -textvariable => \$remember_psf, -width => 65, )-> grid( -row => 2, -column => 2, -sticky => 'w', );
-        $frame_srt1 -> Button( -text => 'Change', -command => sub { &open_file ( "psf" ); $remember_psf = $psf_file; }, )-> grid( -row => 2, -column => 3, );
-        $frame_srt1 -> Label( -text => 'DCD file to use: ', )-> grid( -row => 3, -column => 1, -sticky => 'w', );
-        $frame_srt1 -> Entry( -textvariable => \$remember_dcd, -width => 65, )-> grid( -row => 3, -column => 2, -sticky => 'w', );
-        $frame_srt1 -> Button( -text => 'Change', -command => sub { &open_file ( "dcd" ); $remember_dcd = $dcd_file; }, )-> grid( -row => 3, -column => 3, );
-
-        my $frame_srt2 = $top_srt -> Frame()-> pack( -expand => 0, );
-
-        $frame_srt2 -> Button( -text => 'Return',
-                               -command => [ $top_srt => 'withdraw' ], )
-                               -> pack( -side => 'left', );
-
-        $frame_srt2 -> Button( -text => 'Run',
-                               -command => sub {
-
-                        &create_dir;
-
-                        open CLUSTERS, "carma.clusters.dat" || die "Cannot open carma.clusters.dat for reading\n";
-                        open C_01, ">C_01.dat" || die "Cannot open C_01.dat for writing\n";
-
-                        while ( <CLUSTERS> ) {
-
-                            if ( /(\s*\d*\s*)(\d*)(.*)/ ) {
-
-                                if ( $2 == $srt_cluster ) {
-
-                                    print C_01 "$1$2$3\n";
-                                }
-                            }
-                        }
-
-                        close CLUSTERS;
-                        close C_01;
-
-                        $flag = " -v -sort C_01.dat";
-                        &carma ( "sort" );
-
-                        if ( $all_done ) {
-
-                            $text -> insert( 'end', "Sorting finished", 'valid' );
-                            $text -> see( 'end', );
-                        }
-                        else {
-
-                            $text -> insert( 'end' , "Something went wrong\nCheck carma.out.copy for details\n", 'error' );
-                            $text -> see( 'end', );
-                        }
-        }, )
-        -> pack( -side => 'right', );
-    }
-    else {
-
-        $top_srt -> deiconify;
-        $top_srt -> raise;
     }
 }
 
