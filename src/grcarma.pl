@@ -970,8 +970,6 @@ sub parser {
         $valid_psf_dcd_pair = `carma.exe -v -fit -last 2 \"$psf_file\" \"$dcd_file\"`;
     }
 
-    unlink ( "carma.fit-rms.dat", "carma.fitted.dcd", ) or print "yo";
-
     # If found create a help message or    #
     # a window prompting the user to retry #
     if ( $valid_psf_dcd_pair =~ /Abort./i ) {
@@ -1014,6 +1012,8 @@ sub parser {
             die($!);
         }
     }
+
+    unlink ( "carma.fit-rms.dat", "carma.fitted.dcd", );
 
     # If not found proceed parsing the dcd #
     # header                               #
