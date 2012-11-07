@@ -998,7 +998,7 @@ sub parser {
             }
         }
     }
-    elsif ( @unique_chain_ids >= 20 ) {
+    elsif ( @unique_chain_ids >= 10 ) {
 
         if ( $run_from_terminal ) {
 
