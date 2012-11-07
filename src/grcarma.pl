@@ -76,21 +76,21 @@ POSSIBILITY OF SUCH DAMAGE.
 use strict;
 use warnings;
 
-# Use the Tk module for the GUI     #
+# Use the Tk module for the GUI        #
 
 use Tk;
 use Tk::MsgBox;
 
 require Tk::BrowseEntry;
 
-# Import the following modules       #
+# Import the following modules         #
 
 use Cwd 'abs_path';
 use Cwd;
 use List::MoreUtils qw { uniq };
 
 # Get the system time and modify it so #
-# that it is human readable         #
+# that it is human readable            #
 
 my @now = localtime();
 my $timeStamp = sprintf( "carma_temp_%02d.%02d.%04d_%02d.%02d.%02d", $now[3], $now[4]+1, $now[5]+1900, $now[2], $now[1], $now[0] );
@@ -141,20 +141,20 @@ our $dpca_auto_entry_num;
 our $cpca_auto_entry;
 our $cpca_auto_entry_num;
 
-# ... global arrays and hashes       #
+# ... global arrays and hashes         #
 
 our (
 
-    @seg_ids,          @unique_chain_ids,     @unique_atom_types,
-    @dropdown,        @amplitudes,          @dropdown_value,
-    @upper_res_limit,   @lower_res_limit,      @upper_fit_limit,
+    @seg_ids,           @unique_chain_ids,      @unique_atom_types,
+    @dropdown,          @amplitudes,            @dropdown_value,
+    @upper_res_limit,   @lower_res_limit,       @upper_fit_limit,
     @lower_fit_limit,   @frame_res1,            @frame_fit_index4,
-    %num_residues,    %substitutions,
+    %num_residues,      %substitutions,
 );
 
 # If the OS is *nix/unix-like and the  #
 # the folder "carma_results exists in  #
-# the current working directory get #
+# the current working directory get    #
 # it's size and store it in a scalar   #
 
 my $wd_size = '';
@@ -209,7 +209,7 @@ if ( $^O eq 'linux' ) {
     chomp $pdb_viewer if ( $pdb_viewer );
 }
 
-# Do the same thing for windows     #
+# Do the same thing for windows        #
 
 else {
 
@@ -230,9 +230,9 @@ else {
     }
 }
 
-# check for input from terminal     #
+# check for input from terminal        #
 # if two files are specified           #
-# and they are a DCD and a PSF file #
+# and they are a DCD and a PSF file    #
 
 my $run_from_terminal = 0;
 my $psf_file = '';
@@ -243,10 +243,10 @@ if ( @ARGV ) {
 
     if ( @ARGV == 2 ) {
 
-        # regardless of which was specified #
+        # regardless of which was specified    #
         # first store each of them in a file   #
         # and store the name of the .dcd file  #
-        # in a variable                     #
+        # in a variable                        #
         if ( $ARGV[0] =~ /\w*\.psf/ && ( $ARGV[1] =~ /\w*\/(\w*\.dcd)/ || $ARGV[1] =~ /\w*\\(\w*\.dcd)/ ) ) {
 
             $psf_file = abs_path( $ARGV[0] );
@@ -259,7 +259,7 @@ if ( @ARGV ) {
             $dcd_file = abs_path( $ARGV[0] );
             $dcd_name = $1;
         }
-        # or terminate with a help message   #
+        # or terminate with a help message     #
         else {
 
             die "\nUsage: grcarma file.psf file.dcd\n\n";
@@ -280,18 +280,18 @@ if ( @ARGV ) {
 }
 
 ###################################################################################################
-###   Main Window                                                                              ###
+###   Main Window                                                                               ###
 ###################################################################################################
 
-# Draw the main window               #
+# Draw the main window                 #
 my $mw = MainWindow -> new( -title => 'grcarma', );
 
 # Create the frame for the selection   #
-# of files                           #
+# of files                             #
 my $gui = $mw -> Frame();
 $gui -> Label( -text => 'Please select a .psf and a .dcd file', ) -> pack;
 
-# Draw the button for psf selection #
+# Draw the button for psf selection    #
 $psf_button = $gui -> Button( -text => 'Browse for a .psf file',
                               -command => sub {
 
@@ -300,7 +300,7 @@ $psf_button = $gui -> Button( -text => 'Browse for a .psf file',
                               }, )
                               -> pack( -side => 'left' );
 
-# Draw the button for dcd selection #
+# Draw the button for dcd selection    #
 $dcd_button = $gui -> Button( -text => 'Browse for a .dcd file',
                               -command => sub {
 
@@ -310,7 +310,7 @@ $dcd_button = $gui -> Button( -text => 'Browse for a .dcd file',
                               -> pack( -side => 'right' );
 
 # Unless input is specified from STDIN #
-# draw the frame for file selection #
+# draw the frame for file selection    #
 unless ( $run_from_terminal ) {
 
     $gui -> pack( -side => 'top',
@@ -329,15 +329,15 @@ unless ( $run_from_terminal ) {
 }
 
 ###################################################################################################
-###   Container Frame                                                                          ###
+###   Container Frame                                                                           ###
 ###################################################################################################
 
 # Create the first frame ( container ) #
 my $f0 = $mw -> Frame ();
 
-# If files are specified from STDIN #
+# If files are specified from STDIN    #
 # draw the container frame and proceed #
-# normally                           #
+# normally                             #
 if ( $run_from_terminal ) {
 
     $f0 -> pack( -side => 'top',
@@ -350,14 +350,14 @@ else {
 }
 
 ###################################################################################################
-###   File Menu                                                                              ###
+###   File Menu                                                                                 ###
 ###################################################################################################
 
 # Create the menubar                   #
 $mw -> configure( -menu => my $menubar = $mw -> Menu );
 
 # Create the menubutton "File" and the #
-# menubutton "help"                 #
+# menubutton "help"                    #
 my $file = $menubar -> cascade( -label => '~File');
 my $help = $menubar -> cascade( -label => '~Help');
 
@@ -371,11 +371,11 @@ $file -> command( -label => "Exit",
                   -command => [ $mw => 'destroy' ], );
 
 ###################################################################################################
-###   Menubutton Frame                                                                        ###
+###   Menubutton Frame                                                                          ###
 ###################################################################################################
 
 # Draw the second frame ( menubuttons) #
-# on top of the first one             #
+# on top of the first one              #
 my $f1 = $f0 -> Frame ( -borderwidth => 3,
                         -relief => 'groove',)
                         -> pack ( -side => 'left',
@@ -389,42 +389,42 @@ my $rmsd_menu = $f1 -> Button( -text => 'RMSD Matrix',
                                ->pack( -side => 'top',
                                        -anchor => 'center' );
 
-# ... the dpca menu                 #
+# ... the dpca menu                    #
 my $dpca_menu = $f1 -> Button( -text => 'Dihedral PCA',
                                -command => \&dpca_window,
                                -width => 20, )
                                ->pack( -side => 'top',
                                        -anchor => 'center' );
 
-# ... the cpca menu                 #
+# ... the cpca menu                    #
 my $cpca_menu = $f1 -> Button( -text => 'Cartesian PCA',
                                -command => \&cpca_window,
                                -width => 20, )
                                ->pack( -side => 'top',
                                        -anchor => 'center' );
 
-# ... the eigen calculations menu     #
+# ... the eigen calculations menu      #
 my $eigen_menu = $f1 -> Button( -text => 'Eigen calculations',
                                 -command => \&eigen_window,
                                 -width => 20, )
                                 ->pack( -side => 'top',
                                        -anchor => 'center' );
 
-# ... the var_covar matrix menu     #
+# ... the var_covar matrix menu        #
 my $varcov_menu = $f1 -> Button( -text => 'VarCov matrix',
                                  -command => \&varcov_window,
                                  -width => 20, )
                                  ->pack( -side => 'top',
                                          -anchor => 'center' );
 
-# ... the entropy menu               #
+# ... the entropy menu                 #
 my $entropy_menu = $f1 -> Button( -text => 'Solute entropy calculation',
                                   -command => \&entropy_window,
                                   -width => 20, )
                                   ->pack( -side => 'top',
                                           -anchor => 'center' );
 
-# ... the fitting menu               #
+# ... the fitting menu                 #
 my $fitting_menu = $f1 -> Button( -text => 'Fit',
                                   -command => \&fit_window,
                                   -width => 20, )
@@ -438,7 +438,7 @@ my $fit_index_menu = $f1 -> Button( -text => 'Selective Fit',
                                   ->pack( -side => 'top',
                                           -anchor => 'center' );
 
-# ... the pdb menu                  #
+# ... the pdb menu                    #
 my $pdb_menu = $f1 -> Button( -text => 'Extract PDB',
                               -command => \&pdb_window,
                               -width => 20, )
@@ -452,7 +452,7 @@ my $rms_menu = $f1 -> Button( -text => 'Ca - Ca distances',
                               ->pack( -side => 'top',
                                       -anchor => 'center' );
 
-# ... the gyration menu            #
+# ... the gyration menu               #
 my $rgr_menu = $f1 -> Button( -text => 'Radius of gyration',
                               -command => \&rgr_window,
                               -width => 20, )
@@ -466,28 +466,28 @@ my $dis_menu = $f1 -> Button( -text => 'Distances',
                               ->pack( -side => 'top',
                                       -anchor => 'center' );
 
-# ... the bending angles menu        #
+# ... the bending angles menu         #
 my $ang_menu = $f1 -> Button( -text => 'Bending Angles',
                               -command => \&bnd_window,
                               -width => 20, )
                               ->pack( -side => 'top',
                                       -anchor => 'center' );
 
-# ... the torsion angles menu        #
+# ... the torsion angles menu         #
 my $tor_menu = $f1 -> Button( -text => 'Torsion Angles',
                               -command => \&tor_window,
                               -width => 20, )
                               ->pack( -side => 'top',
                                       -anchor => 'center' );
 
-# ... the map menu                  #
+# ... the map menu                    #
 my $map_menu = $f1 -> Button( -text => 'Map ion & water',
                               -command => \&map_window,
                               -width => 20, )
                               ->pack( -side => 'top',
                                       -anchor => 'center' );
 
-# ... the surface area menu        #
+# ... the surface area menu           #
 my $sur_menu = $f1 -> Button( -text => 'Surface area',
                               -command => \&sur_window,
                               -width => 20, )
@@ -504,7 +504,7 @@ our $image_menu = $f1 -> Button( -text => 'View Images',
                                 ->pack( -side => 'top',
                                         -anchor => 'center' );
 
-# and the exit menu                 #
+# and the exit menu                    #
 my $exit_menu = $f1 -> Button( -text => 'EXIT',
                                -width => 20,
                                -command => \&exit, )
@@ -512,11 +512,11 @@ my $exit_menu = $f1 -> Button( -text => 'EXIT',
                                         -anchor => 'center', );
 
 ###################################################################################################
-###   Atmid Frame                                                                              ###
+###   Atmid Frame                                                                               ###
 ###################################################################################################
 
 # Draw the third frame (atmids) on top #
-# of the first                       #
+# of the first                         #
 my $f2 = $f0 -> Frame( -borderwidth => 3,
                        -relief => 'groove',)
                        ->pack( -side => 'top',
@@ -526,11 +526,11 @@ my $f2 = $f0 -> Frame( -borderwidth => 3,
 &radiobuttons ( $f2 );
 
 ###################################################################################################
-###   Segid Frame                                                                              ###
+###   Segid Frame                                                                               ###
 ###################################################################################################
 
 # Draw the fourth frame(segids) on top #
-# of the first                       #
+# of the first                         #
 my $f3 = $f0 -> Frame( -borderwidth => 3,
                        -relief => 'groove',)
                        ->pack( -side => 'top',
@@ -540,11 +540,11 @@ my $f3 = $f0 -> Frame( -borderwidth => 3,
 &checkbuttons ( $f3 );
 
 ###################################################################################################
-###   Resid Frame                                                                              ###
+###   Resid Frame                                                                               ###
 ###################################################################################################
 
 # Draw the fifth frame (resids) on top #
-# of the first                       #
+# of the first                         #
 my $f4 = $f0 -> Frame( -borderwidth => 3,
                        -relief => 'groove',)
                        ->pack( -side => 'top',
@@ -554,11 +554,11 @@ my $f4 = $f0 -> Frame( -borderwidth => 3,
 &otherbuttons ( $f4 );
 
 ###################################################################################################
-###   Textbox Frame                                                                          ###
+###   Textbox Frame                                                                             ###
 ###################################################################################################
 
 # Draw the sixth frame(textbox) on top #
-# of the first one and immediately   #
+# of the first one and immediately     #
 # after the fifth frame is drawn       #
 my $f5 = $f0 -> Frame() -> pack( -after => $f1,
                                  -side => 'left',
@@ -579,7 +579,7 @@ $text -> configure( -height => 32, ) if ( $^O eq 'linux' );
 $text -> configure( -width => 85, ) if ( $^O ne 'linux' );
 
 # Define three colored text tags       #
-# to be used for the text displayed #
+# to be used for the text displayed    #
 # in the textbox                       #
 $text -> tagConfigure( "error", -foreground => "red3" );
 $text -> tagConfigure( "valid", -foreground => "green3" );
@@ -590,9 +590,9 @@ tie *STDOUT, 'Tk::Text', $text -> Subwidget( 'scrolled' );
 
 $text -> insert( 'end', "The size of carma_results folder is: $wd_size\n", );
 
-# If OS is *nix/unix-like insert a   #
+# If OS is *nix/unix-like insert a     #
 # line informing the user of the prog  #
-# selected for .ps viewing           #
+# selected for .ps viewing             #
 if ( $^O eq 'linux' ) {
 
     if ( $ps_viewer ) {
@@ -609,7 +609,7 @@ if ( $^O eq 'linux' ) {
 $text -> insert( 'end', "\nSELECT A TASK FROM THE LEFT PANEL\n" );
 
 ###################################################################################################
-###   Active file frame                                                                      ###
+###   Active file frame                                                                         ###
 ###################################################################################################
 
 # Draw the seventh frame(active files) #
@@ -620,7 +620,7 @@ my $f6 = $f0 -> Frame() -> pack( -after => $f1,
                                 -fill => 'x',
                                 -expand => 1, );
 
-# Create the labels displaying the   #
+# Create the labels displaying the     #
 # active .psf & .dcd files and update  #
 # the mainwindow to include them       #
 our $active_psf_label = $f6 -> Label( -text => "Active .psf: $psf_file", )
@@ -630,7 +630,7 @@ our $active_dcd_label = $f6 -> Label( -text => "Active .dcd: $dcd_file", )
 
 $mw -> update();
 
-# Get the resolution of the screen   #
+# Get the resolution of the screen     #
 # and position the mainwindow centered #
 # and every other window to it's right #
 my $x_position = int ( ( $mw -> screenwidth / 2 ) - ( $mw -> width / 2 ) );
@@ -640,19 +640,19 @@ my $mw_position = "+" . $x_position . "+" . $y_position;
 my $toplevel_position = "+" . ( $x_position + 150 ) . "+" . ( $y_position + 100 );
 
 $mw -> geometry ("$mw_position");
-# This is due to a windows-exlusive #
-# bug that forces the window to the #
+# This is due to a windows-exlusive    #
+# bug that forces the window to the    #
 # background                           #
 $mw -> focusForce if ( $^O ne 'linux' );
 
 ###################################################################################################
-###   End of main program                                                                      ###
+###   End of main program                                                                       ###
 ###################################################################################################
 
 MainLoop;
 
 ###################################################################################################
-###   Open files from GUI                                                                      ###
+###   Open files from GUI                                                                       ###
 ###################################################################################################
 
 sub open_file {
@@ -660,9 +660,9 @@ sub open_file {
     # Depending on the argument that this  #
     # subroutine is passed, the $filetypes #
     # variable will be set to psf or dcd   #
-    # restricting the files viewed with #
+    # restricting the files viewed with    #
     # the getOpenMethod to the extension   #
-    # currently in $filetypes             #
+    # currently in $filetypes              #
 
     if ( $^O eq 'linux' ) {
 
@@ -676,8 +676,8 @@ sub open_file {
         }
     }
     # Again, due to another bug on windows #
-    # the variable needs to be defined   #
-    # differently                         #
+    # the variable needs to be defined     #
+    # differently                          #
     else {
 
         if ( $_[0] eq 'psf' ) {
@@ -691,8 +691,8 @@ sub open_file {
     }
 
     my $file = $mw -> getOpenFile( -filetypes => $filetypes, -initialdir => getcwd, );
-    # If the file selected through the   #
-    # getOpen method is a .psf file     #
+    # If the file selected through the     #
+    # getOpen method is a .psf file        #
     if ( $file =~ /\w*\.psf/ ) {
 
         if ( $^O eq 'linux' ) {
@@ -701,18 +701,18 @@ sub open_file {
             # subroutine and store it's result in  #
             # a scalar. This is nessecary because  #
             # normally relative paths will be used #
-            # rendering the data in $psf_file     #
-            # obsolete every time the working     #
-            # directory is changed               #
+            # rendering the data in $psf_file      #
+            # obsolete every time the working      #
+            # directory is changed                 #
             $psf_file = abs_path ( $file );
         }
         else {
 
             # else substitute the '/' for '\' in   #
-            # $file as windows uses a backward   #
+            # $file as windows uses a backward     #
             # slash & the getOpen method returns   #
             # the absolute path to the file unix-  #
-            # style                             #
+            # style                                #
             $file =~ s/\//\\/g;
             $psf_file = $file;
         }
@@ -720,7 +720,7 @@ sub open_file {
     }
     # Do the same for .dcd files and add a #
     # scalar which contains the the name   #
-    # of the dcd file                     #
+    # of the dcd file                      #
     elsif ( $file =~ /.*\/(\w*)\.dcd/ ) {
 
         if ( $^O eq 'linux' ) {
@@ -738,7 +738,7 @@ sub open_file {
     }
     # If the file selected is not a psf or #
     # a dcd, then display a window with a  #
-    # warning                             #
+    # warning                              #
     else {
 
         my $top1 = $mw -> Toplevel( -title => 'Error Message', );
@@ -767,8 +767,8 @@ sub carma {
     # Set the variable used for reporting  #
     # success to the rest of the program   #
     # to zero and substitute any multiple  #
-    # spaces in the $flag scalar with a #
-    # single space                       #
+    # spaces in the $flag scalar with a    #
+    # single space                         #
 
     our $all_done = 0;
     our $flag =~ s/[\s]\s+/ /g;
@@ -786,50 +786,50 @@ sub carma {
 
             `carma.exe $flag > carma.out.copy`;
         }
-        # Else if the user has opted to use #
+        # Else if the user has opted to use    #
         # selected residues for calculations   #
         elsif ( $have_custom_psf ) {
 
             # and the calculations are to be made  #
             # using a fitted .dcd then run carma   #
-            # with the 'selected_residues.psf'   #
+            # with the 'selected_residues.psf'     #
             # file, which must be located in the   #
-            # working directory, and the fitted #
-            # .dcd file                         #
+            # working directory, and the fitted    #
+            # .dcd file                            #
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
                 `carma.exe $flag \"selected_residues.psf\" \"carma_fitted_$dcd_count.dcd\" > carma.out.copy`;
             }
 
             # otherwise run it with the same .psf  #
-            # and the original .dcd             #
+            # and the original .dcd                #
             else {
 
                 `carma.exe $flag \"selected_residues.psf\" \"$dcd_name.dcd\" > carma.out.copy`;
             }
         }
         # Else if none of the above contitions #
-        # are true                           #
+        # are true                             #
         else {
 
             # and the calculations are to be made  #
-            # with a fitted .dcd then run carma #
+            # with a fitted .dcd then run carma    #
             # with the fitted .dcd and .psf files  #
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
                 `carma.exe $flag \"carma_fitted_$dcd_count.psf\" \"carma_fitted_$dcd_count.dcd\" > carma.out.copy`;
             }
             # otherwise run it with the original   #
-            # .psf and .dcd files                 #
+            # .psf and .dcd files                  #
             else {
 
                 `carma.exe $flag \"psf_file.psf\" \"$dcd_name.dcd\" > carma.out.copy`;
             }
         }
     }
-    # repeat for *nix OS but run carma   #
+    # repeat for *nix OS but run carma     #
     # through 'xterm' so that the user can #
-    # monitor the program in real time   #
+    # monitor the program in real time     #
     else {
 
         $text -> insert( 'end', "Running carma with the flag :\n", 'valid' );
@@ -895,8 +895,8 @@ sub parser {
 
     open ( PSF_FILE, $psf_file ) || die "Cannot open $psf_file for reading: $!\n";
 
-    # Extract the number of atoms found #
-    # in the .psf file                   #
+    # Extract the number of atoms found    #
+    # in the .psf file                     #
     our $num_atoms = 0;
     while ( <PSF_FILE> ) {
 
@@ -915,9 +915,9 @@ sub parser {
     my @chain_ids;
     our %num_residues;
 
-    # Continue parsing through the .psf #
+    # Continue parsing through the .psf    #
     # file storing the various atmids and  #
-    # segids as well as the number of     #
+    # segids as well as the number of      #
     # residues in each chain               #
     while ( <PSF_FILE> ) {
 
@@ -949,7 +949,7 @@ sub parser {
     }
 
     # Sort the atmids - segids and remove  #
-    # any and all multiple entries       #
+    # any and all multiple entries         #
     my @sorted_atom_types = sort ( @atom_types );
     our @unique_atom_types = uniq ( @sorted_atom_types );
 
@@ -959,7 +959,7 @@ sub parser {
     # Use carma to check the validity by   #
     # parsing the output of the following  #
     # carma run searching for the presence #
-    # of the word 'Abort'                 #
+    # of the word 'Abort'                  #
     my $valid_psf_dcd_pair = '';
     if ( $^O eq 'linux' ) {
 
@@ -970,7 +970,7 @@ sub parser {
         $valid_psf_dcd_pair = `carma.exe -v -fit -last 2 \"$psf_file\" \"$dcd_file\"`;
     }
 
-    # If found create a help message or #
+    # If found create a help message or    #
     # a window prompting the user to retry #
     if ( $valid_psf_dcd_pair =~ /Abort./i ) {
 
@@ -994,7 +994,7 @@ sub parser {
             else {
 
                 $mw -> destroy;
-                kill -9, $$ || die "\nProcess $$ did not terminate properly\n\n";
+                kill -9, $$ || die "\nProcess $$ did not terminate sucesfully\n\n";
             }
         }
     }
@@ -1010,7 +1010,7 @@ sub parser {
                                 -type => 'ok',
                                 -icon => 'warning', );
             $mw -> destroy;
-            kill -9, $$ || die "\nProcess $$ did not terminate properly\n\n";
+            kill -9, $$ || die "\nProcess $$ did not terminate sucesfully\n\n";
         }
     }
     # If not found proceed parsing the dcd #
@@ -1054,9 +1054,9 @@ sub dcd_header_parser {
 
     # If the number or frames is greater   #
     # than 3k set the value of $rmsd_step  #
-    # to $header/3000 rounded up to the #
+    # to $header/3000 rounded up to the    #
     # nearest integer, otherwise set it to #
-    # 1                                 #
+    # 1                                    #
     if ( $header <= 3000 ) {
 
         $rmsd_step = 1;
@@ -1070,8 +1070,8 @@ sub dcd_header_parser {
     # succesful and unless the program was #
     # run from the terminal, the container #
     # frame is drawn and at the same time  #
-    # the window for file selection is   #
-    # withdrawn                         #
+    # the window for file selection is     #
+    # withdrawn                            #
     unless ( $run_from_terminal ) {
 
         $gui -> packForget();
@@ -1096,11 +1096,11 @@ sub raise_custom_window {
     # they will be described in detail in  #
     # the comments of this subroutine and  #
     # are valid for every subroutine which #
-    # follows                             #
+    # follows                              #
 
     # First, the variables, arrays, hashes #
     # are imported ( when necessary ) and  #
-    # initialised                         #
+    # initialised                          #
     my $x = 1;
     my $y = 1;
 
@@ -1110,12 +1110,12 @@ sub raise_custom_window {
     our @custom_atom_ids;
 
     # Second, if the toplevel window does  #
-    # not exist, it is created and it's #
-    # elements are defined               #
+    # not exist, it is created and it's    #
+    # elements are defined                 #
     if ( !Exists( my $top_custom ) ) {
 
-        # The toplevel is drawn, titled and #
-        # positioned. The 'X' button in the #
+        # The toplevel is drawn, titled and    #
+        # positioned. The 'X' button in the    #
         # upper right ( or left depending on   #
         # your window manager ) corner doesn't #
         # destroy the window but withdraws it  #
@@ -1134,7 +1134,7 @@ sub raise_custom_window {
 
                                    # Foreach active element of the array  #
                                    # @custom_atom_ids add its atmid to a  #
-                                   # scalar and use it for the flag    #
+                                   # scalar and use it for the flag       #
                                    foreach ( @custom_atom_ids ) {
 
                                        if ( defined ) {
@@ -1157,7 +1157,7 @@ sub raise_custom_window {
         # For every atmid draw a checkbutton   #
         # and name it after itself. If it is   #
         # active store the atmid in the array  #
-        # @custom_atom_ids                   #
+        # @custom_atom_ids                     #
         our @unique_atom_types;
         for my $i ( 0 .. $#unique_atom_types ) {
 
@@ -1177,7 +1177,7 @@ sub raise_custom_window {
     }
 
     # Finally, if the window has already   #
-    # been created it is brought in the #
+    # been created it is brought in the    #
     # foreground                           #
     else {
 
@@ -1189,7 +1189,7 @@ sub raise_custom_window {
 }
 
 ###################################################################################################
-###   Draw the window for the RMSD matrix calculation                                          ###
+###   Draw the window for the RMSD matrix calculation                                           ###
 ###################################################################################################
 
 sub rmsd_window {
@@ -1215,7 +1215,7 @@ sub rmsd_window {
 
         my $frame_rmsd1 = $rmsd_top -> Frame() -> pack();
 
-        # Create entry boxes for user input #
+        # Create entry boxes for user input    #
         $frame_rmsd1 -> Label( -text => 'First: ', )
                                -> grid( -row => 1, -column => 1, );
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_first, )
@@ -1246,9 +1246,9 @@ sub rmsd_window {
 
         my $frame_rmsd2 = $rmsd_top -> Frame() -> pack();
 
-        # For every variable used for input #
+        # For every variable used for input    #
         # that is active create a flag and add #
-        # it to the flag used to run carma   #
+        # it to the flag used to run carma     #
         $frame_rmsd2 -> Button( -text => 'Run',
                                 -command => sub {
 
@@ -1300,7 +1300,7 @@ sub rmsd_window {
             $rmsd_top -> destroy();
             $mw -> update;
 
-            # If a segid has been specified #
+            # If a segid has been specified    #
             # add it to the flag as well       #
 
             $seg_id_flag = '' if $seg_id_flag;
@@ -1331,9 +1331,9 @@ sub rmsd_window {
             if ( $^O ne 'linux' ) {
 
                 # If the carma run was succesful make  #
-                # a .ps plot of the produced matrix #
+                # a .ps plot of the produced matrix    #
                 # while capturing the limits used for  #
-                # the colouring                     #
+                # the colouring                        #
                 if ( $all_done ) {
 
                     if ( `carma.exe -colour - < \"carma.RMSD.matrix\"` =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
@@ -1388,7 +1388,7 @@ sub rmsd_window {
 }
 
 ###################################################################################################
-###   Draw the window for the dPCA calculation                                                ###
+###   Draw the window for the dPCA calculation                                                  ###
 ###################################################################################################
 
 sub dpca_window {
@@ -1570,7 +1570,7 @@ sub dpca_window {
 }
 
 ###################################################################################################
-###   Draw the window for the cPCA calculation                                                ###
+###   Draw the window for the cPCA calculation                                                  ###
 ###################################################################################################
 
 sub cpca_window {
@@ -1829,7 +1829,7 @@ sub auto_window {
 
         my (
              $seg_custom, $seg_atm, $seg, $res_custom, $res_atm,
-             $res,      $custom,  $atm, $nothing,
+             $res,        $custom,  $atm, $nothing,
         );
 
         $text -> insert( 'end', "\nNow fitting DCD files. ", 'valid', );
@@ -2357,7 +2357,7 @@ sub auto_window {
 }
 
 ###################################################################################################
-###   Draw the window for eigenvector and eigenvalue calculations                              ###
+###   Draw the window for eigenvector and eigenvalue calculations                               ###
 ###################################################################################################
 
 sub eigen_window {
@@ -2491,7 +2491,7 @@ sub eigen_window {
 }
 
 ###################################################################################################
-###   Draw the window for eigenvector and eigenvalue calculations                              ###
+###   Draw the window for eigenvector and eigenvalue calculations                               ###
 ###################################################################################################
 
 sub varcov_window {
@@ -2679,7 +2679,7 @@ sub varcov_window {
 }
 
 ###################################################################################################
-###   Extract the maximum and minimum amplitutes from the carma.fluctuations file              ###
+###   Extract the maximum and minimum amplitutes from the carma.fluctuations file               ###
 ###################################################################################################
 
 sub play {
@@ -2779,7 +2779,7 @@ sub image_window {
 }
 
 ###################################################################################################
-###   Draw the window for residue selection                                                  ###
+###   Draw the window for residue selection                                                     ###
 ###################################################################################################
 
 sub select_residues {
@@ -2803,12 +2803,12 @@ sub select_residues {
         }
     }
 
-    # For every resid bar                 #
+    # For every resid bar                  #
     for ( my $i = 0 ; $i <= $resid_bar_count ; $i++ ) {
 
         # If the $pos variable exists move to  #
         # the point of the filehandle defined  #
-        # by it                             #
+        # by it                                #
         if ( $pos ) {
 
             seek PSF_FILE, $pos, 0;
@@ -2816,18 +2816,18 @@ sub select_residues {
         }
 
         # Else continue reading the .psf file  #
-        # from the next line after the one   #
-        # containing '!NATOM'                 #
+        # from the next line after the one     #
+        # containing '!NATOM'                  #
         while ( <PSF_FILE> ) {
 
-            # If the pattern is met             #
+            # If the pattern is met                #
             if ( /^(\s*\d*\s*)($dropdown_value[$i])(\s*)(\d*)(.*)$/ ) {
 
-                # And the residue number equals the #
+                # And the residue number equals the    #
                 # upper limit set by the user store in #
                 # $pos the location in the filehandle  #
                 # and in $prev_line the line just read #
-                # and exit the while loop             #
+                # and exit the while loop              #
                 if ( $4 == $upper_res_limit[$i] + 1 ) {
 
                     $pos = tell;
@@ -2839,12 +2839,12 @@ sub select_residues {
                 # number falls between the limits set  #
                 # by the user export that line to the  #
                 # custom .psf file while changing the  #
-                # chain id to 'Z'                     #
+                # chain id to 'Z'                      #
                 if ( $4 >= $lower_res_limit[$i] && $4 <= $upper_res_limit[$i] ) {
 
                     print OUT "$1Z$3$4$5\n";
                 }
-                # Otherwise export the line as is     #
+                # Otherwise export the line as is      #
                 else {
 
                     print OUT $_;
@@ -2857,8 +2857,8 @@ sub select_residues {
     # to the one specified by $pos, print  #
     # the line which would have been       #
     # skipped if not for $prev_line, and   #
-    # print the rest of the .psf to the #
-    # custom file                         #
+    # print the rest of the .psf to the    #
+    # custom file                          #
     seek PSF_FILE, $pos, 0;
     print OUT $prev_line;
 
@@ -2882,7 +2882,7 @@ sub select_residues {
 }
 
 ###################################################################################################
-###   Create fit.index                                                                        ###
+###   Create fit.index                                                                          ###
 ###################################################################################################
 
 sub create_fit_index {
@@ -2945,7 +2945,7 @@ sub create_fit_index {
 }
 
 ###################################################################################################
-###   Create new 'select residues bar'                                                        ###
+###   Create new 'select residues bar'                                                          ###
 ###################################################################################################
 
 sub resid_window {
@@ -3075,7 +3075,7 @@ sub add_resid_bar {
 }
 
 ###################################################################################################
-###   Create a new bar for fit.index creation                                                  ###
+###   Create a new bar for fit.index creation                                                   ###
 ###################################################################################################
 
 sub add_index_bar {
@@ -3112,7 +3112,7 @@ sub entropy_window {
     if ( !Exists ( $top_ent ) ) {
 
         # Divide the number of frames in the   #
-        # .dcd header by 10 and round it up #
+        # .dcd header by 10 and round it up    #
         unless ( $ent_step ) {
 
             $ent_step = int ( ( $header / 10 ) );
@@ -3170,15 +3170,15 @@ sub entropy_window {
                 $text -> see( 'end', );
                 $mw -> update;
 
-                # The result of the $i * $ent_step   #
+                # The result of the $i * $ent_step     #
                 # multiplication is the number of the  #
-                # frame that will be used after the #
-                # ' -last' flag                     #
+                # frame that will be used after the    #
+                # ' -last' flag                        #
                 for ( my $i = 0 ; ( $i * $ent_step ) < $header ; $i++ ) {
 
                     # If that number exceeds the number of #
                     # frames in the .dcd header then that  #
-                    # number will be used instead         #
+                    # number will be used instead          #
                     if ( ( $header - ( $i * $ent_step ) ) > $ent_step ) {
 
                         $lower_ent_limit = 1;
@@ -3282,7 +3282,7 @@ sub entropy_window {
 
                 # If arrays for both entropies exist   #
                 # overwrite the entropy file with the  #
-                # contents of those arrays           #
+                # contents of those arrays             #
                 if ( @a_entropy && @s_entropy ) {
 
                     open WRITE_ENTROPY, ">carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing";
@@ -3309,7 +3309,7 @@ sub entropy_window {
 }
 
 ###################################################################################################
-###   Create PDB files for the specified frames                                              ###
+###   Create PDB files for the specified frames                                                 ###
 ###################################################################################################
 
 sub pdb_window {
@@ -3394,7 +3394,7 @@ sub pdb_window {
 }
 
 ###################################################################################################
-###   Draw the window for distance maps                                                      ###
+###   Draw the window for distance maps                                                         ###
 ###################################################################################################
 
 sub rms_window {
@@ -3699,7 +3699,7 @@ sub rgr_window {
 }
 
 ###################################################################################################
-###   Draw the window for distances                                                          ###
+###   Draw the window for distances                                                             ###
 ###################################################################################################
 
 sub dis_window {
@@ -3999,7 +3999,7 @@ sub tor_window {
 }
 
 ###################################################################################################
-###   Draw the window for ion and water distribution maps                                      ###
+###   Draw the window for ion and water distribution maps                                       ###
 ###################################################################################################
 
 sub map_window {
@@ -4237,7 +4237,7 @@ sub sur_window {
 }
 
 ###################################################################################################
-###   Draw the window for fitting                                                              ###
+###   Draw the window for fitting                                                               ###
 ###################################################################################################
 
 sub fit_window {
@@ -4375,7 +4375,7 @@ sub fit_window {
 }
 
 ###################################################################################################
-###   Draw the window for selective fitting                                                  ###
+###   Draw the window for selective fitting                                                     ###
 ###################################################################################################
 
 sub fit_index_window {
@@ -4764,21 +4764,21 @@ sub fit_index_window {
 sub create_dir {
 
     # If the string returned by the getcwd #
-    # function contains the name of the #
+    # function contains the name of the    #
     # folder used for storing the results  #
-    # of the program then terminate the #
-    # subroutine with a success status   #
+    # of the program then terminate the    #
+    # subroutine with a success status     #
     if ( getcwd =~ /carma_temp/ ) {
 
         return(0);
     }
 
     # If the folder does not exist in the  #
-    # CWD it is created and a subfolder #
+    # CWD it is created and a subfolder    #
     # with the current time as it's name   #
     # will be created as well. This folder #
     # will serve as the storing point for  #
-    # every grcarma session             #
+    # every grcarma session                #
     if (! -d "carma_results" ) {
 
         mkdir "carma_results", 0755;
@@ -4794,9 +4794,9 @@ sub create_dir {
     }
 
     # After the folder(s) have been made   #
-    # they are made the CWD and link to #
-    # specified .psf and .dcd files are #
-    # created                             #
+    # they are made the CWD and link to    #
+    # specified .psf and .dcd files are    #
+    # created                              #
     if ( $^O eq 'linux' ) {
 
         `ln -s $psf_file .`;
@@ -4812,7 +4812,7 @@ sub create_dir {
 }
 
 ###################################################################################################
-###   Create the atmid radiobutton bar                                                        ###
+###   Create the atmid radiobutton bar                                                          ###
 ###################################################################################################
 
 sub radiobuttons {
@@ -4834,7 +4834,7 @@ sub radiobuttons {
                                              -command => sub {
 
                                         # If the above variable equals any of  #
-                                        # the @radiobuttons entries specify #
+                                        # the @radiobuttons entries specify    #
                                         # atmid flags for each entry           #
                                         if ( $atm_id eq 'CA' ) {
 
@@ -4876,7 +4876,7 @@ sub radiobuttons {
 }
 
 ###################################################################################################
-###   Create the segid checkbutton bar                                                        ###
+###   Create the segid checkbutton bar                                                          ###
 ###################################################################################################
 
 sub checkbuttons {
@@ -4934,7 +4934,7 @@ sub checkbuttons {
 }
 
 ###################################################################################################
-###   Create the resid radiobutton bar                                                        ###
+###   Create the resid radiobutton bar                                                          ###
 ###################################################################################################
 
 sub otherbuttons {
