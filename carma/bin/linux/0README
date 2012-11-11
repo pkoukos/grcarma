@@ -1,0 +1,36 @@
+
+The two executables provided in this directory are the 32 and 64bit versions
+of the program. 
+
+                              carma   -> 32 bit
+                              carma64 -> 64 bit
+
+
+____________________________________________________________________________
+
+The 32bit executable provided in this directory was produced on a RH7.3
+machine. The executable is dynamic with respect to the X11 libraries, but
+has Ygl, lapack and blas statically linked. I have seen this executable 
+running without problems under all GNU/Linux machines that I can get my
+hands on including debian, knoppix, Scientific linux, Ubuntu 10.04 ...
+
+If you want to prepare your own executable, something in the spirit of the
+following lines should do the trick.
+
+gcc -static -DGRA -D_FILE_OFFSET_BITS=64 -Wall -pedantic -O -c carma.c
+g77 -static -DGRA -D_FILE_OFFSET_BITS=64 -Wall -pedantic -O carma.o \
+    -L/usr/X11R6/lib -lYgl -lglut -lGLU -lGL -lXmu -lXext -lX11 -ldl -llapack \
+    -lblas -lm
+
+____________________________________________________________________________
+
+The 64bit executable was prepared on a 2.6.26 64bit machine using the gcc
+compilers as follows: 
+
+gcc -m64 -DGRA -D_FILE_OFFSET_BITS=64 -IYgl-4.2/X11/ -Wall -pedantic -O -c carma.c
+gfortran -m64 -DGRA -D_FILE_OFFSET_BITS=64 -IYgl-4.2/X11/ -Wall -pedantic \
+         -O carma.o -L. -lYgl -lXext -lX11 -llapack -lblas -lm
+
+
+(ignore site-specific library paths).
+
