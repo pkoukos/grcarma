@@ -80,13 +80,14 @@ use warnings;
 
 use Tk;
 use Tk::MsgBox;
+use Tk::Chart::Lines;
 
 require Tk::BrowseEntry;
 
 # Import the following modules         #
 
-use Cwd 'abs_path';
 use Cwd;
+use Cwd 'abs_path';
 use File::Path 'mkpath';
 use File::Copy 'cp', 'mv';
 use List::MoreUtils qw { uniq };
@@ -110,7 +111,6 @@ our $psf_button = '';
 our $dcd_button = '';
 our $have_psf = 0;
 our $have_dcd = 0;
-our $dcd_loc = '';
 our $have_files = '';
 our $filetypes = '';
 our $have_custom_psf = '';
@@ -234,6 +234,7 @@ my $run_from_terminal = 0;
 my $psf_file = '';
 my $dcd_file = '';
 my $dcd_name = '';
+my $dcd_loc = '';
 
 if ( @ARGV ) {
 
@@ -243,17 +244,25 @@ if ( @ARGV ) {
         # first store each of them in a file   #
         # and store the name of the .dcd file  #
         # in a variable                        #
-        if ( $ARGV[0] =~ /\w*\.psf/ && ( $ARGV[1] =~ /\w*\/(\w*\.dcd)/ || $ARGV[1] =~ /\w*\\(\w*\.dcd)/ ) ) {
+        if ( $ARGV[0] =~ /.*\.psf/ && $ARGV[1] =~ /.*\.dcd/ ) {
 
             $psf_file = abs_path( $ARGV[0] );
             $dcd_file = abs_path( $ARGV[1] );
-            $dcd_name = $1;
+            if ( $dcd_file =~ /(.*)(\/|\\)(\w*)\.dcd/ ) {
+                
+                $dcd_loc = $1;
+                $dcd_name = $3;
+            }
         }
-        elsif ( $ARGV[1] =~ /\w*\.psf/ && ( $ARGV[0] =~ /\w*\/(\w*\.dcd)/ || $ARGV[0] =~ /\w*\\(\w*\.dcd)/ ) ) {
+        elsif ( $ARGV[1] =~ /.*\.psf/ && $ARGV[0] =~ /.*\.dcd/ ) {
 
             $psf_file = abs_path( $ARGV[1] );
             $dcd_file = abs_path( $ARGV[0] );
-            $dcd_name = $1;
+            if ( $dcd_file =~ /(.*)(\/|\\)(\w*)\.dcd/ ) {
+                
+                $dcd_loc = $1;
+                $dcd_name = $3;
+            }
         }
         # or terminate with a help message     #
         else {
@@ -313,12 +322,10 @@ unless ( $run_from_terminal ) {
                   -expand => 1,
                   -fill => 'both', );
 
-    $mw -> update();
-
     my $x_position = int ( ( $mw -> screenwidth / 2 ) - ( $mw -> width / 2 ) );
     my $y_position = int ( ( ( $mw -> screenheight - 80 ) / 2 ) - ( $mw -> height / 2 ) );
 
-    my $mw_position = "+" . $x_position . "+" . $y_position;
+    my $mw_position = "+" . $x_position . "+" . $y_position;print $mw_position;
 
     $mw -> geometry ("$mw_position");
     $mw -> focusForce if ( $^O ne 'linux' );
@@ -329,21 +336,23 @@ unless ( $run_from_terminal ) {
 ###################################################################################################
 
 # Create the first frame ( container ) #
-my $f0 = $mw -> Frame ();
+my $f0 = $mw -> Frame();
 
 # If files are specified from STDIN    #
 # draw the container frame and proceed #
 # normally                             #
-if ( $run_from_terminal ) {
+unless ( $run_from_terminal ) {
 
-    $f0 -> pack( -side => 'top',
-                 -expand => 1,
-                 -fill => 'both', );
+    #~ $f0 -> pack( -side => 'top',
+                                  #~ -expand => 1,
+                                  #~ -fill => 'both', );
+        $mw -> waitVariable(\$have_files);
+    $mw -> update;                          
 }
-else {
-
-    $mw -> waitVariable(\$have_files);
-}
+#~ else {
+#~ 
+    #~ 
+#~ }
 
 ###################################################################################################
 ###   File Menu                                                                                 ###
@@ -384,6 +393,13 @@ my $rmsd_menu = $f1 -> Button( -text => 'RMSD Matrix',
                                -width => 20, )
                                ->pack( -side => 'top',
                                        -anchor => 'center' );
+                                       
+#Draw the button for the qfract menu...#
+my $qfract_menu = $f1 -> Button( -text => 'Qfract',
+                                -command => \&qfract_window,
+                                -width => 20, )
+                                ->pack( -side => 'top',
+                                        -anchor => 'center' );
 
 # ... the dpca menu                    #
 my $dpca_menu = $f1 -> Button( -text => 'Dihedral PCA',
@@ -624,6 +640,7 @@ our $active_psf_label = $f6 -> Label( -text => "Active .psf: $psf_file", )
 our $active_dcd_label = $f6 -> Label( -text => "Active .dcd: $dcd_file", )
 									  -> pack( -side => 'right', );
 
+$f0 -> pack( -side => 'top', -fill => 'x', -expand => 1, );
 $mw -> update();
 
 # Get the resolution of the screen     #
@@ -632,7 +649,7 @@ $mw -> update();
 my $x_position = int ( ( $mw -> screenwidth / 2 ) - ( $mw -> width / 2 ) );
 my $y_position = int ( ( ( $mw -> screenheight - 80 ) / 2 ) - ( $mw -> height / 2 ) );
 
-my $mw_position = "+" . $x_position . "+" . $y_position;
+my $mw_position = "+" . $x_position . "+" . $y_position;#print $mw_position;
 my $toplevel_position = "+" . ( $x_position + 150 ) . "+" . ( $y_position + 100 );
 
 $mw -> geometry ("$mw_position");
@@ -1070,9 +1087,10 @@ sub dcd_header_parser {
     # withdrawn                            #
     unless ( $run_from_terminal ) {
 
-        $gui -> packForget();
+        $gui -> destroy;
         $f0 -> pack( -side => 'top', -fill => 'both', -expand => 1, );
-        $f0 -> update;
+        $mw -> update;
+        $have_files = 1;
         $run_from_terminal = 0;
     }
 
@@ -1379,6 +1397,154 @@ sub rmsd_window {
         $rmsd_top -> raise;
     }
 
+}
+
+###################################################################################################
+###   Draw the window for the native contact calculation                                        ###
+###################################################################################################
+
+sub qfract_window {
+
+    my $qfract_cutoff = 8;
+    my $qfract_dist = 2;
+    my $qfract_plot = '';
+    my $top_qfract;
+
+    if ( !Exists ( $top_qfract ) ) {
+
+        $top_qfract = $mw -> Toplevel( -title => 'Native Contacts', );
+        $top_qfract -> geometry("$toplevel_position");
+        $top_qfract -> protocol( 'WM_DELETE_WINDOW' => sub { $top_qfract -> withdraw }, );
+
+        my $frame_qfract1 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
+        my $frame_qfract2 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
+        my $frame_qfract3 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
+
+        &radiobuttons ( $frame_qfract1 );
+        &checkbuttons ( $frame_qfract2 );
+        &otherbuttons ( $frame_qfract3 );
+
+        my $frame_qfract4 = $top_qfract -> Frame() -> pack( -fill => 'x', );
+        $frame_qfract4 -> Label( -text => 'Various Options' )
+                              -> pack( -side => 'top', );
+
+        $frame_qfract4 -> Checkbutton( -text => 'Automatically create a plot of the results file',
+                                       -variable => \$qfract_plot,
+                                       -offvalue => 0,
+                                       -onvalue => 1, )
+                                       -> pack( -side => 'top', -anchor => 'w', );
+
+        my $frame_qfract5 = $top_qfract -> Frame()-> pack( -expand => 0, );
+
+        $frame_qfract5 -> Label( -text => 'Cutoff: ', )
+                                 -> grid( -row => 1, -column => 1, );
+        $frame_qfract5 -> Entry( -textvariable => \$qfract_cutoff, )
+                                 -> grid( -row => 1, -column => 2, );
+        $frame_qfract5 -> Label( -text => 'Distance: ', )
+                                 -> grid( -row => 2, -column => 1, );
+        $frame_qfract5 -> Entry( -textvariable => \$qfract_dist, )
+                                 -> grid( -row => 2, -column => 2, );
+
+        my $frame_qfract6 = $top_qfract -> Frame() -> pack( -expand => 0, );
+
+        $frame_qfract6 -> Button( -text => 'Return',
+                               -command => [ $top_qfract => 'withdraw' ], )
+                               -> pack( -side => 'left', );
+
+        $frame_qfract6 -> Button( -text => 'Run',
+                               -command => sub {
+
+                        $top_qfract -> destroy;
+
+                        $seg_id_flag = '' if $seg_id_flag;
+
+                        foreach ( @seg_ids ) {
+
+                            if ( defined ( $_ ) ) {
+
+                                $seg_id_flag = $seg_id_flag . $_;
+                            }
+                        }
+
+                        if ( $seg_id_flag ) {
+
+                            $flag = " -v -qf $qfract_cutoff $qfract_dist $atm_id_flag $seg_id_flag $res_id_flag";
+                        }
+                        else {
+
+                            $flag = " -v -qf $qfract_cutoff $qfract_dist $atm_id_flag $res_id_flag";
+                        }
+
+                        &create_dir;
+
+                        $text -> insert( 'end', "\nNow calculating qfract. ", 'valid', );
+                        $text -> see( 'end', );
+                        $mw -> update;
+
+                        &carma;
+
+                        if ( $all_done ) {
+
+                            $text -> insert( 'end', "Calculation finished", 'valid' );
+                            $text -> see( 'end', );
+                            
+                            if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
+                                
+                                my $mw = MainWindow -> new( -title => 'Qfraction plot', );
+                                
+                                open IN, '<', "carma.Qfraction.dat" || die "Cannot open carma.Qfraction.dat for reading";
+                                
+                                my $chart = $mw -> Lines( -background => 'snow',
+                                                          -zeroaxis => 1,
+                                                          -linewidth  => 1, )
+                                                          -> pack( -fill => 'both',
+                                                                   -expand => 1, );
+
+                                my $i = 0;
+                                my ( @frames, @Q, @Qs, @q, );
+                                while ( <IN> ) {
+                                    
+                                    if ( /\s+(.*?50|.*?00)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)/ ) {
+                                        
+                                        $frames[$i] = $1;
+                                        $Q[$i] = $2;
+                                        $Qs[$i] = $3;
+                                        $q[$i] = $4;
+                                        $i++;
+                                    }
+                                }
+                                
+                                close IN;
+
+                                my @data = ( [ @frames ], [ @Q ], [ @Qs ], [ @q ], );
+
+                                # Add a legend to the graph
+                                my @legends = ( 'Q', 'Qs', 'q', );
+                                $chart -> set_legend(
+                                    -data        => \@legends,
+                                    -titlecolors => 'blue',
+                                );
+
+                                # Add help identification
+                                $chart -> set_balloon();
+
+                                # Create the graph
+                                $chart -> plot( \@data );
+                            }
+                        }
+                        else {
+
+                            $text -> insert( 'end' , "Something went wrong\nCheck carma.out.copy for details\n", 'error' );
+                            $text -> see( 'end', );
+                        }
+        }, )
+        -> pack( -side => 'right', );
+    }
+    else {
+
+        $top_qfract -> deiconify;
+        $top_qfract -> raise;
+    }
 }
 
 ###################################################################################################
@@ -2831,7 +2997,7 @@ sub select_residues {
         while ( <PSF_FILE> ) {
 
             # If the pattern is met                #
-            if ( /^(\s*\d*\s*)($dropdown_value[$i])(\s*)(\d*)(.*)$/ ) {
+            if ( /^(\s*\d+\s+)($dropdown_value[$i])(\s+)(\d+)(.+)$/ ) {
 
                 # And the residue number equals the    #
                 # upper limit set by the user store in #
@@ -4810,11 +4976,11 @@ sub create_dir {
 		
 		if ( $run_from_terminal ) {
 			
-			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in. Goodbye\n\n";
+			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
 		}
 		else {
 			
-			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in. Goodbye\n\n",
+			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
 							   -type => 'ok',
 							   -icon => 'warning', );
 			$mw -> destroy;
