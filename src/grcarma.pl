@@ -85,9 +85,10 @@ require Tk::BrowseEntry;
 
 # Import the following modules         #
 
-use Cwd 'abs_path';
 use Cwd;
+use Cwd 'abs_path';
 use File::Path 'mkpath';
+use File::Copy 'cp', 'mv';
 use List::MoreUtils qw { uniq };
 
 # Get the system time and modify it so #
@@ -104,8 +105,11 @@ our $seg_id_flag = '';
 our $index_seg_id_flag = '';
 our $custom_selection = '';
 our $all_done = '';
+our $num_atoms = '';
 our $psf_button = '';
 our $dcd_button = '';
+our $have_psf = 0;
+our $have_dcd = 0;
 our $have_files = '';
 our $filetypes = '';
 our $have_custom_psf = '';
@@ -142,7 +146,7 @@ our $dpca_auto_entry_num;
 our $cpca_auto_entry;
 our $cpca_auto_entry_num;
 
-# ... global arrays and hashes         #
+# and global arrays and hashes         #
 
 our (
 
@@ -173,12 +177,10 @@ if ( $^O eq 'linux' ) {
             $wd_size = $1 . "B";
         }
     }
-
     # If any of the following programs #
     # is found in the /usr/bin folder  #
     # set it as the default .ps file   #
     # viewer                           #
-
     if ( -e "/usr/bin/evince" ) {
 
         $ps_viewer = "evince";
@@ -209,25 +211,17 @@ if ( $^O eq 'linux' ) {
 
     chomp $pdb_viewer if ( $pdb_viewer );
 }
-
 # Do the same thing for windows        #
-
 else {
 
     if ( -d "carma_results" ) {
 
-        `dir carma_results /s /-c | find "File(s)" > dir.txt`;
-        open WIN_DIR, "dir.txt" || die "win close\n";
-        while ( <WIN_DIR> ) {
+        my $dir = `dir carma_results /s /-c | find "File(s)"`;
 
-            if ( /\d* File...\s*(\d*)/ ) {
+        if ( $dir !~ /\d* File...\s*(\d*)/ ) {
 
-                $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
-            }
+            $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
         }
-
-        close WIN_DIR;
-        unlink ( "dir.txt" );
     }
 }
 
@@ -239,6 +233,7 @@ my $run_from_terminal = 0;
 my $psf_file = '';
 my $dcd_file = '';
 my $dcd_name = '';
+my $dcd_loc = '';
 
 if ( @ARGV ) {
 
@@ -248,17 +243,19 @@ if ( @ARGV ) {
         # first store each of them in a file   #
         # and store the name of the .dcd file  #
         # in a variable                        #
-        if ( $ARGV[0] =~ /\w*\.psf/ && ( $ARGV[1] =~ /\w*\/(\w*\.dcd)/ || $ARGV[1] =~ /\w*\\(\w*\.dcd)/ ) ) {
+        if ( $ARGV[0] =~ /\w*\.psf/ && ( $ARGV[1] =~ /(\w*)\/(\w*\.dcd)/ || $ARGV[1] =~ /(\w*)\\(\w*\.dcd)/ ) ) {
 
             $psf_file = abs_path( $ARGV[0] );
             $dcd_file = abs_path( $ARGV[1] );
-            $dcd_name = $1;
+            $dcd_loc = $1;print $dcd_loc;
+            $dcd_name = $2;
         }
-        elsif ( $ARGV[1] =~ /\w*\.psf/ && ( $ARGV[0] =~ /\w*\/(\w*\.dcd)/ || $ARGV[0] =~ /\w*\\(\w*\.dcd)/ ) ) {
+        elsif ( $ARGV[1] =~ /\w*\.psf/ && ( $ARGV[0] =~ /(\w*)\/(\w*\.dcd)/ || $ARGV[0] =~ /(\w*)\\(\w*\.dcd)/ ) ) {
 
             $psf_file = abs_path( $ARGV[1] );
             $dcd_file = abs_path( $ARGV[0] );
-            $dcd_name = $1;
+            $dcd_loc = $1;print $dcd_loc;
+            $dcd_name = $2;
         }
         # or terminate with a help message     #
         else {
@@ -318,12 +315,10 @@ unless ( $run_from_terminal ) {
                   -expand => 1,
                   -fill => 'both', );
 
-    $mw -> update();
-
     my $x_position = int ( ( $mw -> screenwidth / 2 ) - ( $mw -> width / 2 ) );
     my $y_position = int ( ( ( $mw -> screenheight - 80 ) / 2 ) - ( $mw -> height / 2 ) );
 
-    my $mw_position = "+" . $x_position . "+" . $y_position;
+    my $mw_position = "+" . $x_position . "+" . $y_position;print $mw_position;
 
     $mw -> geometry ("$mw_position");
     $mw -> focusForce if ( $^O ne 'linux' );
@@ -334,21 +329,23 @@ unless ( $run_from_terminal ) {
 ###################################################################################################
 
 # Create the first frame ( container ) #
-my $f0 = $mw -> Frame ();
+my $f0 = $mw -> Frame();
 
 # If files are specified from STDIN    #
 # draw the container frame and proceed #
 # normally                             #
-if ( $run_from_terminal ) {
+unless ( $run_from_terminal ) {
 
-    $f0 -> pack( -side => 'top',
-                 -expand => 1,
-                 -fill => 'both', );
+    #~ $f0 -> pack( -side => 'top',
+                                  #~ -expand => 1,
+                                  #~ -fill => 'both', );
+        $mw -> waitVariable(\$have_files);
+    $mw -> update;                          
 }
-else {
-
-    $mw -> waitVariable(\$have_files);
-}
+#~ else {
+#~ 
+    #~ 
+#~ }
 
 ###################################################################################################
 ###   File Menu                                                                                 ###
@@ -434,10 +431,10 @@ my $fitting_menu = $f1 -> Button( -text => 'Fit',
 
 # ... the index fitting menu           #
 my $fit_index_menu = $f1 -> Button( -text => 'Selective Fit',
-                                  -command => \&fit_index_window,
-                                  -width => 20, )
-                                  ->pack( -side => 'top',
-                                          -anchor => 'center' );
+									-command => \&fit_index_window,
+									-width => 20, )
+									->pack( -side => 'top',
+											-anchor => 'center' );
 
 # ... the pdb menu                    #
 my $pdb_menu = $f1 -> Button( -text => 'Extract PDB',
@@ -499,10 +496,10 @@ $f1 -> Label( -text => "\n", ) -> pack( -side => 'top', );
 
 # ... the image menu                   #
 our $image_menu = $f1 -> Button( -text => 'View Images',
-                                -command => [ \&image_window ],
-                                -width => 20,
-                                -state => 'disabled', )
-                                ->pack( -side => 'top',
+								 -command => [ \&image_window ],
+                                 -width => 20,
+                                 -state => 'disabled', )
+                                 ->pack( -side => 'top',
                                         -anchor => 'center' );
 
 # and the exit menu                    #
@@ -617,18 +614,19 @@ $text -> insert( 'end', "\nSELECT A TASK FROM THE LEFT PANEL\n" );
 # on top of the first one immediately  #
 # after the fifth frame is drawn       #
 my $f6 = $f0 -> Frame() -> pack( -after => $f1,
-                                -side => 'bottom',
-                                -fill => 'x',
-                                -expand => 1, );
+								 -side => 'bottom',
+                                 -fill => 'x',
+                                 -expand => 1, );
 
 # Create the labels displaying the     #
 # active .psf & .dcd files and update  #
 # the mainwindow to include them       #
 our $active_psf_label = $f6 -> Label( -text => "Active .psf: $psf_file", )
-                                  -> pack( -side => 'left', );
+									  -> pack( -side => 'left', );
 our $active_dcd_label = $f6 -> Label( -text => "Active .dcd: $dcd_file", )
-                                  -> pack( -side => 'right', );
+									  -> pack( -side => 'right', );
 
+$f0 -> pack( -side => 'top', -fill => 'x', -expand => 1, );
 $mw -> update();
 
 # Get the resolution of the screen     #
@@ -637,7 +635,7 @@ $mw -> update();
 my $x_position = int ( ( $mw -> screenwidth / 2 ) - ( $mw -> width / 2 ) );
 my $y_position = int ( ( ( $mw -> screenheight - 80 ) / 2 ) - ( $mw -> height / 2 ) );
 
-my $mw_position = "+" . $x_position . "+" . $y_position;
+my $mw_position = "+" . $x_position . "+" . $y_position;print $mw_position;
 my $toplevel_position = "+" . ( $x_position + 150 ) . "+" . ( $y_position + 100 );
 
 $mw -> geometry ("$mw_position");
@@ -683,11 +681,11 @@ sub open_file {
 
         if ( $_[0] eq 'psf' ) {
 
-            $filetypes = [['PSF FIles',  '.psf'], ['PSF FIles',  '.psf']];
+            $filetypes = [ ['PSF FIles',  '.psf'], ['PSF FIles',  '.psf'] ];
         }
         elsif ( $_[0] eq 'dcd' ) {
 
-            $filetypes = [['DCD Trajectory Files', '.dcd'], ['DCD Trajectory Files', '.dcd']];
+            $filetypes = [ ['DCD Trajectory Files', '.dcd'], ['DCD Trajectory Files', '.dcd'] ];
         }
     }
 
@@ -717,25 +715,28 @@ sub open_file {
             $file =~ s/\//\\/g;
             $psf_file = $file;
         }
-        our $have_psf = 1;
+        $have_psf = 1;
     }
     # Do the same for .dcd files and add a #
     # scalar which contains the the name   #
     # of the dcd file                      #
-    elsif ( $file =~ /.*\/(\w*)\.dcd/ ) {
+    elsif ( $file =~ /(.*)\/(\w*)\.dcd/ ) {
 
         if ( $^O eq 'linux' ) {
 
             $dcd_file = abs_path ( $file );
-            $dcd_name = $1;
+            $dcd_loc = $1;
+            $dcd_name = $2;
         }
         else {
 
-            $dcd_name = $1;
+			$dcd_loc = $1;
+            $dcd_name = $2;
             $file =~ s/\//\\/g;
+			$dcd_loc =~ s/\//\\/g;
             $dcd_file = $file;
         }
-        our $have_dcd = 1;
+        $have_dcd = 1;
     }
     # If the file selected is not a psf or #
     # a dcd, then display a window with a  #
@@ -750,7 +751,7 @@ sub open_file {
                           -> pack( -side => 'right', );
     }
 
-    if ( our $have_psf && our $have_dcd ) {
+    if ( $have_psf && $have_dcd ) {
 
         &parser;
 
@@ -771,10 +772,8 @@ sub carma {
     # spaces in the $flag scalar with a    #
     # single space                         #
 
-    our $all_done = 0;
-    our $flag =~ s/[\s]\s+/ /g;
-
-    our $dcd_count;
+    $all_done = 0;
+    $flag =~ s/[\s]\s+/ /g;
 
     if ( $^O ne 'linux' ) {
 
@@ -799,14 +798,14 @@ sub carma {
             # .dcd file                            #
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
-                `carma.exe $flag \"selected_residues.psf\" \"carma_fitted_$dcd_count.dcd\" > carma.out.copy`;
+                `carma.exe $flag selected_residues.psf carma_fitted_$dcd_count.dcd > carma.out.copy`;
             }
 
             # otherwise run it with the same .psf  #
             # and the original .dcd                #
             else {
 
-                `carma.exe $flag \"selected_residues.psf\" \"$dcd_name.dcd\" > carma.out.copy`;
+                `carma.exe $flag selected_residues.psf $dcd_name.dcd > carma.out.copy`;
             }
         }
         # Else if none of the above contitions #
@@ -818,13 +817,13 @@ sub carma {
             # with the fitted .dcd and .psf files  #
             if ( $dcd_count >= 0 && $_[0] ne "fit" ) {
 
-                `carma.exe $flag \"carma_fitted_$dcd_count.psf\" \"carma_fitted_$dcd_count.dcd\" > carma.out.copy`;
+                `carma.exe $flag carma_fitted_$dcd_count.psf carma_fitted_$dcd_count.dcd > carma.out.copy`;
             }
             # otherwise run it with the original   #
             # .psf and .dcd files                  #
             else {
 
-                `carma.exe $flag \"psf_file.psf\" \"$dcd_name.dcd\" > carma.out.copy`;
+                `carma.exe $flag psf_file.psf $dcd_name.dcd > carma.out.copy`;
             }
         }
     }
@@ -898,7 +897,7 @@ sub parser {
 
     # Extract the number of atoms found    #
     # in the .psf file                     #
-    our $num_atoms = 0;
+    $num_atoms = 0;
     while ( <PSF_FILE> ) {
 
         if ( /(\d*)\s\!NATOM/ ) {
@@ -914,7 +913,6 @@ sub parser {
 
     my @atom_types;
     my @chain_ids;
-    our %num_residues;
 
     # Continue parsing through the .psf    #
     # file storing the various atmids and  #
@@ -968,7 +966,7 @@ sub parser {
     }
     else {
 
-        $valid_psf_dcd_pair = `carma.exe -v -fit -last 2 \"$psf_file\" \"$dcd_file\"`;
+        $valid_psf_dcd_pair = `carma.exe -v -fit -last 2 $psf_file $dcd_file`;
     }
 
     # If found create a help message or    #
@@ -994,7 +992,8 @@ sub parser {
             }
             else {
 
-                exit(1);
+				$mw -> destroy;
+				kill -9, $$ || die ( $! );
             }
         }
     }
@@ -1010,7 +1009,7 @@ sub parser {
                                 -type => 'ok',
                                 -icon => 'warning', );
             $mw -> destroy;
-            die($!);
+            kill -9, $$ || die ( $! );
         }
     }
     # If not found proceed parsing the dcd #
@@ -1019,7 +1018,7 @@ sub parser {
 
         &dcd_header_parser;
     }
-    
+
     unlink ( "carma.fit-rms.dat", "carma.fitted.dcd", );
 }
 
@@ -1074,9 +1073,10 @@ sub dcd_header_parser {
     # withdrawn                            #
     unless ( $run_from_terminal ) {
 
-        $gui -> packForget();
+        $gui -> destroy;
         $f0 -> pack( -side => 'top', -fill => 'both', -expand => 1, );
-        $f0 -> update;
+        $mw -> update;
+        $have_files = 1;
         $run_from_terminal = 0;
     }
 
@@ -1104,8 +1104,8 @@ sub raise_custom_window {
     my $x = 1;
     my $y = 1;
 
-    our $custom_id_flag = '';
-    our $custom_selection = '';
+    $custom_id_flag = '';
+    $custom_selection = '';
 
     our @custom_atom_ids;
 
@@ -1205,8 +1205,6 @@ sub rmsd_window {
     my $rmsd_max_flag = '';
     my $rmsd_reverse = '';
     my $rmsd_top;
-
-    our $rmsd_step;
 
     if ( !Exists( $rmsd_top ) ) {
 
@@ -1851,7 +1849,7 @@ sub auto_window {
 
                 {
                     local $" = '|';
-                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s*)(@selected_atoms)(\s+.*)};
+                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s+)(@selected_atoms)(\s+.*)};
                 }
 
                 open PSF, '<', $psf_file || die "Cannot open $psf_file for reading: $!";
@@ -1859,7 +1857,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-                    if ( /$regex_var/i ) {
+					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+						
+						last;
+					}
+					elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -1890,8 +1892,8 @@ sub auto_window {
 
                 {
                     local $" = '|';
-                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s*)($backbone)(\s+.*)} if ( $atm_id =~ /backbone/i );
-                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s*)(\w+)(.*)} if ( $atm_id_flag =~ /(HEAVY|ALLID)/ );
+                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)} if ( $atm_id =~ /backbone/i );
+                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s+)(\w+)(.*)} if ( $atm_id_flag =~ /(HEAVY|ALLID)/ );
                 }
 
                 open PSF, '<', $psf_file || die "Cannot open $psf_file for reading: $!";
@@ -1899,7 +1901,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-                    if ( /$regex_var/i ) {
+					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+						
+						last;
+					}
+					elsif ( /$regex_var/i ) {
 
                         my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
@@ -1910,7 +1916,7 @@ sub auto_window {
                         }
                         elsif ( $allid || $atm_id =~ /backbone/i ) {
 
-                            printf OUT ( "%6d%s%s%s%s%s\n", $line_count, $2, $3, $4, $5, $6, );
+                            printf OUT ( "%s\n", $line, );
                             $line_count++;
                         }
                     }
@@ -1938,7 +1944,7 @@ sub auto_window {
 
                 {
                     local $" = '|';
-                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s*)($backbone)(\s+.*)};
+                    $regex_var = qr{^(\s*)\d+(\s*)(@chains)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)};
                 }
 
                 open PSF, '<', $psf_file || die "Cannot open $psf_file for reading: $!";
@@ -1946,7 +1952,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-                    if ( /$regex_var/i ) {
+					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+						
+						last;
+					}
+					elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -1978,7 +1988,7 @@ sub auto_window {
 
                 {
                     local $" = '|';
-                    $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s*)(@selected_atoms)(\s+.*)};
+                    $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s+)(@selected_atoms)(\s+.*)};
                 }
 
                 open PSF, '<', "selected_residues.psf" || die "Cannot open selected_residues.psf for reading: $!";
@@ -1986,7 +1996,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-                    if ( /$regex_var/i ) {
+					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+						
+						last;
+					}
+					elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count\n";
                         $line_count++;
@@ -1996,7 +2010,7 @@ sub auto_window {
                 close PSF;
                 close OUT;
 
-                $flag = " -v -w -fit -atmid ALLID -index $seg_id_flag selected_residues.psf carma.cluster_0$i.dcd";
+                $flag = " -v -w -fit -atmid ALLID -index selected_residues.psf carma.cluster_0$i.dcd";
                 &carma ( 'auto' );
 
                 if ( $all_done ) {
@@ -2015,35 +2029,39 @@ sub auto_window {
                 my $line_count = 1;
                 my $regex_var = '';
 
-                $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s*)($backbone)(\s+.*)} if ( $atm_id =~ /backbone/i );
-                $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s*)(\w*)(.*)} if ( $atm_id_flag =~ /(HEAVY|ALLID)/ );
+                $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)} if ( $atm_id =~ /backbone/i );
+                $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s+)(\w*)(.*)} if ( $atm_id_flag =~ /(HEAVY|ALLID)/ );
 
                 open PSF, '<', "selected_residues.psf" || die "Cannot open selected_residues.psf for reading: $!";
                 open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!\n";
 
                 while ( <PSF> ) {
 
-                    if ( /$regex_var/i ) {
+					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+						
+						last;
+					}
+					elsif ( /$regex_var/i ) {
 
-                        my $line = $line_count . $2 . $3 . $4 . $5 . $6;
+						my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
-                        if ( $heavy && $5 !~ /^H/ ) {
+						if ( $heavy && $5 !~ /^H/ ) {
 
-                            print OUT "$line\n";
-                            $line_count++;
-                        }
-                        elsif ( $allid || $atm_id =~ /backbone/i ) {
+							print OUT "$line\n";
+							$line_count++;
+						}
+						elsif ( $allid || $atm_id =~ /backbone/i ) {
 
-                            printf OUT ( "%6d%s%s%s%s%s\n", $line_count, $2, $3, $4, $5, $6, );
-                            $line_count++;
-                        }
-                    }
+							printf OUT ( "%s\n", $line, );
+							$line_count++;
+						}
+					}
                 }
 
                 close OUT;
                 close PSF;
 
-                $flag = " -v -w -fit -index -atmid ALLID $res_id_flag selected_residues.psf carma.cluster_0$i.dcd";
+                $flag = " -v -w -fit -index -atmid ALLID selected_residues.psf carma.cluster_0$i.dcd";
                 &carma ( 'auto' );
 
                 if ( $all_done ) {
@@ -2060,14 +2078,18 @@ sub auto_window {
                 my $line_count = 1;
                 my $regex_var = '';
 
-                $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s*)($backbone)(\s+.*)};
+                $regex_var = qr{^(\s*)\d+(\s*)(Z)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)};
 
                 open PSF, '<', "selected_residues.psf" || die "Cannot open selected_residues.psf for reading: $!";
                 open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
 
                 while ( <PSF> ) {
 
-                    if ( /$regex_var/i ) {
+					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+						
+						last;
+					}
+					elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -2077,7 +2099,7 @@ sub auto_window {
                 close OUT;
                 close PSF;
 
-                $flag = " -v -w -fit -index -atmid ALLID $res_id_flag selected_residues.psf carma.cluster_0$i.dcd";
+                $flag = " -v -w -fit -index -atmid ALLID selected_residues.psf carma.cluster_0$i.dcd";
                 &carma ( 'auto' );
 
                 if ( $all_done ) {
@@ -2105,7 +2127,11 @@ sub auto_window {
 
             while ( <PSF> ) {
 
-                if ( /$regex_var/i ) {
+				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+					
+					last;
+				}
+                elsif ( /$regex_var/i ) {
 
                     print OUT "$1$line_count$2$3$4$5$6\n";
                     $line_count++;
@@ -2134,30 +2160,32 @@ sub auto_window {
             my $line_count = 1;
             my $regex_var = '';
 
-            $regex_var = qr{^(\s*)\d+(\s*)(\w+)(\s*\d+\s*\w+\s*)($backbone)(\s+.*)} if ( $atm_id =~ /BACKBONE/i );
-            $regex_var = qr{^(\s*)\d+(\s*\w+\s*\d+\s*\w+\s*)(\w+)(.*)} if ( $atm_id_flag =~ /(HEAVY|ALLID)/ );
-            
-print "lalala" if ( $atm_id =~ /BACKBONE/i );
+            $regex_var = qr{^(\s*)\d+(\s*)(\w+)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)} if ( $atm_id =~ /BACKBONE/i );
+            $regex_var = qr{^(\s*)\d+(\s*\w+)(\s*\d+)(\s*\w+\s+)(\w+)(.*)} if ( $atm_id_flag =~ /(HEAVY|ALLID)/ );
 
             open PSF, '<', $psf_file || die "Cannot open $psf_file for reading: $!";
             open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
 
             while ( <PSF> ) {
+				
+				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+					
+					last;
+				}
+                elsif ( /$regex_var/i ) {
+					
+					my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
-                if ( /$regex_var/i ) {
+					if ( $heavy && $5 !~ /^H/ ) {
 
-                    my $line = $line_count . $2 . $3 . $4 . $5 . $6;
+						print OUT "$line\n";
+						$line_count++;
+					}
+					elsif ( $allid || $atm_id =~ /BACKBONE/i ) {
 
-                    if ( $heavy && $3 !~ /^H/ ) {
-
-                        print OUT "$line\n";
-                        $line_count++;
-                    }
-                    elsif ( $allid || $atm_id =~ /BACKBONE/i ) {
-
-                        print OUT "$line\n";
-                        $line_count++;
-                    }
+						print OUT "$line\n";
+						$line_count++;
+					}
                 }
             }
 
@@ -2181,14 +2209,18 @@ print "lalala" if ( $atm_id =~ /BACKBONE/i );
             my $line_count = 1;
             my $regex_var = '';
 
-            $regex_var = qr{^(\s*)\d+(\s*)(\w+)(\s*\d+\s*\w+\s*)($backbone)(\s+.*)};
+            $regex_var = qr{^(\s*)\d+(\s*)(\w+)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)};
 
             open PSF, '<', $psf_file || die "Cannot open $psf_file for reading: $!";
             open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
 
             while ( <PSF> ) {
 
-                if ( /$regex_var/i ) {
+				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+					
+					last;
+				}
+                elsif ( /$regex_var/i ) {
 
                     print OUT "$1$line_count$2$3$4$5$6\n";
                     $line_count++;
@@ -2214,76 +2246,74 @@ print "lalala" if ( $atm_id =~ /BACKBONE/i );
             $text -> see( 'end', );
             $mw -> update;
 
-            if ( $^O eq 'linux' ) {
+            mv ( "carma.fitted.dcd", "carma.fitted.cluster_0$i.dcd" );
+            
+            if ( $seg_custom || $seg_atm ) {
 
-                `mv carma.fitted.dcd carma.fitted.cluster_0$i.dcd`;
+                $flag = " -v -w -col -cov -dot -norm -super $seg_id_flag $custom_id_flag $atm_id_flag carma.fitted.cluster_0$i.dcd $psf_file";
+                &carma ( 'auto' );
+
+                $text -> insert( 'end', "\nThe fitting was performed for the selected atom types of the selected chains", 'info', );
+                $seg_custom = 0;
+                $seg_atm = 0;
             }
-            else {
+            elsif ( $seg ) {
 
-                `move carma.fitted.dcd carma.fitted.cluster_0$i.dcd`;
+                $flag = " -v -w -col -cov -dot -norm -super $seg_id_flag -atmid CA -atmid C -atmid N -atmid O carma.fitted.cluster_0$i.dcd $psf_file";
+                &carma ( 'auto' );
+
+                $text -> insert( 'end', "\nThe fitting was performed for the backbone atoms of the selected chains", 'info', );
+                $seg = 0;
             }
+            elsif ( $res_custom || $res_atm ) {
 
-            $flag = " -v -w -col -cov -dot -norm -super carma.fitted.cluster_0$i.dcd $psf_file";
-            #~ $flag = " -v -w -col -cov -dot -norm -super carma.fitted.cluster_0$i.dcd selected_residues.psf" if ( $res_id_flag );
-            &carma ( 'auto' );
+                $flag = " -v -w -col -cov -dot -norm -super -segid Z $custom_id_flag $atm_id_flag carma.fitted.cluster_0$i.dcd selected_residues.psf";
+                &carma ( 'auto' );
+
+                $text -> insert( 'end', "\nThe fitting was performed for the selected atom types of the selected residues", 'info', );
+                $res_custom = 0;
+                $res_atm = 0;
+            }
+            elsif ( $res ) {
+
+                $flag = " -v -w -col -cov -dot -norm -super -segid Z -atmid CA -atmid C -atmid N -atmid O carma.fitted.cluster_0$i.dcd selected_residues.psf";
+                &carma ( 'auto' );
+
+                $text -> insert( 'end', "\nThe fitting was performed for the backbone atoms of the selected residues", 'info', );
+                $res = 0;
+            }
+            elsif ( $custom || $atm ) {
+
+                $flag = " -v -w -col -cov -dot -norm -super $custom_id_flag $atm_id_flag carma.fitted.cluster_0$i.dcd $psf_file";
+                &carma ( 'auto' );
+
+                $text -> insert( 'end', "\nThe fitting was performed for the selected atom types", 'info', );
+                $custom = 0;
+                $atm = 0;
+            }
+            elsif ( $nothing ) {
+
+                $flag = " -v -w -col -cov -dot -norm -super -atmid C -atmid CA -atmid N -atmid O carma.fitted.cluster_0$i.dcd $psf_file";
+                &carma ( 'auto' );
+
+                $text -> insert( 'end', "\nThe fitting was performed for backbone atoms", 'info', );
+                $nothing = 0;
+            }
 
             if ( $all_done ) {
+                
+                mv ( "carma.superposition.pdb", "superposition.cluster_0$i.pdb" );
+                mv ( "carma.average.pdb", "average.cluster_0$i.pdb" );
 
-                $super_check = 1;
-
-                if ( $^O eq 'linux' ) {
-
-                    `mv carma.superposition.pdb superposition.cluster_0$i.pdb`;
-                    `mv carma.average.pdb average.cluster_0$i.pdb`;
-                }
-                else {
-
-                    `move carma.superposition.pdb superposition.cluster_0$i.pdb`;
-                    `move carma.average.pdb average.cluster_0$i.pdb`;
-                }
-
-                if ( $seg_custom || $seg_atm ) {
-
-                    $text -> insert( 'end', "\nThe fitting was performed for the selected atom types of the selected chains", 'info', );
-                    $seg_custom = 0;
-                    $seg_atm = 0;
-                }
-                elsif ( $seg ) {
-
-                    $text -> insert( 'end', "\nThe fitting was performed for the backbone atoms of the selected chains", 'info', );
-                    $seg = 0;
-                }
-                elsif ( $res_custom || $res_atm ) {
-
-                    $text -> insert( 'end', "\nThe fitting was performed for the selected atom types of the selected residues", 'info', );
-                    $res_custom = 0;
-                    $res_atm = 0;
-                }
-                elsif ( $res ) {
-
-                    $text -> insert( 'end', "\nThe fitting was performed for the backbone atoms of the selected residues", 'info', );
-                    $res = 0;
-                }
-                elsif ( $custom || $atm ) {
-
-                    $text -> insert( 'end', "\nThe fitting was performed for the selected atom types", 'info', );
-                    $custom = 0;
-                    $atm = 0;
-                }
-                elsif ( $nothing ) {
-
-                    $text -> insert( 'end', "\nThe fitting was performed for backbone atoms", 'info', );
-                    $nothing = 0;
-                }
+                $text -> insert( 'end', "\nPerformed superposition of $clusters dcd files\n", 'info', ) if ( $all_done );
+                $fit_check = 0;
+				$super_check = 1;
             }
             else {
 
                 $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
                 $text -> insert( 'end', getcwd . "\n", 'info', );
             }
-
-            $text -> insert( 'end', "\nPerformed superposition of $clusters dcd files\n", 'info', ) if ( $all_done );
-            $fit_check = 0;
         }
         else {
 
@@ -4703,16 +4733,9 @@ sub fit_index_window {
                         $dcd_count++;
                         $active_dcd_label -> configure( -text => "Active .dcd: carma_fitted_$dcd_count.dcd", );
                         $active_psf_label -> configure( -text => "Active .psf: carma_fitted_$dcd_count.psf", );
-                        if ( $^O eq 'linux' ) {
 
-                            `mv carma.fitted.dcd carma_fitted_$dcd_count.dcd`;
-                            `mv carma.selected_atoms.psf carma_fitted_$dcd_count.psf`;
-                        }
-                        else {
-
-                            `move carma.fitted.dcd carma_fitted_$dcd_count.dcd`;
-                            `move carma.selected_atoms.psf carma_fitted_$dcd_count.psf`;
-                        }
+                        mv ( "carma.fitted.dcd", "carma_fitted_$dcd_count.dcd" );
+                        mv ( "carma.selected_atoms.psf", "carma_fitted_$dcd_count.psf" );
 
                         $top_fit_index -> withdraw;
                     }
@@ -4757,35 +4780,50 @@ sub create_dir {
         return(0);
     }
     # If the folder does not exist in the  #
-    # CWD it is created and a subfolder    #
+    # Cwd it is created and a subfolder    #
     # with the current time as it's name   #
     # will be created as well. This folder #
     # will serve as the storing point for  #
     # every grcarma session                #
     # If the folder exists then only the   #
     # subfolder of every session is made   #
-    else {
 
-        mkpath ( "carma_results/$timeStamp", 0, 0755, );
-        chdir ( "carma_results/$timeStamp" );
-    }
+	if ( -w $dcd_loc ) {
+		
+		mkpath ( "$dcd_loc/$timeStamp", 0, 0755, );
+		chdir ( "$dcd_loc/$timeStamp" );
 
-    # After the folder(s) have been made   #
-    # they are made the CWD and link to    #
-    # specified .psf and .dcd files are    #
-    # created                              #
-    if ( $^O eq 'linux' ) {
+		# After the folder(s) have been made   #
+		# they are made the Cwd and links to   #
+		# specified .psf and .dcd files are    #
+		# created                              #
+		if ( $^O eq 'linux' ) {
 
-        `ln -s $psf_file .`;
-        `ln -s $dcd_file .`;
-    }
-    else {
+			`ln -s $psf_file .`;
+			`ln -s $dcd_file .`;
+		}
+		else {
 
-        link ( $psf_file, "psf_file.psf", );
-        link ( $dcd_file, "$dcd_name.dcd", );
+			link ( $psf_file, "$dcd_name.psf", );
+			link ( $dcd_file, "$dcd_name.dcd", );
 
-        `copy ..\\..\\carma.exe .`;
-    }
+			`copy ..\\..\\carma.exe .`;
+		}
+	}
+	else {
+		
+		if ( $run_from_terminal ) {
+			
+			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
+		}
+		else {
+			
+			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
+							   -type => 'ok',
+							   -icon => 'warning', );
+			$mw -> destroy;
+		}
+	}
 }
 
 ###################################################################################################
