@@ -445,10 +445,10 @@ my $fitting_menu = $f1 -> Button( -text => 'Fit',
 
 # ... the index fitting menu           #
 my $fit_index_menu = $f1 -> Button( -text => 'Selective Fit',
-									-command => \&fit_index_window,
-									-width => 20, )
-									->pack( -side => 'top',
-											-anchor => 'center' );
+                                    -command => \&fit_index_window,
+                                    -width => 20, )
+                                    ->pack( -side => 'top',
+                                            -anchor => 'center' );
 
 # ... the pdb menu                    #
 my $pdb_menu = $f1 -> Button( -text => 'Extract PDB',
@@ -510,7 +510,7 @@ $f1 -> Label( -text => "\n", ) -> pack( -side => 'top', );
 
 # ... the image menu                   #
 our $image_menu = $f1 -> Button( -text => 'View Images',
-								 -command => [ \&image_window ],
+                                 -command => [ \&image_window ],
                                  -width => 20,
                                  -state => 'disabled', )
                                  ->pack( -side => 'top',
@@ -628,7 +628,7 @@ $text -> insert( 'end', "\nSELECT A TASK FROM THE LEFT PANEL\n" );
 # on top of the first one immediately  #
 # after the fifth frame is drawn       #
 my $f6 = $f0 -> Frame() -> pack( -after => $f1,
-								 -side => 'bottom',
+                                 -side => 'bottom',
                                  -fill => 'x',
                                  -expand => 1, );
 
@@ -636,9 +636,9 @@ my $f6 = $f0 -> Frame() -> pack( -after => $f1,
 # active .psf & .dcd files and update  #
 # the mainwindow to include them       #
 our $active_psf_label = $f6 -> Label( -text => "Active .psf: $psf_file", )
-									  -> pack( -side => 'left', );
+                                      -> pack( -side => 'left', );
 our $active_dcd_label = $f6 -> Label( -text => "Active .dcd: $dcd_file", )
-									  -> pack( -side => 'right', );
+                                      -> pack( -side => 'right', );
 
 $f0 -> pack( -side => 'top', -fill => 'x', -expand => 1, );
 $mw -> update();
@@ -744,10 +744,10 @@ sub open_file {
         }
         else {
 
-			$dcd_loc = $1;
+            $dcd_loc = $1;
             $dcd_name = $2;
             $file =~ s/\//\\/g;
-			$dcd_loc =~ s/\//\\/g;
+            $dcd_loc =~ s/\//\\/g;
             $dcd_file = $file;
         }
         $have_dcd = 1;
@@ -1006,8 +1006,8 @@ sub parser {
             }
             else {
 
-				$mw -> destroy;
-				kill -9, $$ || die ( $! );
+                $mw -> destroy;
+                kill -9, $$ || die ( $! );
             }
         }
     }
@@ -2019,11 +2019,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -2063,11 +2063,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
@@ -2114,11 +2114,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -2158,11 +2158,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count\n";
                         $line_count++;
@@ -2199,25 +2199,25 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
-						my $line = $line_count . $2 . $3 . $4 . $5 . $6;
+                        my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
-						if ( $heavy && $5 !~ /^H/ ) {
+                        if ( $heavy && $5 !~ /^H/ ) {
 
-							print OUT "$line\n";
-							$line_count++;
-						}
-						elsif ( $allid || $atm_id =~ /backbone/i ) {
+                            print OUT "$line\n";
+                            $line_count++;
+                        }
+                        elsif ( $allid || $atm_id =~ /backbone/i ) {
 
-							printf OUT ( "%s\n", $line, );
-							$line_count++;
-						}
-					}
+                            printf OUT ( "%s\n", $line, );
+                            $line_count++;
+                        }
+                    }
                 }
 
                 close OUT;
@@ -2247,11 +2247,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -2289,10 +2289,10 @@ sub auto_window {
 
             while ( <PSF> ) {
 
-				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-					
-					last;
-				}
+                if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                    
+                    last;
+                }
                 elsif ( /$regex_var/i ) {
 
                     print OUT "$1$line_count$2$3$4$5$6\n";
@@ -2329,25 +2329,25 @@ sub auto_window {
             open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
 
             while ( <PSF> ) {
-				
-				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-					
-					last;
-				}
+                
+                if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                    
+                    last;
+                }
                 elsif ( /$regex_var/i ) {
-					
-					my $line = $line_count . $2 . $3 . $4 . $5 . $6;
+                    
+                    my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
-					if ( $heavy && $5 !~ /^H/ ) {
+                    if ( $heavy && $5 !~ /^H/ ) {
 
-						print OUT "$line\n";
-						$line_count++;
-					}
-					elsif ( $allid || $atm_id =~ /BACKBONE/i ) {
+                        print OUT "$line\n";
+                        $line_count++;
+                    }
+                    elsif ( $allid || $atm_id =~ /BACKBONE/i ) {
 
-						print OUT "$line\n";
-						$line_count++;
-					}
+                        print OUT "$line\n";
+                        $line_count++;
+                    }
                 }
             }
 
@@ -2378,10 +2378,10 @@ sub auto_window {
 
             while ( <PSF> ) {
 
-				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-					
-					last;
-				}
+                if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                    
+                    last;
+                }
                 elsif ( /$regex_var/i ) {
 
                     print OUT "$1$line_count$2$3$4$5$6\n";
@@ -2469,7 +2469,7 @@ sub auto_window {
 
                 $text -> insert( 'end', "\nPerformed superposition of $clusters dcd files\n", 'info', ) if ( $all_done );
                 $fit_check = 0;
-				$super_check = 1;
+                $super_check = 1;
             }
             else {
 
@@ -4950,42 +4950,42 @@ sub create_dir {
     # If the folder exists then only the   #
     # subfolder of every session is made   #
 
-	if ( -w $dcd_loc ) {
-		
-		mkpath ( "$dcd_loc/$timeStamp", 0, 0755, );
-		chdir ( "$dcd_loc/$timeStamp" );
+    if ( -w $dcd_loc ) {
+        
+        mkpath ( "$dcd_loc/$timeStamp", 0, 0755, );
+        chdir ( "$dcd_loc/$timeStamp" );
 
-		# After the folder(s) have been made   #
-		# they are made the Cwd and links to   #
-		# specified .psf and .dcd files are    #
-		# created                              #
-		if ( $^O eq 'linux' ) {
+        # After the folder(s) have been made   #
+        # they are made the Cwd and links to   #
+        # specified .psf and .dcd files are    #
+        # created                              #
+        if ( $^O eq 'linux' ) {
 
-			`ln -s $psf_file .`;
-			`ln -s $dcd_file .`;
-		}
-		else {
+            `ln -s $psf_file .`;
+            `ln -s $dcd_file .`;
+        }
+        else {
 
-			link ( $psf_file, "$dcd_name.psf", );
-			link ( $dcd_file, "$dcd_name.dcd", );
+            link ( $psf_file, "$dcd_name.psf", );
+            link ( $dcd_file, "$dcd_name.dcd", );
 
-			`copy ..\\..\\carma.exe .`;
-		}
-	}
-	else {
-		
-		if ( $run_from_terminal ) {
-			
-			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
-		}
-		else {
-			
-			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
-							   -type => 'ok',
-							   -icon => 'warning', );
-			$mw -> destroy;
-		}
-	}
+            `copy ..\\..\\carma.exe .`;
+        }
+    }
+    else {
+        
+        if ( $run_from_terminal ) {
+            
+            die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
+        }
+        else {
+            
+            $mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
+                               -type => 'ok',
+                               -icon => 'warning', );
+            $mw -> destroy;
+        }
+    }
 }
 
 ###################################################################################################
