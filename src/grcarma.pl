@@ -86,7 +86,10 @@ require Tk::BrowseEntry;
 # Import the following modules         #
 
 use Cwd;
+<<<<<<< HEAD
 use Cwd 'abs_path';
+=======
+>>>>>>> 82bfaafe7a20c626ce3f9466ad8d353dd30cf399
 use File::Path 'mkpath';
 use File::Copy 'cp', 'mv';
 use List::MoreUtils qw { uniq };
@@ -110,6 +113,10 @@ our $psf_button = '';
 our $dcd_button = '';
 our $have_psf = 0;
 our $have_dcd = 0;
+<<<<<<< HEAD
+=======
+our $dcd_loc = '';
+>>>>>>> 82bfaafe7a20c626ce3f9466ad8d353dd30cf399
 our $have_files = '';
 our $filetypes = '';
 our $have_custom_psf = '';
@@ -4814,11 +4821,19 @@ sub create_dir {
 		
 		if ( $run_from_terminal ) {
 			
+<<<<<<< HEAD
 			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
 		}
 		else {
 			
 			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
+=======
+			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in. Goodbye\n\n";
+		}
+		else {
+			
+			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in. Goodbye\n\n",
+>>>>>>> 82bfaafe7a20c626ce3f9466ad8d353dd30cf399
 							   -type => 'ok',
 							   -icon => 'warning', );
 			$mw -> destroy;

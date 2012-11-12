@@ -1,0 +1,14 @@
+
+The executable provided in this directory was cross-compiled
+on a GNU/Linux machine using wingw32 and it has been tested 
+under windows XP. The executable was produced with something
+like
+
+gcc -DWINDOWS -Wall -pedantic -O carma.c -lm
+
+and it uses numerical recipes' eigen-routines. 
+
+The easiest (only ?) way to use the program on windows is
+via the MS-DOS prompt. Needless to say that this executable
+does not have graphics support.
+
