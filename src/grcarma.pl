@@ -80,16 +80,14 @@ use warnings;
 
 use Tk;
 use Tk::MsgBox;
+use Tk::Chart::Lines;
 
 require Tk::BrowseEntry;
 
 # Import the following modules         #
 
 use Cwd;
-<<<<<<< HEAD
 use Cwd 'abs_path';
-=======
->>>>>>> 82bfaafe7a20c626ce3f9466ad8d353dd30cf399
 use File::Path 'mkpath';
 use File::Copy 'cp', 'mv';
 use List::MoreUtils qw { uniq };
@@ -113,10 +111,6 @@ our $psf_button = '';
 our $dcd_button = '';
 our $have_psf = 0;
 our $have_dcd = 0;
-<<<<<<< HEAD
-=======
-our $dcd_loc = '';
->>>>>>> 82bfaafe7a20c626ce3f9466ad8d353dd30cf399
 our $have_files = '';
 our $filetypes = '';
 our $have_custom_psf = '';
@@ -240,6 +234,7 @@ my $run_from_terminal = 0;
 my $psf_file = '';
 my $dcd_file = '';
 my $dcd_name = '';
+my $psf_name = '';
 my $dcd_loc = '';
 
 if ( @ARGV ) {
@@ -250,19 +245,33 @@ if ( @ARGV ) {
         # first store each of them in a file   #
         # and store the name of the .dcd file  #
         # in a variable                        #
-        if ( $ARGV[0] =~ /\w*\.psf/ && ( $ARGV[1] =~ /(\w*)\/(\w*\.dcd)/ || $ARGV[1] =~ /(\w*)\\(\w*\.dcd)/ ) ) {
+        if ( $ARGV[0] =~ /.*\.psf/ && $ARGV[1] =~ /.*\.dcd/ ) {
 
             $psf_file = abs_path( $ARGV[0] );
             $dcd_file = abs_path( $ARGV[1] );
-            $dcd_loc = $1;print $dcd_loc;
-            $dcd_name = $2;
+            if ( $dcd_file =~ /(.*)(\/|\\)(\w*)\.dcd/ ) {
+                
+                $dcd_loc = $1;
+                $dcd_name = $3;
+            }
+            if ( $psf_file =~ /(.*)(\/|\\)(\w*)\.psf/ ) {
+                
+                $psf_name = $3;
+            }
         }
-        elsif ( $ARGV[1] =~ /\w*\.psf/ && ( $ARGV[0] =~ /(\w*)\/(\w*\.dcd)/ || $ARGV[0] =~ /(\w*)\\(\w*\.dcd)/ ) ) {
+        elsif ( $ARGV[1] =~ /.*\.psf/ && $ARGV[0] =~ /.*\.dcd/ ) {
 
             $psf_file = abs_path( $ARGV[1] );
             $dcd_file = abs_path( $ARGV[0] );
-            $dcd_loc = $1;print $dcd_loc;
-            $dcd_name = $2;
+            if ( $dcd_file =~ /(.*)(\/|\\)(\w*)\.dcd/ ) {
+                
+                $dcd_loc = $1;
+                $dcd_name = $3;
+            }
+            if ( $psf_file =~ /(.*)(\/|\\)(\w*)\.psf/ ) {
+                
+                $psf_name = $3;
+            }
         }
         # or terminate with a help message     #
         else {
@@ -379,142 +388,129 @@ $file -> command( -label => "Exit",
 ###   Menubutton Frame                                                                          ###
 ###################################################################################################
 
+my $font_12 = qw/-*-helvetica-bold-r-*-*-*-120-*-*-*-*-*-*/;
+my $font_20 = qw/-*-helvetica-bold-r-*-*-*-200-*-*-*-*-*-*/;
+
 # Draw the second frame ( menubuttons) #
 # on top of the first one              #
-my $f1 = $f0 -> Frame ( -borderwidth => 3,
-                        -relief => 'groove',)
-                        -> pack ( -side => 'left',
-                                  -expand => 1,
-                                  -fill => 'both',);
+my $f1 = $f0 -> Frame ( qw/ -relief raised -borderwidth 1/ ) -> pack ( qw/ -side left -expand 1 -fill both/ );
 
 #Draw the button for the rmsd menu...  #
 my $rmsd_menu = $f1 -> Button( -text => 'RMSD Matrix',
-                               -command => \&rmsd_window,
-                               -width => 20, )
-                               ->pack( -side => 'top',
-                                       -anchor => 'center' );
+                                 -command => \&rmsd_window,
+                                 -width => 24,
+                                 -font => "$font_12", ) -> pack;
+                                       
+#Draw the button for the qfract menu...#
+my $qfract_menu = $f1 -> Button( -text => 'Qfract',
+                                   -command => \&qfract_window,
+                                   -width => 24,
+                                   -font => "$font_12", ) -> pack;
 
 # ... the dpca menu                    #
 my $dpca_menu = $f1 -> Button( -text => 'Dihedral PCA',
-                               -command => \&dpca_window,
-                               -width => 20, )
-                               ->pack( -side => 'top',
-                                       -anchor => 'center' );
+                                 -command => \&dpca_window,
+                                 -width => 24,
+                                 -font => "$font_12", ) -> pack;
 
 # ... the cpca menu                    #
 my $cpca_menu = $f1 -> Button( -text => 'Cartesian PCA',
-                               -command => \&cpca_window,
-                               -width => 20, )
-                               ->pack( -side => 'top',
-                                       -anchor => 'center' );
+                                 -command => \&cpca_window,
+                                 -width => 24,
+                                 -font => "$font_12", ) -> pack;
 
 # ... the eigen calculations menu      #
 my $eigen_menu = $f1 -> Button( -text => 'Eigen calculations',
-                                -command => \&eigen_window,
-                                -width => 20, )
-                                ->pack( -side => 'top',
-                                       -anchor => 'center' );
+                                  -command => \&eigen_window,
+                                  -width => 24,
+                                  -font => "$font_12", ) -> pack;
 
 # ... the var_covar matrix menu        #
 my $varcov_menu = $f1 -> Button( -text => 'VarCov matrix',
-                                 -command => \&varcov_window,
-                                 -width => 20, )
-                                 ->pack( -side => 'top',
-                                         -anchor => 'center' );
+                                   -command => \&varcov_window,
+                                   -width => 24,
+                                   -font => "$font_12", ) -> pack;
 
 # ... the entropy menu                 #
 my $entropy_menu = $f1 -> Button( -text => 'Solute entropy calculation',
-                                  -command => \&entropy_window,
-                                  -width => 20, )
-                                  ->pack( -side => 'top',
-                                          -anchor => 'center' );
+                                    -command => \&entropy_window,
+                                    -width => 24,
+                                    -font => "$font_12", ) -> pack;
 
 # ... the fitting menu                 #
 my $fitting_menu = $f1 -> Button( -text => 'Fit',
-                                  -command => \&fit_window,
-                                  -width => 20, )
-                                  ->pack( -side => 'top',
-                                          -anchor => 'center' );
+                                    -command => \&fit_window,
+                                    -width => 24,
+                                    -font => "$font_12", ) -> pack;
 
 # ... the index fitting menu           #
 my $fit_index_menu = $f1 -> Button( -text => 'Selective Fit',
-									-command => \&fit_index_window,
-									-width => 20, )
-									->pack( -side => 'top',
-											-anchor => 'center' );
+                                    -command => \&fit_index_window,
+                                    -width => 24,
+                                    -font => "$font_12", ) -> pack;
 
 # ... the pdb menu                    #
 my $pdb_menu = $f1 -> Button( -text => 'Extract PDB',
                               -command => \&pdb_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 # ... the average distances menu      #
 my $rms_menu = $f1 -> Button( -text => 'Ca - Ca distances',
                               -command => \&rms_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 # ... the gyration menu               #
 my $rgr_menu = $f1 -> Button( -text => 'Radius of gyration',
                               -command => \&rgr_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 # ... the distances menu              #
 my $dis_menu = $f1 -> Button( -text => 'Distances',
                               -command => \&dis_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 # ... the bending angles menu         #
 my $ang_menu = $f1 -> Button( -text => 'Bending Angles',
                               -command => \&bnd_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 # ... the torsion angles menu         #
 my $tor_menu = $f1 -> Button( -text => 'Torsion Angles',
                               -command => \&tor_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 # ... the map menu                    #
 my $map_menu = $f1 -> Button( -text => 'Map ion & water',
                               -command => \&map_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 # ... the surface area menu           #
 my $sur_menu = $f1 -> Button( -text => 'Surface area',
                               -command => \&sur_window,
-                              -width => 20, )
-                              ->pack( -side => 'top',
-                                      -anchor => 'center' );
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
 
 $f1 -> Label( -text => "\n", ) -> pack( -side => 'top', );
 
 # ... the image menu                   #
 our $image_menu = $f1 -> Button( -text => 'View Images',
-								 -command => [ \&image_window ],
-                                 -width => 20,
-                                 -state => 'disabled', )
-                                 ->pack( -side => 'top',
-                                        -anchor => 'center' );
+                                 -command => [ \&image_window ],
+                                 -width => 24,
+                                 -font => "$font_12",
+                                 -state => 'disabled', ) -> pack;
 
 # and the exit menu                    #
 my $exit_menu = $f1 -> Button( -text => 'EXIT',
-                               -width => 20,
-                               -command => \&exit, )
-                               -> pack( -side => 'top',
-                                        -anchor => 'center', );
+                               -width => 24,
+                               -command => \&exit,
+                               -font => "$font_12", ) -> pack;
 
 ###################################################################################################
 ###   Atmid Frame                                                                               ###
@@ -522,11 +518,7 @@ my $exit_menu = $f1 -> Button( -text => 'EXIT',
 
 # Draw the third frame (atmids) on top #
 # of the first                         #
-my $f2 = $f0 -> Frame( -borderwidth => 3,
-                       -relief => 'groove',)
-                       ->pack( -side => 'top',
-                               -expand => 1,
-                               -fill => 'both',);
+my $f2 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( -expand => 1, -fill => 'both',);
 # Invoke the radiobuttons subroutine   #
 &radiobuttons ( $f2 );
 
@@ -536,11 +528,7 @@ my $f2 = $f0 -> Frame( -borderwidth => 3,
 
 # Draw the fourth frame(segids) on top #
 # of the first                         #
-my $f3 = $f0 -> Frame( -borderwidth => 3,
-                       -relief => 'groove',)
-                       ->pack( -side => 'top',
-                               -expand => 1,
-                               -fill => 'both',);
+my $f3 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( -expand => 1, -fill => 'both',);
 # Invoke the checkbuttons subroutine   #
 &checkbuttons ( $f3 );
 
@@ -550,11 +538,7 @@ my $f3 = $f0 -> Frame( -borderwidth => 3,
 
 # Draw the fifth frame (resids) on top #
 # of the first                         #
-my $f4 = $f0 -> Frame( -borderwidth => 3,
-                       -relief => 'groove',)
-                       ->pack( -side => 'top',
-                               -expand => 1,
-                               -fill => 'both',);
+my $f4 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( qw/ -expand 1 -fill both/ );
 # Invoke the otherbuttons subroutine   #
 &otherbuttons ( $f4 );
 
@@ -565,10 +549,11 @@ my $f4 = $f0 -> Frame( -borderwidth => 3,
 # Draw the sixth frame(textbox) on top #
 # of the first one and immediately     #
 # after the fifth frame is drawn       #
-my $f5 = $f0 -> Frame() -> pack( -after => $f1,
-                                 -side => 'left',
-                                 -fill => 'both',
-                                 -expand => 1, );
+my $f5 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ )
+                            -> pack( -after => $f1,
+                                     -side => 'left',
+                                     -fill => 'both',
+                                     -expand => 1, );
 
 our $text = $f5 -> Scrolled( "Text",
                          -bg => 'black',
@@ -580,7 +565,7 @@ our $text = $f5 -> Scrolled( "Text",
                          -height => 26, )
                          ->pack();
 
-$text -> configure( -height => 32, ) if ( $^O eq 'linux' );
+$text -> configure( -height => 33, ) if ( $^O eq 'linux' );
 $text -> configure( -width => 85, ) if ( $^O ne 'linux' );
 
 # Define three colored text tags       #
@@ -620,18 +605,19 @@ $text -> insert( 'end', "\nSELECT A TASK FROM THE LEFT PANEL\n" );
 # Draw the seventh frame(active files) #
 # on top of the first one immediately  #
 # after the fifth frame is drawn       #
-my $f6 = $f0 -> Frame() -> pack( -after => $f1,
-								 -side => 'bottom',
-                                 -fill => 'x',
-                                 -expand => 1, );
+my $f6 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) 
+                            -> pack( -after => $f1,
+                                     -side => 'bottom',
+                                     -fill => 'both',
+                                     -expand => 1, );
 
 # Create the labels displaying the     #
 # active .psf & .dcd files and update  #
 # the mainwindow to include them       #
-our $active_psf_label = $f6 -> Label( -text => "Active .psf: $psf_file", )
-									  -> pack( -side => 'left', );
-our $active_dcd_label = $f6 -> Label( -text => "Active .dcd: $dcd_file", )
-									  -> pack( -side => 'right', );
+our $active_psf_label = $f6 -> Label( -text => "Active .psf: $psf_name.psf", -fg => 'blue', -font => "$font_20", )
+                                      -> pack( -side => 'left', );
+our $active_dcd_label = $f6 -> Label( -text => "Active .dcd: $dcd_name.dcd", -fg => 'blue', -font => "$font_20", )
+                                      -> pack( -side => 'right', );
 
 $f0 -> pack( -side => 'top', -fill => 'x', -expand => 1, );
 $mw -> update();
@@ -642,7 +628,7 @@ $mw -> update();
 my $x_position = int ( ( $mw -> screenwidth / 2 ) - ( $mw -> width / 2 ) );
 my $y_position = int ( ( ( $mw -> screenheight - 80 ) / 2 ) - ( $mw -> height / 2 ) );
 
-my $mw_position = "+" . $x_position . "+" . $y_position;print $mw_position;
+my $mw_position = "+" . $x_position . "+" . $y_position;#print $mw_position;
 my $toplevel_position = "+" . ( $x_position + 150 ) . "+" . ( $y_position + 100 );
 
 $mw -> geometry ("$mw_position");
@@ -737,10 +723,10 @@ sub open_file {
         }
         else {
 
-			$dcd_loc = $1;
+            $dcd_loc = $1;
             $dcd_name = $2;
             $file =~ s/\//\\/g;
-			$dcd_loc =~ s/\//\\/g;
+            $dcd_loc =~ s/\//\\/g;
             $dcd_file = $file;
         }
         $have_dcd = 1;
@@ -830,7 +816,7 @@ sub carma {
             # .psf and .dcd files                  #
             else {
 
-                `carma.exe $flag psf_file.psf $dcd_name.dcd > carma.out.copy`;
+                `carma.exe $flag $dcd_name.psf $dcd_name.dcd > carma.out.copy`;
             }
         }
     }
@@ -999,8 +985,8 @@ sub parser {
             }
             else {
 
-				$mw -> destroy;
-				kill -9, $$ || die ( $! );
+                $mw -> destroy;
+                kill -9, $$ || die ( $! );
             }
         }
     }
@@ -1390,6 +1376,154 @@ sub rmsd_window {
         $rmsd_top -> raise;
     }
 
+}
+
+###################################################################################################
+###   Draw the window for the native contact calculation                                        ###
+###################################################################################################
+
+sub qfract_window {
+
+    my $qfract_cutoff = 8;
+    my $qfract_dist = 2;
+    my $qfract_plot = '';
+    my $top_qfract;
+
+    if ( !Exists ( $top_qfract ) ) {
+
+        $top_qfract = $mw -> Toplevel( -title => 'Native Contacts', );
+        $top_qfract -> geometry("$toplevel_position");
+        $top_qfract -> protocol( 'WM_DELETE_WINDOW' => sub { $top_qfract -> withdraw }, );
+
+        my $frame_qfract1 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
+        my $frame_qfract2 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
+        my $frame_qfract3 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
+
+        &radiobuttons ( $frame_qfract1 );
+        &checkbuttons ( $frame_qfract2 );
+        &otherbuttons ( $frame_qfract3 );
+
+        my $frame_qfract4 = $top_qfract -> Frame() -> pack( -fill => 'x', );
+        $frame_qfract4 -> Label( -text => 'Various Options' )
+                              -> pack( -side => 'top', );
+
+        $frame_qfract4 -> Checkbutton( -text => 'Automatically create a plot of the results file',
+                                       -variable => \$qfract_plot,
+                                       -offvalue => 0,
+                                       -onvalue => 1, )
+                                       -> pack( -side => 'top', -anchor => 'w', );
+
+        my $frame_qfract5 = $top_qfract -> Frame()-> pack( -expand => 0, );
+
+        $frame_qfract5 -> Label( -text => 'Cutoff: ', )
+                                 -> grid( -row => 1, -column => 1, );
+        $frame_qfract5 -> Entry( -textvariable => \$qfract_cutoff, )
+                                 -> grid( -row => 1, -column => 2, );
+        $frame_qfract5 -> Label( -text => 'Distance: ', )
+                                 -> grid( -row => 2, -column => 1, );
+        $frame_qfract5 -> Entry( -textvariable => \$qfract_dist, )
+                                 -> grid( -row => 2, -column => 2, );
+
+        my $frame_qfract6 = $top_qfract -> Frame() -> pack( -expand => 0, );
+
+        $frame_qfract6 -> Button( -text => 'Return',
+                               -command => [ $top_qfract => 'withdraw' ], )
+                               -> pack( -side => 'left', );
+
+        $frame_qfract6 -> Button( -text => 'Run',
+                               -command => sub {
+
+                        $top_qfract -> destroy;
+
+                        $seg_id_flag = '' if $seg_id_flag;
+
+                        foreach ( @seg_ids ) {
+
+                            if ( defined ( $_ ) ) {
+
+                                $seg_id_flag = $seg_id_flag . $_;
+                            }
+                        }
+
+                        if ( $seg_id_flag ) {
+
+                            $flag = " -v -qf $qfract_cutoff $qfract_dist $atm_id_flag $seg_id_flag $res_id_flag";
+                        }
+                        else {
+
+                            $flag = " -v -qf $qfract_cutoff $qfract_dist $atm_id_flag $res_id_flag";
+                        }
+
+                        &create_dir;
+
+                        $text -> insert( 'end', "\nNow calculating qfract. ", 'valid', );
+                        $text -> see( 'end', );
+                        $mw -> update;
+
+                        &carma;
+
+                        if ( $all_done ) {
+
+                            $text -> insert( 'end', "Calculation finished", 'valid' );
+                            $text -> see( 'end', );
+                            
+                            if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
+                                
+                                my $mw = MainWindow -> new( -title => 'Qfraction plot', );
+                                
+                                open IN, '<', "carma.Qfraction.dat" || die "Cannot open carma.Qfraction.dat for reading";
+                                
+                                my $chart = $mw -> Lines( -background => 'snow',
+                                                          -zeroaxis => 1,
+                                                          -linewidth  => 1, )
+                                                          -> pack( -fill => 'both',
+                                                                   -expand => 1, );
+
+                                my $i = 0;
+                                my ( @frames, @Q, @Qs, @q, );
+                                while ( <IN> ) {
+                                    
+                                    if ( /\s+(.*?50|.*?00)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)/ ) {
+                                        
+                                        $frames[$i] = $1;
+                                        $Q[$i] = $2;
+                                        $Qs[$i] = $3;
+                                        $q[$i] = $4;
+                                        $i++;
+                                    }
+                                }
+                                
+                                close IN;
+
+                                my @data = ( [ @frames ], [ @Q ], [ @Qs ], [ @q ], );
+
+                                # Add a legend to the graph
+                                my @legends = ( 'Q', 'Qs', 'q', );
+                                $chart -> set_legend(
+                                    -data        => \@legends,
+                                    -titlecolors => 'blue',
+                                );
+
+                                # Add help identification
+                                $chart -> set_balloon();
+
+                                # Create the graph
+                                $chart -> plot( \@data );
+                            }
+                        }
+                        else {
+
+                            $text -> insert( 'end' , "Something went wrong\nCheck carma.out.copy for details\n", 'error' );
+                            $text -> see( 'end', );
+                        }
+        }, )
+        -> pack( -side => 'right', );
+    }
+    else {
+
+        $top_qfract -> deiconify;
+        $top_qfract -> raise;
+    }
 }
 
 ###################################################################################################
@@ -1864,11 +1998,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -1908,11 +2042,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
@@ -1959,11 +2093,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -2003,11 +2137,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count\n";
                         $line_count++;
@@ -2044,25 +2178,25 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
-						my $line = $line_count . $2 . $3 . $4 . $5 . $6;
+                        my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
-						if ( $heavy && $5 !~ /^H/ ) {
+                        if ( $heavy && $5 !~ /^H/ ) {
 
-							print OUT "$line\n";
-							$line_count++;
-						}
-						elsif ( $allid || $atm_id =~ /backbone/i ) {
+                            print OUT "$line\n";
+                            $line_count++;
+                        }
+                        elsif ( $allid || $atm_id =~ /backbone/i ) {
 
-							printf OUT ( "%s\n", $line, );
-							$line_count++;
-						}
-					}
+                            printf OUT ( "%s\n", $line, );
+                            $line_count++;
+                        }
+                    }
                 }
 
                 close OUT;
@@ -2092,11 +2226,11 @@ sub auto_window {
 
                 while ( <PSF> ) {
 
-					if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-						
-						last;
-					}
-					elsif ( /$regex_var/i ) {
+                    if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                        
+                        last;
+                    }
+                    elsif ( /$regex_var/i ) {
 
                         print OUT "$1$line_count$2$3$4$5$6\n";
                         $line_count++;
@@ -2134,10 +2268,10 @@ sub auto_window {
 
             while ( <PSF> ) {
 
-				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-					
-					last;
-				}
+                if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                    
+                    last;
+                }
                 elsif ( /$regex_var/i ) {
 
                     print OUT "$1$line_count$2$3$4$5$6\n";
@@ -2174,25 +2308,25 @@ sub auto_window {
             open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
 
             while ( <PSF> ) {
-				
-				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-					
-					last;
-				}
+                
+                if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                    
+                    last;
+                }
                 elsif ( /$regex_var/i ) {
-					
-					my $line = $line_count . $2 . $3 . $4 . $5 . $6;
+                    
+                    my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
-					if ( $heavy && $5 !~ /^H/ ) {
+                    if ( $heavy && $5 !~ /^H/ ) {
 
-						print OUT "$line\n";
-						$line_count++;
-					}
-					elsif ( $allid || $atm_id =~ /BACKBONE/i ) {
+                        print OUT "$line\n";
+                        $line_count++;
+                    }
+                    elsif ( $allid || $atm_id =~ /BACKBONE/i ) {
 
-						print OUT "$line\n";
-						$line_count++;
-					}
+                        print OUT "$line\n";
+                        $line_count++;
+                    }
                 }
             }
 
@@ -2223,10 +2357,10 @@ sub auto_window {
 
             while ( <PSF> ) {
 
-				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-					
-					last;
-				}
+                if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+                    
+                    last;
+                }
                 elsif ( /$regex_var/i ) {
 
                     print OUT "$1$line_count$2$3$4$5$6\n";
@@ -2314,7 +2448,7 @@ sub auto_window {
 
                 $text -> insert( 'end', "\nPerformed superposition of $clusters dcd files\n", 'info', ) if ( $all_done );
                 $fit_check = 0;
-				$super_check = 1;
+                $super_check = 1;
             }
             else {
 
@@ -2842,7 +2976,7 @@ sub select_residues {
         while ( <PSF_FILE> ) {
 
             # If the pattern is met                #
-            if ( /^(\s*\d*\s*)($dropdown_value[$i])(\s*)(\d*)(.*)$/ ) {
+            if ( /^(\s*\d+\s+)($dropdown_value[$i])(\s+)(\d+)(.+)$/ ) {
 
                 # And the residue number equals the    #
                 # upper limit set by the user store in #
@@ -4795,50 +4929,42 @@ sub create_dir {
     # If the folder exists then only the   #
     # subfolder of every session is made   #
 
-	if ( -w $dcd_loc ) {
-		
-		mkpath ( "$dcd_loc/$timeStamp", 0, 0755, );
-		chdir ( "$dcd_loc/$timeStamp" );
+    if ( -w $dcd_loc ) {
+        
+        mkpath ( "$dcd_loc/$timeStamp", 0, 0755, );
+        chdir ( "$dcd_loc/$timeStamp" );
 
-		# After the folder(s) have been made   #
-		# they are made the Cwd and links to   #
-		# specified .psf and .dcd files are    #
-		# created                              #
-		if ( $^O eq 'linux' ) {
+        # After the folder(s) have been made   #
+        # they are made the Cwd and links to   #
+        # specified .psf and .dcd files are    #
+        # created                              #
+        if ( $^O eq 'linux' ) {
 
-			`ln -s $psf_file .`;
-			`ln -s $dcd_file .`;
-		}
-		else {
+            `ln -s $psf_file .`;
+            `ln -s $dcd_file .`;
+        }
+        else {
 
-			link ( $psf_file, "$dcd_name.psf", );
-			link ( $dcd_file, "$dcd_name.dcd", );
+            link ( $psf_file, "$dcd_name.psf", );
+            link ( $dcd_file, "$dcd_name.dcd", );
 
-			`copy ..\\..\\carma.exe .`;
-		}
-	}
-	else {
-		
-		if ( $run_from_terminal ) {
-			
-<<<<<<< HEAD
-			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
-		}
-		else {
-			
-			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
-=======
-			die "\nSeems like you don't have write privileges for the folder the .dcd file is located in. Goodbye\n\n";
-		}
-		else {
-			
-			$mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in. Goodbye\n\n",
->>>>>>> 82bfaafe7a20c626ce3f9466ad8d353dd30cf399
-							   -type => 'ok',
-							   -icon => 'warning', );
-			$mw -> destroy;
-		}
-	}
+            `copy ..\\..\\carma.exe .`;
+        }
+    }
+    else {
+        
+        if ( $run_from_terminal ) {
+            
+            die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
+        }
+        else {
+            
+            $mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
+                               -type => 'ok',
+                               -icon => 'warning', );
+            $mw -> destroy;
+        }
+    }
 }
 
 ###################################################################################################
@@ -4846,8 +4972,8 @@ sub create_dir {
 ###################################################################################################
 
 sub radiobuttons {
-
-    $_[0] -> Label ( -text => 'Atmid Selection' ) -> pack;
+    
+    $_[0] -> Label ( -text => 'Atmid Selection', -font => "$font_20", ) -> pack;
 
     my @radiobuttons = ( 'CA', 'Backbone', 'Heavy', 'All atoms', 'Custom selection', );
     my @radio_b;
@@ -4913,11 +5039,11 @@ sub checkbuttons {
 
     if ( ( $dpca_frame_1 && $_[0] eq $dpca_frame_1 ) || ( $frame_sur2 && $_[0] eq $frame_sur2 ) ) {
 
-        $_[0] -> Label( -text => 'At least one segid selection required' ) -> pack;
+        $_[0] -> Label( -text => 'At least one segid selection required', -font => "$font_20", ) -> pack;
     }
     else {
 
-        $_[0] -> Label( -text => 'Segid Selection' ) -> pack;
+        $_[0] -> Label( -text => 'Segid Selection', -font => "$font_20", ) -> pack;
     }
 
     my @check_b;
@@ -4972,7 +5098,7 @@ sub otherbuttons {
     my @otherbuttons = ( 'All', 'Change', );
     my @other;
 
-    $_[0] -> Label( -text => 'Resid Selection', ) -> pack;
+    $_[0] -> Label( -text => 'Resid Selection', -font => "$font_20", ) -> pack;
 
     for my $i ( 0 .. $#otherbuttons ) {
 
@@ -4996,11 +5122,11 @@ sub otherbuttons {
         $f4_b -> destroy if ( $f4_b );
         if ( $dcd_count >= 0 ) {
 
-            $active_psf_label -> configure( -text => "Active .psf: carma_fitted_$dcd_count.psf", );
+            $active_psf_label -> configure( -text => "Active .psf: $psf_name.$dcd_count.psf", );
         }
         else {
 
-            $active_psf_label -> configure( -text => "Active .psf: $psf_file", );
+            $active_psf_label -> configure( -text => "Active .psf: $psf_name.psf", );
         }
     }, );
     $other[1] -> configure( -command => \&resid_window, );
