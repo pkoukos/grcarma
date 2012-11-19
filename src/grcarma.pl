@@ -1237,12 +1237,6 @@ sub rmsd_window {
                                      -onvalue => " -reverse", )
                                      -> grid( -row => 3, -column => 3, );
 
-        $frame_rmsd1 -> Checkbutton( -text => "Automatically create a plot\nof the results file",
-                                     -variable => \$rmsd_plot,
-                                     -offvalue => 0,
-                                     -onvalue => 1, )
-                                     -> grid( -row => 4, -column => 1, );
-
         my $frame_rmsd2 = $rmsd_top -> Frame() -> pack();
 
         # For every variable used for input    #
@@ -1340,12 +1334,6 @@ sub rmsd_window {
                     $text -> insert( 'end', "Use \"View Images\"\n", 'valid' );
                     $text -> see( 'end', );
                     $image_menu -> configure( -state => 'normal', );
-                }
-
-                if ( $rmsd_plot && -e "carma.RMSD.matrix" ) {
-
-                    &plot ( 'cross' );
-                    $rmsd_plot = 0;
                 }
             }
             else {
@@ -1457,7 +1445,7 @@ sub qfract_window {
 
                             if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
 
-                                &plot ( 'qfract' );
+                                plot ( 'carma.Qfraction.dat' );
                                 $qfract_plot = 0;
                             }
                         }
@@ -2847,23 +2835,29 @@ sub image_window {
     my $i = 0;
     my $j = 0;
     my @contents = '';
+    my $files = 'carma.Qfraction.dat|carma.Rgyration.dat|carma.distances|carma.torsions|carma.bendangles|carma.rms-average.dat|carma.dPCA.eigenvalues.dat|carma.PCA.eigenvalues.dat';
     #~ my $toplevel_position = "260x290" . $toplevel_position;
 
     my $image_top = $mw -> Toplevel( -title => 'Latest Images', );
     $image_top -> geometry("$toplevel_position");
-    opendir IMAGE_DIR, "." || die "Cannot open \'.\':$!";
+    opendir IMAGE_DIR, getcwd || die "Cannot open " . getcwd . ": $!";
     while ( readdir IMAGE_DIR ) {
 
         if ( /.*\.ps$/ ) {
-
-            $contents[$i] = $_;
-            $i++;
+        
+            push @contents, $_;
+        }
+        elsif ( /$files/ ) {
+            
+            push @contents, $_;
         }
     }
+    shift @contents;
 
     @contents = sort ( @contents );
 
-    $image_top -> Label( -text => "\nClick on the image you want to view\n", ) -> pack;
+    $image_top -> Label( -text => "\nClick on the image you want to view", ) -> pack;
+    $image_top -> Label( -text => "or the file you would like to plot\n", ) -> pack;
 
     my $lb = $image_top -> Listbox( -selectmode => "single",
                                     -width => 27, )
@@ -2878,8 +2872,15 @@ sub image_window {
     $lb -> bind( '<Button-1>', sub {
 
                                     my $selection = $lb -> get( $lb -> curselection() );
-                                    system ( "$ps_viewer $selection &" ) if ( $^O eq 'linux' );
-                                    `start $selection` if ( $^O ne 'linux' );
+                                    if ( $selection =~ /.*ps$/ ) {
+                                        
+                                        system ( "$ps_viewer $selection &" ) if ( $^O eq 'linux' );
+                                        `start $selection` if ( $^O ne 'linux' );
+                                    }
+                                    else {
+                                        
+                                        plot ( $selection );
+                                    }
                                 } );
 }
 
@@ -3341,8 +3342,8 @@ sub entropy_window {
                         &create_dir;
                         &carma;
                     }
-                    open READ_ENTROPY, "carma.out.copy" || die "Cannot open carma.out.copy for reading:$!";
-                    open WRITE_ENTROPY, ">>carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing:$!";
+                    open READ_ENTROPY, '<' , "carma.out.copy" || die "Cannot open carma.out.copy for reading:$!";
+                    open WRITE_ENTROPY, '>>', "carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing:$!";
 
                     # Parse the output file for the lines  #
                     # containing the results and save them #
@@ -3390,7 +3391,7 @@ sub entropy_window {
                 # contents of those arrays             #
                 if ( @a_entropy && @s_entropy ) {
 
-                    open WRITE_ENTROPY, ">carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing";
+                    open WRITE_ENTROPY, '>', "carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing";
                     my $k = 0;
                     foreach ( @s_entropy ) {
 
@@ -3403,6 +3404,8 @@ sub entropy_window {
                     }
                     close WRITE_ENTROPY;
                 }
+                
+                plot ( 'carma_entropy.dat' );
         }, )
         -> pack( -side => 'right', );
     }
@@ -4339,7 +4342,7 @@ sub sur_window {
 
             if ( $sur_plot ) {
 
-                &plot ( 'surf' );
+                &plot ( 'carma.surface.dat' );
                 $sur_plot = 0;
             }
         }
@@ -4489,7 +4492,7 @@ sub fit_window {
 
                 if ( $fit_plot ) {
 
-                    &plot ( 'fit' );
+                    &plot ( 'carma.fit-rms.dat' );
                     $fit_plot = 0;
                 }
             }
@@ -5119,9 +5122,7 @@ sub otherbuttons {
 sub plot {
 
     my $input = shift;
-    my $file = '';
-    my $title = '';
-    my ( @frames, @Q, @Qs, @q, @y, @data, @legends, @step, );
+    my ( @frames, @Q, @Qs, @q, @y, @data, @legends, @step, @Andricioaei, @Schlitter, );
 
     my $mw = MainWindow -> new( -title => "Results Plot", );
 
@@ -5133,27 +5134,29 @@ sub plot {
         push ( @step, $interval * $_ );
     }
 
-    $file = 'carma.Qfraction.dat' if ( $input eq 'qfract' );
-    $file = 'carma.fit-rms.dat' if ( $input eq 'fit' );
-    $file = 'carma.surface.dat' if ( $input eq 'surf' );
-    $file = 'carma.RMSD.matrix' if ( $input eq 'cross' );
-
-    open IN, '<', $file || die "Cannot open $file for reading";
+    open IN, '<', $input || die "Cannot open $input for reading";
 
     my $i = 0;
     while ( <IN> ) {
 
-        if ( defined $step[$i] && $input eq 'qfract' && /\s+(.*?$step[$i])\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)/ ) {
+        if ( defined $step[$i] && $input =~ /qfract/i && /\s+(.*?$step[$i])\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)/ ) {
 
-            $frames[$i] = $i;
+            $frames[$i] = $1;
             $Q[$i] = $2;
             $Qs[$i] = $3;
             $q[$i] = $4;
             $i++;
         }
-        elsif ( defined $step[$i] && $input =~ /fit|cross|surf/ && /\s+(.*?$step[$i])\s+(\d+\.?\d*)/ ) {
+        elsif ( defined $step[$i] && $input =~ /entropy/i && /\s+(\S+?)\s+(\S+)\s*(\S*)/ ) {
 
-            $frames[$i] = $i;
+            $frames[$i] = $1;
+            $Andricioaei[$i] = $2;
+            $Schlitter[$i] = $3 if ( $3 );
+            $i++;
+        }
+        elsif ( defined $step[$i] && $input =~ /fit|rgyr|bend|tors|dist|rms-av|surf/i && /\s+(.*?$step[$i])\s+([+-]?\d+\.?\d*)/ ) {
+
+            $frames[$i] = $1;
             $y[$i] = $2;
             $i++;
         }
@@ -5161,34 +5164,47 @@ sub plot {
 
     close IN;
 
-    my ( $dataset1, $dataset2, $dataset3, $dataset4, );
+    my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6,);
 
-    if ( $input eq 'qfract' ) {
+    if ( $input =~ /qfract/i ) {
 
         $dataset1 = LineGraphDataset -> new( -name => 'Q',
                                              -xData => \@frames,
                                              -yData => \@Q,
-                                             -xlabel => 'Frames',
                                              -color => 'blue', );
         $dataset2 = LineGraphDataset -> new( -name => 'Qs',
                                              -xData => \@frames,
                                              -yData => \@Qs,
-                                             -xlabel => 'Frames',
                                              -color => 'green', );
         $dataset3 = LineGraphDataset -> new( -name => 'q',
                                              -xData => \@frames,
                                              -yData => \@q,
-                                             -xlabel => 'Frames',
-                                             -yvalue => 'Value',
                                              -color => 'purple', );
+    }
+    elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
+
+        $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
+                                             -xData => \@frames,
+                                             -yData => \@Andricioaei,
+                                             -color => 'blue', );
+        $dataset5 = LineGraphDataset -> new( -name => 'Schlitter',
+                                             -xData => \@frames,
+                                             -yData => \@Schlitter,
+                                             -color => 'green', );
+    }
+    elsif ( $input =~ /entropy/i ) {
+
+        $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
+                                             -xData => \@frames,
+                                             -yData => \@Andricioaei,
+                                             -color => 'blue', );
     }
     else {
 
-        $dataset4 = LineGraphDataset -> new( -name => $input,
+        $dataset6 = LineGraphDataset -> new( -name => $input,
                                              -xData => \@frames,
                                              -yData => \@y,
-                                             -xAxis => 'Frames',
-                                             -color => 'green', );
+                                             -color => 'blue', );
     }
 
     my $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
@@ -5196,16 +5212,24 @@ sub plot {
                                     -background => 'snow',
                                     -xlabel => 'Frame',
                                     -ylabel => 'Value',
-                                    -plotTitle => [ '', 20, ] )
-                                    -> pack( -fill => 'both', -expand => 1, );
+                                    -plotTitle => [ $input, 20, ] )
+                                    -> pack( qw/ -fill both -expand 1/ );
 
-    if ( $input eq 'qfract' ) {
+    if ( $input =~ /qfract/i ) {
 
         $graph -> addDatasets( $dataset1, $dataset2, $dataset3, );
     }
-    else {
+    elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
+
+        $graph -> addDatasets( $dataset4, $dataset5, );
+    }
+    elsif ( $input =~ /entropy/i ) {
 
         $graph -> addDatasets( $dataset4, );
+    }
+    else {
+
+        $graph -> addDatasets( $dataset6, );
     }
 
     $graph -> plot;
