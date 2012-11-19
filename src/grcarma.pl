@@ -400,51 +400,51 @@ my $f1 = $f0 -> Frame ( qw/ -relief raised -borderwidth 1/ ) -> pack ( qw/ -side
 
 #Draw the button for the rmsd menu...  #
 my $rmsd_menu = $f1 -> Button( -text => 'RMSD Matrix',
-                                 -command => \&rmsd_window,
-                                 -width => 24,
-                                 -font => "$font_12", ) -> pack;
+                               -command => \&rmsd_window,
+                               -width => 24,
+                               -font => "$font_12", ) -> pack;
 
 #Draw the button for the qfract menu...#
 my $qfract_menu = $f1 -> Button( -text => 'Qfract',
-                                   -command => \&qfract_window,
-                                   -width => 24,
-                                   -font => "$font_12", ) -> pack;
+                                 -command => \&qfract_window,
+                                 -width => 24,
+                                 -font => "$font_12", ) -> pack;
 
 # ... the dpca menu                    #
 my $dpca_menu = $f1 -> Button( -text => 'Dihedral PCA',
-                                 -command => \&dpca_window,
-                                 -width => 24,
-                                 -font => "$font_12", ) -> pack;
+                               -command => \&dpca_window,
+                               -width => 24,
+                               -font => "$font_12", ) -> pack;
 
 # ... the cpca menu                    #
 my $cpca_menu = $f1 -> Button( -text => 'Cartesian PCA',
-                                 -command => \&cpca_window,
-                                 -width => 24,
-                                 -font => "$font_12", ) -> pack;
+                               -command => \&cpca_window,
+                               -width => 24,
+                               -font => "$font_12", ) -> pack;
 
 # ... the eigen calculations menu      #
 my $eigen_menu = $f1 -> Button( -text => 'Eigen calculations',
-                                  -command => \&eigen_window,
-                                  -width => 24,
-                                  -font => "$font_12", ) -> pack;
+                                -command => \&eigen_window,
+                                -width => 24,
+                                -font => "$font_12", ) -> pack;
 
 # ... the var_covar matrix menu        #
 my $varcov_menu = $f1 -> Button( -text => 'VarCov matrix',
-                                   -command => \&varcov_window,
-                                   -width => 24,
-                                   -font => "$font_12", ) -> pack;
+                                 -command => \&varcov_window,
+                                 -width => 24,
+                                 -font => "$font_12", ) -> pack;
 
 # ... the entropy menu                 #
 my $entropy_menu = $f1 -> Button( -text => 'Solute entropy calculation',
-                                    -command => \&entropy_window,
-                                    -width => 24,
-                                    -font => "$font_12", ) -> pack;
+                                  -command => \&entropy_window,
+                                  -width => 24,
+                                  -font => "$font_12", ) -> pack;
 
 # ... the fitting menu                 #
 my $fitting_menu = $f1 -> Button( -text => 'Fit',
-                                    -command => \&fit_window,
-                                    -width => 24,
-                                    -font => "$font_12", ) -> pack;
+                                  -command => \&fit_window,
+                                  -width => 24,
+                                  -font => "$font_12", ) -> pack;
 
 # ... the index fitting menu           #
 my $fit_index_menu = $f1 -> Button( -text => 'Selective Fit',
@@ -503,7 +503,7 @@ my $sur_menu = $f1 -> Button( -text => 'Surface area',
 $f1 -> Label( -text => "\n", ) -> pack( -side => 'top', );
 
 # ... the image menu                   #
-our $image_menu = $f1 -> Button( -text => 'View Images',
+our $image_menu = $f1 -> Button( -text => 'View Results',
                                  -command => [ \&image_window ],
                                  -width => 24,
                                  -font => "$font_12",
@@ -1245,50 +1245,11 @@ sub rmsd_window {
         $frame_rmsd2 -> Button( -text => 'Run',
                                 -command => sub {
 
-            if ( $rmsd_first ) {
-
-                $rmsd_first_flag = " -first $rmsd_first";
-            }
-            else {
-
-                $rmsd_first_flag = '';
-            }
-
-            if ( $rmsd_last ) {
-
-                $rmsd_last_flag = " -last $rmsd_last";
-            }
-            else {
-
-                $rmsd_last_flag = '';
-            }
-
-            if ( $rmsd_step ) {
-
-                $rmsd_step_flag = " -step $rmsd_step";
-            }
-            else {
-
-                $rmsd_step_flag = '';
-            }
-
-            if ( $rmsd_min ) {
-
-                $rmsd_min_flag = " -min $rmsd_min";
-            }
-            else {
-
-                $rmsd_min_flag = '';
-            }
-
-            if ( $rmsd_max ) {
-
-                $rmsd_max_flag = " -max $rmsd_max";
-            }
-            else {
-
-                $rmsd_max_flag = '';
-            }
+            $rmsd_first_flag = ( $rmsd_first ? " -first $rmsd_first" : '' );
+            $rmsd_last_flag = ( $rmsd_last ? " -last $rmsd_last" : '' );
+            $rmsd_step_flag = ( $rmsd_step ? " -step $rmsd_step" : '' );
+            $rmsd_min_flag = ( $rmsd_min ? " -min $rmsd_min" : '' );
+            $rmsd_max_flag = ( $rmsd_max ? " -max $rmsd_max" : '' );
 
             $rmsd_top -> destroy();
             $mw -> update;
@@ -1331,7 +1292,7 @@ sub rmsd_window {
                 if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
                     $text -> insert( 'end', "\nCalculation finished. Plotted .ps image from $1.$2 to $3.$4\n", 'valid' );
-                    $text -> insert( 'end', "Use \"View Images\"\n", 'valid' );
+                    $text -> insert( 'end', "Use \"View Results\"\n", 'valid' );
                     $text -> see( 'end', );
                     $image_menu -> configure( -state => 'normal', );
                 }
@@ -1440,8 +1401,9 @@ sub qfract_window {
 
                         if ( $all_done ) {
 
-                            $text -> insert( 'end', "Calculation finished", 'valid' );
+                            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
                             $text -> see( 'end', );
+                            $image_menu -> configure( -state => 'normal', );
 
                             if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
 
@@ -1570,7 +1532,7 @@ sub dpca_window {
                                 &auto_window ( 'dpca' ) if ( $dpca_auto_entry -> cget( -state, ) eq 'normal' );
                                 if ( $all_done ) {
 
-                                    $text -> insert( 'end', "\nCalculation finished. Use \"View Images\"\n", 'valid' );
+                                    $text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
                                     $text -> see( 'end', );
                                     $image_menu -> configure( -state => 'normal', );
                                     $all_done = '';
@@ -1750,7 +1712,7 @@ sub cpca_window {
 
                                 if ( $all_done ) {
 
-                                    $text -> insert( 'end', "\nCalculation finished. Use \"View Images\"\n", 'valid' );
+                                    $text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
                                     $text -> see( 'end', );
                                     $image_menu -> configure( -state => 'normal', );
                                     $all_done = '';
@@ -2552,15 +2514,15 @@ sub eigen_window {
                         &create_dir;
 
                         $text -> insert( 'end', "\nNow calculating eigenvectors and eigenvalues. ", 'valid', );
-                        $text -> see( 'end', );
                         $mw -> update;
 
                         &carma;
 
                         if ( $all_done ) {
 
-                            $text -> insert( 'end', "Calculation finished", 'valid' );
+                            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
                             $text -> see( 'end', );
+                            $image_menu -> configure( -state => 'normal', );
                         }
                         else {
 
@@ -2679,50 +2641,11 @@ sub varcov_window {
 
                         $top_var -> destroy;
 
-                        if ( $var_first ) {
-
-                            $var_first_flag = " -first $var_first";
-                        }
-                        else {
-
-                            $var_first_flag = '';
-                        }
-
-                        if ( $var_last ) {
-
-                            $var_last_flag = " -last $var_last";
-                        }
-                        else {
-
-                            $var_last_flag = '';
-                        }
-
-                        if ( $var_step ) {
-
-                            $var_step_flag = " -step $var_step";
-                        }
-                        else {
-
-                            $var_step_flag = '';
-                        }
-
-                        if ( $var_min ) {
-
-                            $var_min_flag = " -min $var_min";
-                        }
-                        else {
-
-                            $var_min_flag = '';
-                        }
-
-                        if ( $var_max ) {
-
-                            $var_max_flag = " -max $var_max";
-                        }
-                        else {
-
-                            $var_max_flag = '';
-                        }
+                        $var_first_flag = ( $var_first ? " -first $var_first" : '' );
+                        $var_last_flag = ( $var_last ? " -last $var_last" : '' );
+                        $var_step_flag = ( $var_step ? " -step $var_step" : '' );
+                        $var_min_flag = ( $var_min ? " -min $var_min" : '' );
+                        $var_max_flag = ( $var_max ? " -max $var_max" : '' );
 
                         $seg_id_flag = '' if $seg_id_flag;
 
@@ -2753,8 +2676,9 @@ sub varcov_window {
 
                         if ( $all_done ) {
 
-                            $text -> insert( 'end', "Calculation finished", 'valid' );
+                            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
                             $text -> see( 'end', );
+                            $image_menu -> configure( -state => 'normal', );
                         }
                         else {
 
@@ -2844,11 +2768,11 @@ sub image_window {
     while ( readdir IMAGE_DIR ) {
 
         if ( /.*\.ps$/ ) {
-        
+
             push @contents, $_;
         }
         elsif ( /$files/ ) {
-            
+
             push @contents, $_;
         }
     }
@@ -2873,12 +2797,12 @@ sub image_window {
 
                                     my $selection = $lb -> get( $lb -> curselection() );
                                     if ( $selection =~ /.*ps$/ ) {
-                                        
+
                                         system ( "$ps_viewer $selection &" ) if ( $^O eq 'linux' );
                                         `start $selection` if ( $^O ne 'linux' );
                                     }
                                     else {
-                                        
+
                                         plot ( $selection );
                                     }
                                 } );
@@ -3373,8 +3297,9 @@ sub entropy_window {
 
                         if ( $all_done ) {
 
-                            $text -> insert( 'end', "\nCalculation finished", 'valid' );
+                            $text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
                             $text -> see( 'end', );
+                            $image_menu -> configure( -state => 'normal', );
                         }
                         else {
 
@@ -3404,7 +3329,7 @@ sub entropy_window {
                     }
                     close WRITE_ENTROPY;
                 }
-                
+
                 plot ( 'carma_entropy.dat' );
         }, )
         -> pack( -side => 'right', );
@@ -3586,59 +3511,12 @@ sub rms_window {
         $frame_rms5 -> Button( -text => 'Run',
                                -command => sub {
 
-        if ( $rms_first ) {
-
-            $rms_first_flag = " -first $rms_first";
-        }
-        else {
-
-            $rms_first_flag = '';
-        }
-
-        if ( $rms_last ) {
-
-            $rms_last_flag = " -last $rms_last";
-        }
-        else {
-
-            $rms_last_flag = '';
-        }
-
-        if ( $rms_step ) {
-
-            $rms_step_flag = " -step $rms_step";
-        }
-        else {
-
-            $rms_step_flag = '';
-        }
-
-        if ( $rms_min ) {
-
-            $rms_min_flag = " -min $rms_min";
-        }
-        else {
-
-            $rms_min_flag = '';
-        }
-
-        if ( $rms_max ) {
-
-            $rms_max_flag = " -max $rms_max";
-        }
-        else {
-
-            $rms_max_flag = '';
-        }
-
-        if ( $rms_mrms ) {
-
-            $rms_mrms_flag = " -mrms $rms_mrms";
-        }
-        else {
-
-            $rms_mrms_flag = '';
-        }
+        $rms_first_flag = ( $rms_first ? " -first $rms_first" : '' );
+        $rms_last_flag = ( $rms_last ? " -last $rms_last" : '' );
+        $rms_step_flag = ( $rms_step ? " -step $rms_step" : '' );
+        $rms_min_flag = ( $rms_min ? " -min $rms_min" : '' );
+        $rms_max_flag = ( $rms_max ? " -max $rms_max" : '' );
+        $rms_mrms_flag = ( $rms_mrms ? " -mrms $rms_mrms" : '' );
 
         $top_rms -> destroy;
 
@@ -3715,7 +3593,7 @@ sub rms_window {
             `carma.exe $average_ps_file $rmsdev_ps_file`;
         }
 
-        $text -> insert( 'end', "Calculation finished\nUse \'View Images\'", 'valid' );
+        $text -> insert( 'end', "Calculation finished. Use \'View Results\'\n", 'valid' );
         $text -> see( 'end', );
         $image_menu -> configure( -state => 'normal', );
         }, )-> pack( -side => 'right', );
@@ -3789,8 +3667,9 @@ sub rgr_window {
 
         if ( $all_done ) {
 
-            $text -> insert( 'end', "Calculation finished", 'valid' );
+            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -3884,8 +3763,9 @@ sub dis_window {
 
         if ( $all_done ) {
 
-            $text -> insert( 'end', "Calculation finished", 'valid' );
+            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -3985,8 +3865,9 @@ sub bnd_window {
 
         if ( $all_done ) {
 
-            $text -> insert( 'end', "Calculation finished", 'valid' );
+            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -4089,8 +3970,9 @@ sub tor_window {
 
         if ( $all_done ) {
 
-            $text -> insert( 'end', "Calculation finished", 'valid' );
+            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -4212,8 +4094,9 @@ sub map_window {
 
             if ( $all_done ) {
 
-                $text -> insert( 'end', "Calculation finished", 'valid' );
+                $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
                 $text -> see( 'end', );
+                $image_menu -> configure( -state => 'normal', );
             }
             else {
 
@@ -4337,8 +4220,9 @@ sub sur_window {
 
         if ( $all_done ) {
 
-            $text -> insert( 'end', "Calculation finished", 'valid' );
+            $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
 
             if ( $sur_plot ) {
 
@@ -4460,8 +4344,9 @@ sub fit_window {
             &carma ( "fit" );
             if ( $all_done ) {
 
-                $text -> insert( 'end', "Fitting complete\n", 'valid' );
+                $text -> insert( 'end', "Fitting complete. Use \"View Results\"\n", 'valid' );
                 $text -> see( 'end', );
+                $image_menu -> configure( -state => 'normal', );
 
                 my $response = $frame_fit1 -> messageBox( -message => "Would you like to use this PSF - DCD pair in other calculations?",
                                                           -type => 'yesno',
@@ -5127,7 +5012,9 @@ sub plot {
     my $mw = MainWindow -> new( -title => "Results Plot", );
 
     my $screenwidth = $mw -> screenwidth;
-    my $interval = int ( $header / $screenwidth + 0.5 );
+    my $interval;
+
+    $interval = ( ( $screenwidth <= $header ) ? int ( $header / $screenwidth + 0.5 ) : 1 );
 
     for ( 0 .. $screenwidth ) {
 
