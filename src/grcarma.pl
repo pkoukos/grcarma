@@ -80,7 +80,10 @@ use warnings;
 
 use Tk;
 use Tk::MsgBox;
+
 use Tk::Chart::Lines;
+use Tk::PlotDataset;
+use Tk::LineGraphDataset;
 
 require Tk::BrowseEntry;
 
@@ -250,12 +253,12 @@ if ( @ARGV ) {
             $psf_file = abs_path( $ARGV[0] );
             $dcd_file = abs_path( $ARGV[1] );
             if ( $dcd_file =~ /(.*)(\/|\\)(\w*)\.dcd/ ) {
-                
+
                 $dcd_loc = $1;
                 $dcd_name = $3;
             }
             if ( $psf_file =~ /(.*)(\/|\\)(\w*)\.psf/ ) {
-                
+
                 $psf_name = $3;
             }
         }
@@ -264,12 +267,12 @@ if ( @ARGV ) {
             $psf_file = abs_path( $ARGV[1] );
             $dcd_file = abs_path( $ARGV[0] );
             if ( $dcd_file =~ /(.*)(\/|\\)(\w*)\.dcd/ ) {
-                
+
                 $dcd_loc = $1;
                 $dcd_name = $3;
             }
             if ( $psf_file =~ /(.*)(\/|\\)(\w*)\.psf/ ) {
-                
+
                 $psf_name = $3;
             }
         }
@@ -356,11 +359,11 @@ unless ( $run_from_terminal ) {
                                   #~ -expand => 1,
                                   #~ -fill => 'both', );
         $mw -> waitVariable(\$have_files);
-    $mw -> update;                          
+    $mw -> update;
 }
 #~ else {
-#~ 
-    #~ 
+#~
+    #~
 #~ }
 
 ###################################################################################################
@@ -400,7 +403,7 @@ my $rmsd_menu = $f1 -> Button( -text => 'RMSD Matrix',
                                  -command => \&rmsd_window,
                                  -width => 24,
                                  -font => "$font_12", ) -> pack;
-                                       
+
 #Draw the button for the qfract menu...#
 my $qfract_menu = $f1 -> Button( -text => 'Qfract',
                                    -command => \&qfract_window,
@@ -518,8 +521,7 @@ my $exit_menu = $f1 -> Button( -text => 'EXIT',
 
 # Draw the third frame (atmids) on top #
 # of the first                         #
-my $f2 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( -expand => 1, -fill => 'both',);
-# Invoke the radiobuttons subroutine   #
+my $f2 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( qw/ -expand 1 -fill both/ );
 &radiobuttons ( $f2 );
 
 ###################################################################################################
@@ -528,8 +530,7 @@ my $f2 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( -expand => 
 
 # Draw the fourth frame(segids) on top #
 # of the first                         #
-my $f3 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( -expand => 1, -fill => 'both',);
-# Invoke the checkbuttons subroutine   #
+my $f3 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( qw/ -expand 1 -fill both/ );
 &checkbuttons ( $f3 );
 
 ###################################################################################################
@@ -539,7 +540,6 @@ my $f3 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( -expand => 
 # Draw the fifth frame (resids) on top #
 # of the first                         #
 my $f4 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( qw/ -expand 1 -fill both/ );
-# Invoke the otherbuttons subroutine   #
 &otherbuttons ( $f4 );
 
 ###################################################################################################
@@ -605,7 +605,7 @@ $text -> insert( 'end', "\nSELECT A TASK FROM THE LEFT PANEL\n" );
 # Draw the seventh frame(active files) #
 # on top of the first one immediately  #
 # after the fifth frame is drawn       #
-my $f6 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) 
+my $f6 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ )
                             -> pack( -after => $f1,
                                      -side => 'bottom',
                                      -fill => 'both',
@@ -630,6 +630,8 @@ my $y_position = int ( ( ( $mw -> screenheight - 80 ) / 2 ) - ( $mw -> height / 
 
 my $mw_position = "+" . $x_position . "+" . $y_position;#print $mw_position;
 my $toplevel_position = "+" . ( $x_position + 150 ) . "+" . ( $y_position + 100 );
+
+my $plot_step = ( $header / ( $mw -> screenwidth ) );
 
 $mw -> geometry ("$mw_position");
 # This is due to a windows-exlusive    #
@@ -876,7 +878,6 @@ sub carma {
     close TEMP_OUT;
 
     $flag = 0;
-    #~ $seg_id_flag = '';
     $index_seg_id_flag = '';
 }
 
@@ -990,7 +991,7 @@ sub parser {
             }
         }
     }
-    elsif ( @unique_chain_ids >= 10 ) {
+    elsif ( @unique_chain_ids >= 20 ) {
 
         if ( $run_from_terminal ) {
 
@@ -1197,6 +1198,7 @@ sub rmsd_window {
     my $rmsd_max = '';
     my $rmsd_max_flag = '';
     my $rmsd_reverse = '';
+    my $rmsd_plot = '';
     my $rmsd_top;
 
     if ( !Exists( $rmsd_top ) ) {
@@ -1234,6 +1236,12 @@ sub rmsd_window {
                                      -offvalue => '',
                                      -onvalue => " -reverse", )
                                      -> grid( -row => 3, -column => 3, );
+
+        $frame_rmsd1 -> Checkbutton( -text => "Automatically create a plot\nof the results file",
+                                     -variable => \$rmsd_plot,
+                                     -offvalue => 0,
+                                     -onvalue => 1, )
+                                     -> grid( -row => 4, -column => 1, );
 
         my $frame_rmsd2 = $rmsd_top -> Frame() -> pack();
 
@@ -1319,48 +1327,32 @@ sub rmsd_window {
             $mw -> update;
 
             &carma;
-            if ( $^O ne 'linux' ) {
 
-                # If the carma run was succesful make  #
-                # a .ps plot of the produced matrix    #
-                # while capturing the limits used for  #
-                # the colouring                        #
-                if ( $all_done ) {
+            if ( $all_done ) {
 
-                    if ( `carma.exe -colour - < \"carma.RMSD.matrix\"` =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
+                my $coloring;
+                $coloring = `carma.exe -col - < carma.RMSD.matrix` if ( $^O eq 'MSWin32' );
+                $coloring = `carma -col - < carma.RMSD.matrix` if ( $^O eq 'linux' );
 
-                        $text -> insert( 'end', "\nCalculation finished. Plotted .ps image from $1.$2 to $3.$4\n", 'valid' );
-                        $text -> insert( 'end', "Use \"View Images\"\n", 'valid' );
-                        $text -> see( 'end', );
-                        $image_menu -> configure( -state => 'normal', );
-                    }
-                }
-                # Else report it with a help message   #
-                else {
+                if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
-                    $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-                    $text -> insert( 'end', getcwd . "\n", 'info', );
+                    $text -> insert( 'end', "\nCalculation finished. Plotted .ps image from $1.$2 to $3.$4\n", 'valid' );
+                    $text -> insert( 'end', "Use \"View Images\"\n", 'valid' );
                     $text -> see( 'end', );
+                    $image_menu -> configure( -state => 'normal', );
+                }
+
+                if ( $rmsd_plot && -e "carma.RMSD.matrix" ) {
+
+                    &plot ( 'cross' );
+                    $rmsd_plot = 0;
                 }
             }
             else {
 
-                if ( $all_done ) {
-
-                    if ( `carma -colour - < carma.RMSD.matrix` =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
-
-                        $text -> insert( 'end', "\nCalculation finished. Plotted .ps image from $1.$2 to $3.$4\n", 'valid' );
-                        $text -> insert( 'end', "Use \"View Images\"\n", 'valid' );
-                        $text -> see( 'end', );
-                        $image_menu -> configure( -state => 'normal', );
-                    }
-                }
-                else {
-
-                    $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-                    $text -> insert( 'end', getcwd . "\n", 'info', );
-                    $text -> see( 'end', );
-                }
+                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                $text -> insert( 'end', getcwd . "\n", 'info', );
+                $text -> see( 'end', );
             }
             }, )
             -> grid( -row => 2, -column => 2, );
@@ -1398,39 +1390,35 @@ sub qfract_window {
         my $frame_qfract1 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
         my $frame_qfract2 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
         my $frame_qfract3 = $top_qfract -> Frame() -> pack( -expand => 1, -fill => 'x', );
+        my $frame_qfract4 = $top_qfract -> Frame() -> pack( -fill => 'x', );
+        my $frame_qfract5 = $top_qfract -> Frame( -relief => 'groove', -borderwidth => 3, ) -> pack( -expand => 1, -fill => 'x', );
+
+        $frame_qfract5 -> Label( -text => 'Distance Cutoff: ', )
+                                 -> grid( -row => 1, -column => 1, );
+        $frame_qfract5 -> Entry( -textvariable => \$qfract_cutoff, )
+                                 -> grid( -row => 1, -column => 2, );
+        $frame_qfract5 -> Label( -text => 'Residue Separation: ', )
+                                 -> grid( -row => 2, -column => 1, );
+        $frame_qfract5 -> Entry( -textvariable => \$qfract_dist, )
+                                 -> grid( -row => 2, -column => 2, );
 
         &radiobuttons ( $frame_qfract1 );
         &checkbuttons ( $frame_qfract2 );
         &otherbuttons ( $frame_qfract3 );
 
-        my $frame_qfract4 = $top_qfract -> Frame() -> pack( -fill => 'x', );
-        $frame_qfract4 -> Label( -text => 'Various Options' )
-                              -> pack( -side => 'top', );
+        $frame_qfract4 -> Label( -text => 'Various Options' ) -> pack;
 
         $frame_qfract4 -> Checkbutton( -text => 'Automatically create a plot of the results file',
                                        -variable => \$qfract_plot,
                                        -offvalue => 0,
                                        -onvalue => 1, )
-                                       -> pack( -side => 'top', -anchor => 'w', );
+                                       -> pack( -side => 'bottom', -anchor => 'w',);
 
-        my $frame_qfract5 = $top_qfract -> Frame()-> pack( -expand => 0, );
+        $frame_qfract5 -> Button( -text => 'Return',
+                                  -command => [ $top_qfract => 'withdraw' ], )
+                                  -> grid( -row => 3, -column => 1, );
 
-        $frame_qfract5 -> Label( -text => 'Cutoff: ', )
-                                 -> grid( -row => 1, -column => 1, );
-        $frame_qfract5 -> Entry( -textvariable => \$qfract_cutoff, )
-                                 -> grid( -row => 1, -column => 2, );
-        $frame_qfract5 -> Label( -text => 'Distance: ', )
-                                 -> grid( -row => 2, -column => 1, );
-        $frame_qfract5 -> Entry( -textvariable => \$qfract_dist, )
-                                 -> grid( -row => 2, -column => 2, );
-
-        my $frame_qfract6 = $top_qfract -> Frame() -> pack( -expand => 0, );
-
-        $frame_qfract6 -> Button( -text => 'Return',
-                               -command => [ $top_qfract => 'withdraw' ], )
-                               -> pack( -side => 'left', );
-
-        $frame_qfract6 -> Button( -text => 'Run',
+        $frame_qfract5 -> Button( -text => 'Run',
                                -command => sub {
 
                         $top_qfract -> destroy;
@@ -1466,49 +1454,11 @@ sub qfract_window {
 
                             $text -> insert( 'end', "Calculation finished", 'valid' );
                             $text -> see( 'end', );
-                            
+
                             if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
-                                
-                                my $mw = MainWindow -> new( -title => 'Qfraction plot', );
-                                
-                                open IN, '<', "carma.Qfraction.dat" || die "Cannot open carma.Qfraction.dat for reading";
-                                
-                                my $chart = $mw -> Lines( -background => 'snow',
-                                                          -zeroaxis => 1,
-                                                          -linewidth  => 1, )
-                                                          -> pack( -fill => 'both',
-                                                                   -expand => 1, );
 
-                                my $i = 0;
-                                my ( @frames, @Q, @Qs, @q, );
-                                while ( <IN> ) {
-                                    
-                                    if ( /\s+(.*?50|.*?00)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)/ ) {
-                                        
-                                        $frames[$i] = $1;
-                                        $Q[$i] = $2;
-                                        $Qs[$i] = $3;
-                                        $q[$i] = $4;
-                                        $i++;
-                                    }
-                                }
-                                
-                                close IN;
-
-                                my @data = ( [ @frames ], [ @Q ], [ @Qs ], [ @q ], );
-
-                                # Add a legend to the graph
-                                my @legends = ( 'Q', 'Qs', 'q', );
-                                $chart -> set_legend(
-                                    -data        => \@legends,
-                                    -titlecolors => 'blue',
-                                );
-
-                                # Add help identification
-                                $chart -> set_balloon();
-
-                                # Create the graph
-                                $chart -> plot( \@data );
+                                &plot ( 'qfract' );
+                                $qfract_plot = 0;
                             }
                         }
                         else {
@@ -1517,7 +1467,7 @@ sub qfract_window {
                             $text -> see( 'end', );
                         }
         }, )
-        -> pack( -side => 'right', );
+        -> grid( -row => 3, -column => 2, );
     }
     else {
 
@@ -1999,7 +1949,7 @@ sub auto_window {
                 while ( <PSF> ) {
 
                     if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                        
+
                         last;
                     }
                     elsif ( /$regex_var/i ) {
@@ -2043,7 +1993,7 @@ sub auto_window {
                 while ( <PSF> ) {
 
                     if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                        
+
                         last;
                     }
                     elsif ( /$regex_var/i ) {
@@ -2094,7 +2044,7 @@ sub auto_window {
                 while ( <PSF> ) {
 
                     if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                        
+
                         last;
                     }
                     elsif ( /$regex_var/i ) {
@@ -2138,7 +2088,7 @@ sub auto_window {
                 while ( <PSF> ) {
 
                     if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                        
+
                         last;
                     }
                     elsif ( /$regex_var/i ) {
@@ -2179,7 +2129,7 @@ sub auto_window {
                 while ( <PSF> ) {
 
                     if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                        
+
                         last;
                     }
                     elsif ( /$regex_var/i ) {
@@ -2227,7 +2177,7 @@ sub auto_window {
                 while ( <PSF> ) {
 
                     if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                        
+
                         last;
                     }
                     elsif ( /$regex_var/i ) {
@@ -2269,7 +2219,7 @@ sub auto_window {
             while ( <PSF> ) {
 
                 if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                    
+
                     last;
                 }
                 elsif ( /$regex_var/i ) {
@@ -2308,13 +2258,13 @@ sub auto_window {
             open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
 
             while ( <PSF> ) {
-                
+
                 if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                    
+
                     last;
                 }
                 elsif ( /$regex_var/i ) {
-                    
+
                     my $line = $line_count . $2 . $3 . $4 . $5 . $6;
 
                     if ( $heavy && $5 !~ /^H/ ) {
@@ -2358,7 +2308,7 @@ sub auto_window {
             while ( <PSF> ) {
 
                 if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
-                    
+
                     last;
                 }
                 elsif ( /$regex_var/i ) {
@@ -2388,7 +2338,7 @@ sub auto_window {
             $mw -> update;
 
             mv ( "carma.fitted.dcd", "carma.fitted.cluster_0$i.dcd" );
-            
+
             if ( $seg_custom || $seg_atm ) {
 
                 $flag = " -v -w -col -cov -dot -norm -super $seg_id_flag $custom_id_flag $atm_id_flag carma.fitted.cluster_0$i.dcd $psf_file";
@@ -2442,7 +2392,7 @@ sub auto_window {
             }
 
             if ( $all_done ) {
-                
+
                 mv ( "carma.superposition.pdb", "superposition.cluster_0$i.pdb" );
                 mv ( "carma.average.pdb", "average.cluster_0$i.pdb" );
 
@@ -4319,6 +4269,7 @@ sub map_window {
 sub sur_window {
 
     my $top_sur;
+    my $sur_plot = '';
 
     if ( !Exists ( $top_sur ) ) {
 
@@ -4329,10 +4280,19 @@ sub sur_window {
         my $frame_sur1 = $top_sur -> Frame() -> pack( -fill => 'x', );
         $frame_sur2 = $top_sur -> Frame() -> pack( -fill => 'x', );
         my $frame_sur3 = $top_sur -> Frame() -> pack( -fill => 'x', );
+        my $frame_sur5 = $top_sur -> Frame() -> pack( -fill => 'x', );
 
         &radiobuttons ( $frame_sur1 );
         &checkbuttons ( $frame_sur2 );
         &otherbuttons ( $frame_sur3 );
+
+        $frame_sur5 -> Label( -text => 'Various options', ) -> pack;
+
+        $frame_sur5 -> Checkbutton( -text => 'Automatically create a plot of the results file',
+                                    -variable => \$sur_plot,
+                                    -offvalue => 0,
+                                    -onvalue => 1, )
+                                    -> pack( -side => 'top', -anchor => 'w', );
 
         my $frame_sur4 = $top_sur -> Frame() -> pack( -expand => 0, );
 
@@ -4376,6 +4336,12 @@ sub sur_window {
 
             $text -> insert( 'end', "Calculation finished", 'valid' );
             $text -> see( 'end', );
+
+            if ( $sur_plot ) {
+
+                &plot ( 'surf' );
+                $sur_plot = 0;
+            }
         }
         else {
 
@@ -4401,6 +4367,7 @@ sub fit_window {
     my $ref = '';
     my $ref_fit_entry = '';
     my $ref_atom_num = '';
+    my $fit_plot = '';
 
     our $top_fit;
 
@@ -4429,22 +4396,29 @@ sub fit_window {
         $frame_fit2a -> Label( -text => 'Optional settings' )
                                -> pack( -side => 'bottom', );
 
+        $frame_fit4 -> Checkbutton( -text => 'Automatically create a plot of the results file',
+                                    -variable => \$fit_plot,
+                                    -offvalue => 0,
+                                    -onvalue => 1, )
+                                    -> grid( -row => 1, -column => 1, -sticky => 'w', );
+
         $frame_fit4 -> Checkbutton( -text => "Use frame as ref: ",
                                     -variable => \$ref,
                                     -offvalue => '',
                                     -onvalue => " -ref",
                                     -command => sub { $ref_fit_entry -> configure( -state => 'normal', ); }, )
-                                    -> grid( -row => 2, -column => 1, );
+                                    -> grid( -row => 2, -column => 1, -sticky => 'w', );
+
 
         my $ref_fit_entry = $frame_fit4 -> Entry( -textvariable => \$ref_atom_num,
                                                   -state => 'disabled', )
-                                                  -> grid( -row => 2, -column => 2, );
+                                                  -> grid( -row => 2, -column => 2, -sticky => 'w', );
 
         $frame_fit4 -> Checkbutton( -text => 'No fit',
                                     -variable => \$no_fit,
                                     -offvalue => '',
                                     -onvalue => " -nofit", )
-                                    -> grid( -row => 2, -column => 3, );
+                                    -> grid( -row => 2, -column => 3, -sticky => 'w', );
 
         my $frame_fit5 = $top_fit -> Frame() -> pack( -side => 'bottom', -expand => 0, );
 
@@ -4511,6 +4485,12 @@ sub fit_window {
 
                     $frame_fit1 -> messageBox( -type => "ok",
                                                -message => "These files will not be used in any calculations and will be overwritten next time you perform a fitting", );
+                }
+
+                if ( $fit_plot ) {
+
+                    &plot ( 'fit' );
+                    $fit_plot = 0;
                 }
             }
             else {
@@ -4930,7 +4910,7 @@ sub create_dir {
     # subfolder of every session is made   #
 
     if ( -w $dcd_loc ) {
-        
+
         mkpath ( "$dcd_loc/$timeStamp", 0, 0755, );
         chdir ( "$dcd_loc/$timeStamp" );
 
@@ -4952,13 +4932,13 @@ sub create_dir {
         }
     }
     else {
-        
+
         if ( $run_from_terminal ) {
-            
+
             die "\nSeems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n";
         }
         else {
-            
+
             $mw -> messageBox( -text => "Seems like you don't have write privileges for the folder the .dcd file is located in: $!\n\n",
                                -type => 'ok',
                                -icon => 'warning', );
@@ -4972,7 +4952,7 @@ sub create_dir {
 ###################################################################################################
 
 sub radiobuttons {
-    
+
     $_[0] -> Label ( -text => 'Atmid Selection', -font => "$font_20", ) -> pack;
 
     my @radiobuttons = ( 'CA', 'Backbone', 'Heavy', 'All atoms', 'Custom selection', );
@@ -5130,4 +5110,103 @@ sub otherbuttons {
         }
     }, );
     $other[1] -> configure( -command => \&resid_window, );
+}
+
+###################################################################################################
+###   Create the plot of the input matrix                                                       ###
+###################################################################################################
+
+sub plot {
+
+    my $input = shift;
+    my $file = '';
+    my $title = '';
+    my ( @frames, @Q, @Qs, @q, @y, @data, @legends, @step, );
+
+    my $mw = MainWindow -> new( -title => "Results Plot", );
+
+    my $screenwidth = $mw -> screenwidth;
+    my $interval = int ( $header / $screenwidth + 0.5 );
+
+    for ( 0 .. $screenwidth ) {
+
+        push ( @step, $interval * $_ );
+    }
+
+    $file = 'carma.Qfraction.dat' if ( $input eq 'qfract' );
+    $file = 'carma.fit-rms.dat' if ( $input eq 'fit' );
+    $file = 'carma.surface.dat' if ( $input eq 'surf' );
+    $file = 'carma.RMSD.matrix' if ( $input eq 'cross' );
+
+    open IN, '<', $file || die "Cannot open $file for reading";
+
+    my $i = 0;
+    while ( <IN> ) {
+
+        if ( defined $step[$i] && $input eq 'qfract' && /\s+(.*?$step[$i])\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)\s+(-?[01]\.\d+)/ ) {
+
+            $frames[$i] = $i;
+            $Q[$i] = $2;
+            $Qs[$i] = $3;
+            $q[$i] = $4;
+            $i++;
+        }
+        elsif ( defined $step[$i] && $input =~ /fit|cross|surf/ && /\s+(.*?$step[$i])\s+(\d+\.?\d*)/ ) {
+
+            $frames[$i] = $i;
+            $y[$i] = $2;
+            $i++;
+        }
+    }
+
+    close IN;
+
+    my ( $dataset1, $dataset2, $dataset3, $dataset4, );
+
+    if ( $input eq 'qfract' ) {
+
+        $dataset1 = LineGraphDataset -> new( -name => 'Q',
+                                             -xData => \@frames,
+                                             -yData => \@Q,
+                                             -xlabel => 'Frames',
+                                             -color => 'blue', );
+        $dataset2 = LineGraphDataset -> new( -name => 'Qs',
+                                             -xData => \@frames,
+                                             -yData => \@Qs,
+                                             -xlabel => 'Frames',
+                                             -color => 'green', );
+        $dataset3 = LineGraphDataset -> new( -name => 'q',
+                                             -xData => \@frames,
+                                             -yData => \@q,
+                                             -xlabel => 'Frames',
+                                             -yvalue => 'Value',
+                                             -color => 'purple', );
+    }
+    else {
+
+        $dataset4 = LineGraphDataset -> new( -name => $input,
+                                             -xData => \@frames,
+                                             -yData => \@y,
+                                             -xAxis => 'Frames',
+                                             -color => 'green', );
+    }
+
+    my $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
+                                    -height => $mw -> screenheight,
+                                    -background => 'snow',
+                                    -xlabel => 'Frame',
+                                    -ylabel => 'Value',
+                                    -plotTitle => [ '', 20, ] )
+                                    -> pack( -fill => 'both', -expand => 1, );
+
+    if ( $input eq 'qfract' ) {
+
+        $graph -> addDatasets( $dataset1, $dataset2, $dataset3, );
+    }
+    else {
+
+        $graph -> addDatasets( $dataset4, );
+    }
+
+    $graph -> plot;
 }
