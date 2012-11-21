@@ -81,25 +81,51 @@ use warnings;
 use Tk;
 use Tk::MsgBox;
 
-use Tk::Chart::Lines;
-use Tk::PlotDataset;
-use Tk::LineGraphDataset;
+if ( $^O eq 'MSWin32' ) {
+    
+    require Tk::Chart::Lines;
+}
+else {
+
+    require Tk::PlotDataset;
+    require Tk::LineGraphDataset;
+}
 
 require Tk::BrowseEntry;
 
-# Import the following modules         #
+# Import the following core modules    #
 
 use Cwd;
 use Cwd 'abs_path';
 use File::Path 'mkpath';
 use File::Copy 'cp', 'mv';
-use List::MoreUtils qw { uniq };
+
+use List::MoreUtils 'uniq';
 
 # Get the system time and modify it so #
 # that it is human readable            #
+# Find the OS type and store it in a   #
+# variable                             #
 
 my @now = localtime();
 my $timeStamp = sprintf( "carma_temp_%02d.%02d.%04d_%02d.%02d.%02d", $now[3], $now[4]+1, $now[5]+1900, $now[2], $now[1], $now[0] );
+
+my $windows = '';
+my $linux = '';
+my $mac = '';
+
+if ( $^O eq 'MSWin32' ) {
+    
+    $windows = 1;
+}
+elsif ( $^O eq 'linux' ) {
+    
+    $linux = 1;
+}
+elsif ( $^O eq 'darwin' ) {
+    
+    $mac = 1;
+}
 
 # Declaration of the global scalars... #
 
@@ -122,6 +148,8 @@ our $atm_id_flag = '';
 our $res_id_flag = '';
 our $header = '';
 our $rmsd_step = '';
+our $atm_id = '';
+
 our $active_run_buttons = '';
 our $eig_play = '';
 our $eig_play_vector = '';
@@ -138,7 +166,6 @@ our $index_row = '';
 our $index_column = '';
 our $f4_b = '';
 our $dpca_run_button = '';
-our $atm_id = '';
 our $index_num_atoms = '';
 our $dpca_frame = '';
 our $dpca_frame_1 = '';
@@ -170,7 +197,7 @@ my $wd_size = '';
 my $ps_viewer = '';
 my $pdb_viewer ='';
 
-if ( $^O eq 'linux' ) {
+if ( $linux || $mac ) {
 
     if ( -d "carma_results" ) {
 
@@ -565,8 +592,8 @@ our $text = $f5 -> Scrolled( "Text",
                          -height => 26, )
                          ->pack();
 
-$text -> configure( -height => 33, ) if ( $^O eq 'linux' );
-$text -> configure( -width => 85, ) if ( $^O ne 'linux' );
+$text -> configure( -height => 33, ) if ( $linux );
+$text -> configure( -width => 85, ) if ( $windows );
 
 # Define three colored text tags       #
 # to be used for the text displayed    #
@@ -583,7 +610,7 @@ $text -> insert( 'end', "The size of carma_results folder is: $wd_size\n", );
 # If OS is *nix/unix-like insert a     #
 # line informing the user of the prog  #
 # selected for .ps viewing             #
-if ( $^O eq 'linux' ) {
+if ( $linux ) {
 
     if ( $ps_viewer ) {
 
@@ -606,10 +633,7 @@ $text -> insert( 'end', "\nSELECT A TASK FROM THE LEFT PANEL\n" );
 # on top of the first one immediately  #
 # after the fifth frame is drawn       #
 my $f6 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ )
-                            -> pack( -after => $f1,
-                                     -side => 'bottom',
-                                     -fill => 'both',
-                                     -expand => 1, );
+                            -> pack( -after => $f1, -side => 'bottom', -fill => 'both', -expand => 1, );
 
 # Create the labels displaying the     #
 # active .psf & .dcd files and update  #
@@ -658,7 +682,7 @@ sub open_file {
     # the getOpenMethod to the extension   #
     # currently in $filetypes              #
 
-    if ( $^O eq 'linux' ) {
+    if ( $linux ) {
 
         if ( $_[0] eq 'psf' ) {
 
@@ -689,7 +713,7 @@ sub open_file {
     # getOpen method is a .psf file        #
     if ( $file =~ /\w*\.psf/ ) {
 
-        if ( $^O eq 'linux' ) {
+        if ( $linux ) {
 
             # If on *nix invoke the abs_path       #
             # subroutine and store it's result in  #
@@ -717,7 +741,7 @@ sub open_file {
     # of the dcd file                      #
     elsif ( $file =~ /(.*)\/(\w*)\.dcd/ ) {
 
-        if ( $^O eq 'linux' ) {
+        if ( $linux ) {
 
             $dcd_file = abs_path ( $file );
             $dcd_loc = $1;
@@ -770,7 +794,7 @@ sub carma {
     $all_done = 0;
     $flag =~ s/[\s]\s+/ /g;
 
-    if ( $^O ne 'linux' ) {
+    if ( $windows ) {
 
         $text -> insert( 'end', " Running carma with the flag :\n", 'valid' );
         $text -> insert( 'end', "$flag\n", 'info' );
@@ -954,7 +978,7 @@ sub parser {
     # carma run searching for the presence #
     # of the word 'Abort'                  #
     my $valid_psf_dcd_pair = '';
-    if ( $^O eq 'linux' ) {
+    if ( $linux ) {
 
         $valid_psf_dcd_pair = `carma -v -fit -last 2 $psf_file $dcd_file`;
     }
@@ -995,11 +1019,11 @@ sub parser {
 
         if ( $run_from_terminal ) {
 
-            die "\nIt seems that the .psf file lacks chain ids. Please fix and retry.\n\n";
+            die "\nIt seems that the .psf file lacks chain ids. Please fix this and retry.\n\n";
         }
         else {
 
-            $mw -> messageBox ( -message => "It seems that the .psf file lacks chain ids. Please fix and retry.",
+            $mw -> messageBox ( -message => "It seems that the .psf file lacks chain ids. Please fix this and retry.",
                                 -type => 'ok',
                                 -icon => 'warning', );
             $mw -> destroy;
@@ -1022,7 +1046,7 @@ sub parser {
 
 sub dcd_header_parser {
 
-    if ( $^O eq 'linux' ) {
+    if ( $linux ) {
 
         `carma -v -fit -first 1 -last 2 $psf_file $dcd_file > carma.out`;
     }
@@ -1286,8 +1310,8 @@ sub rmsd_window {
             if ( $all_done ) {
 
                 my $coloring;
-                $coloring = `carma.exe -col - < carma.RMSD.matrix` if ( $^O eq 'MSWin32' );
-                $coloring = `carma -col - < carma.RMSD.matrix` if ( $^O eq 'linux' );
+                $coloring = `carma.exe -col - < carma.RMSD.matrix` if ( $windows );
+                $coloring = `carma -col - < carma.RMSD.matrix` if ( $linux );
 
                 if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
@@ -1853,7 +1877,7 @@ sub auto_window {
         $mw -> update;
 
 
-        if ( $^O eq 'linux' ) {
+        if ( $linux ) {
 
             `carma -v -sort $file $dcd_file`;
             `mv carma.reordered.dcd carma.cluster_0$i.dcd`;
@@ -2403,8 +2427,8 @@ sub auto_window {
             $lb -> bind( '<Button-1>', sub {
 
                                             my $selection = $lb -> get( $lb -> curselection() );
-                                            system ( "$pdb_viewer $selection &" ) if ( $^O eq 'linux' );
-                                            `start $selection` if ( $^O ne 'linux' );
+                                            system ( "$pdb_viewer $selection &" ) if ( $linux );
+                                            `start $selection` if ( $windows );
                                         } );
         }
         $super_check = 0;
@@ -2759,7 +2783,7 @@ sub image_window {
     my $i = 0;
     my $j = 0;
     my @contents = '';
-    my $files = 'carma.Qfraction.dat|carma.Rgyration.dat|carma.distances|carma.torsions|carma.bendangles|carma.rms-average.dat|carma.dPCA.eigenvalues.dat|carma.PCA.eigenvalues.dat';
+    my $files = 'carma.Qfraction.dat|carma.Rgyration.dat|carma.distances|carma.torsions|carma.bendangles|carma.rms-average.dat|carma_entropy.dat';
     #~ my $toplevel_position = "260x290" . $toplevel_position;
 
     my $image_top = $mw -> Toplevel( -title => 'Latest Images', );
@@ -2798,8 +2822,8 @@ sub image_window {
                                     my $selection = $lb -> get( $lb -> curselection() );
                                     if ( $selection =~ /.*ps$/ ) {
 
-                                        system ( "$ps_viewer $selection &" ) if ( $^O eq 'linux' );
-                                        `start $selection` if ( $^O ne 'linux' );
+                                        system ( "$ps_viewer $selection &" ) if ( $linux );
+                                        `start $selection` if ( $windows );
                                     }
                                     else {
 
@@ -3584,7 +3608,7 @@ sub rms_window {
         }
         close RMS_OUT;
 
-        if ( $^O eq 'linux' ) {
+        if ( $linux ) {
 
             `carma $average_ps_file $rmsdev_ps_file`;
         }
@@ -4135,7 +4159,7 @@ sub map_window {
                 $file = abs_path ( $file );
                 &create_dir;
 
-                if ( $^O eq 'linux' ) {
+                if ( $linux ) {
 
                     `cp $file .`;
                 }
@@ -4357,7 +4381,7 @@ sub fit_window {
                     $dcd_count++;
                     $active_dcd_label -> configure( -text => "Active .dcd: carma_fitted_$dcd_count.dcd", );
                     $active_psf_label -> configure( -text => "Active .psf: carma_fitted_$dcd_count.psf", );
-                    if ( $^O eq 'linux' ) {
+                    if ( $linux ) {
 
                         `mv carma.fitted.dcd carma_fitted_$dcd_count.dcd`;
                         `mv carma.selected_atoms.psf carma_fitted_$dcd_count.psf`;
@@ -4461,7 +4485,7 @@ sub fit_index_window {
                                      -command => sub {
 
                                          &create_dir;
-                                         if ( $^O eq 'linux' ) {
+                                         if ( $linux ) {
 
                                             $seg_id_flag = '' if $seg_id_flag;
 
@@ -4651,7 +4675,7 @@ sub fit_index_window {
 
             &create_fit_index;
 
-            if ( $^O eq 'linux' ) {
+            if ( $linux ) {
 
                 foreach ( @index_seg_ids ) {
 
@@ -4806,7 +4830,7 @@ sub create_dir {
         # they are made the Cwd and links to   #
         # specified .psf and .dcd files are    #
         # created                              #
-        if ( $^O eq 'linux' ) {
+        if ( $linux ) {
 
             `ln -s $psf_file .`;
             `ln -s $dcd_file .`;
@@ -5007,7 +5031,9 @@ sub otherbuttons {
 sub plot {
 
     my $input = shift;
-    my ( @frames, @Q, @Qs, @q, @y, @data, @legends, @step, @Andricioaei, @Schlitter, );
+    my ( @frames,    @Q,    @Qs,    @q,
+         @values,    @data, @step,  @legends,
+         @Schlitter, @Andricioaei, );
 
     my $mw = MainWindow -> new( -title => "Results Plot", );
 
@@ -5021,7 +5047,7 @@ sub plot {
         push ( @step, $interval * $_ );
     }
 
-    open IN, '<', $input || die "Cannot open $input for reading";
+    open IN, '<', $input || die "Cannot open $input for reading: $!";
 
     my $i = 0;
     while ( <IN> ) {
@@ -5044,80 +5070,142 @@ sub plot {
         elsif ( defined $step[$i] && $input =~ /fit|rgyr|bend|tors|dist|rms-av|surf/i && /\s+(.*?$step[$i])\s+([+-]?\d+\.?\d*)/ ) {
 
             $frames[$i] = $1;
-            $y[$i] = $2;
+            $values[$i] = $2;
             $i++;
         }
     }
 
     close IN;
+    
+    if ( $linux || $mac ) {
 
-    my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6,);
+        my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6,);
 
-    if ( $input =~ /qfract/i ) {
+        my $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
+                                        -height => $mw -> screenheight,
+                                        -background => 'snow',
+                                        -xlabel => 'Frame',
+                                        -ylabel => 'Value',
+                                        -plotTitle => [ $input, 20, ] )
+                                        -> pack( qw/ -fill both -expand 1/ );
 
-        $dataset1 = LineGraphDataset -> new( -name => 'Q',
-                                             -xData => \@frames,
-                                             -yData => \@Q,
-                                             -color => 'blue', );
-        $dataset2 = LineGraphDataset -> new( -name => 'Qs',
-                                             -xData => \@frames,
-                                             -yData => \@Qs,
-                                             -color => 'green', );
-        $dataset3 = LineGraphDataset -> new( -name => 'q',
-                                             -xData => \@frames,
-                                             -yData => \@q,
-                                             -color => 'purple', );
-    }
-    elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
+        if ( $input =~ /qfract/i ) {
 
-        $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
-                                             -xData => \@frames,
-                                             -yData => \@Andricioaei,
-                                             -color => 'blue', );
-        $dataset5 = LineGraphDataset -> new( -name => 'Schlitter',
-                                             -xData => \@frames,
-                                             -yData => \@Schlitter,
-                                             -color => 'green', );
-    }
-    elsif ( $input =~ /entropy/i ) {
+            $dataset1 = LineGraphDataset -> new( -name => 'Q',
+                                                 -xData => \@frames,
+                                                 -yData => \@Q,
+                                                 -color => 'blue', );
+            $dataset2 = LineGraphDataset -> new( -name => 'Qs',
+                                                 -xData => \@frames,
+                                                 -yData => \@Qs,
+                                                 -color => 'green', );
+            $dataset3 = LineGraphDataset -> new( -name => 'q',
+                                                 -xData => \@frames,
+                                                 -yData => \@q,
+                                                 -color => 'purple', );
+                                                 
+            $graph -> addDatasets( $dataset1, $dataset2, $dataset3, );
+        }
+        elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
 
-        $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
-                                             -xData => \@frames,
-                                             -yData => \@Andricioaei,
-                                             -color => 'blue', );
+            $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
+                                                 -xData => \@frames,
+                                                 -yData => \@Andricioaei,
+                                                 -color => 'blue', );
+            $dataset5 = LineGraphDataset -> new( -name => 'Schlitter',
+                                                 -xData => \@frames,
+                                                 -yData => \@Schlitter,
+                                                 -color => 'green', );
+                                                 
+            $graph -> addDatasets( $dataset4, $dataset5, );
+        }
+        elsif ( $input =~ /entropy/i ) {
+
+            $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
+                                                 -xData => \@frames,
+                                                 -yData => \@Andricioaei,
+                                                 -color => 'blue', );
+                                                 
+            $graph -> addDatasets( $dataset4, );
+        }
+        else {
+
+            $dataset6 = LineGraphDataset -> new( -name => $input,
+                                                 -xData => \@frames,
+                                                 -yData => \@values,
+                                                 -color => 'blue', );
+                                                 
+            $graph -> addDatasets( $dataset6, );
+        }
+
+        $graph -> plot;
     }
     else {
+        
+        my $tick = 0;
+        if ( $header < 1000 ) {
 
-        $dataset6 = LineGraphDataset -> new( -name => $input,
-                                             -xData => \@frames,
-                                             -yData => \@y,
-                                             -color => 'blue', );
+            $tick = 1;
+        }
+        elsif ( $header >= 1000 && $header < 10000 ) {
+
+            $tick = 9;
+        }
+        elsif ( $header >= 10000 && $header < 100000 ) {
+
+            $tick = 99;
+        }
+        elsif ( $header >= 100000 && $header < 1000000 ) {
+
+            $tick = 999;
+        }
+        elsif ( $header >= 1000000 && $header < 10000000 ) {
+
+            $tick = 9999;
+        }
+        else {
+
+            $tick = 99999;
+        }
+        
+        my $chart = $mw -> Lines( -background => 'snow',
+                                  -xlabel => 'Frame',
+                                  -ylabel => 'Value',
+                                  -title => $input,
+                                  -xlabelskip => $tick,
+                                  -interval => 1,
+                                  -linewidth => 2, )
+                                  -> pack( -fill => 'both', -expand => 1, );
+        
+        if ( $input =~ /qfract/i ) {
+            
+            @data = ( [ @frames ], [ @Q ], [ @Qs ], [ @q ], );
+            @legends = ( 'Q', 'Qs', 'q', );
+        }
+        elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
+
+            @data = ( [ @frames ], [ @Andricioaei ], [ @Schlitter ], );
+            @legends = ( 'Andricioaei', 'Schlitter', );
+        }
+        elsif ( $input =~ /entropy/i ) {
+
+            @data = ( [ @frames ], [ @Andricioaei ], );
+            @legends = ( 'Andricioaei', );
+        }
+        else {
+
+            @data = ( [ @frames ], [ @values ], );
+            @legends = ( 'Values', );
+        }
+
+
+        $chart -> set_legend(
+            -title       => 'Legend',
+            -data        => \@legends,
+            -titlecolors => 'blue',
+        );
+        
+        $chart -> set_balloon();
+        $chart -> plot( \@data );
     }
-
-    my $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
-                                    -height => $mw -> screenheight,
-                                    -background => 'snow',
-                                    -xlabel => 'Frame',
-                                    -ylabel => 'Value',
-                                    -plotTitle => [ $input, 20, ] )
-                                    -> pack( qw/ -fill both -expand 1/ );
-
-    if ( $input =~ /qfract/i ) {
-
-        $graph -> addDatasets( $dataset1, $dataset2, $dataset3, );
-    }
-    elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
-
-        $graph -> addDatasets( $dataset4, $dataset5, );
-    }
-    elsif ( $input =~ /entropy/i ) {
-
-        $graph -> addDatasets( $dataset4, );
-    }
-    else {
-
-        $graph -> addDatasets( $dataset6, );
-    }
-
-    $graph -> plot;
 }
