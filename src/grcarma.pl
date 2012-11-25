@@ -713,7 +713,7 @@ sub open_file {
     my $file = $mw -> getOpenFile( -filetypes => $filetypes, -initialdir => getcwd, );
     # If the file selected through the     #
     # getOpen method is a .psf file        #
-    if ( $file =~ /(.*)\/(\w*)\.psf/ ) {
+    if ( $file =~ /(.*)(\/|\\)(\w*)\.psf/ ) {
 
         if ( $linux ) {
 
@@ -725,12 +725,13 @@ sub open_file {
             # obsolete every time the working      #
             # directory is changed                 #
             $psf_file = abs_path ( $file );
-            $psf_name = $2;
-            $active_psf = $2 . '.psf';
+            $psf_name = $3;
+            $active_psf = $3 . '.psf';
         }
         else {
 
-            $active_psf = $2 . '.psf';
+			$psf_name = $3;
+            $active_psf = $3 . '.psf';
             # else substitute the '/' for '\' in   #
             # $file as windows uses a backward     #
             # slash & the getOpen method returns   #
