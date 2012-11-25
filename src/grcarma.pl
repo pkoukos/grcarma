@@ -100,7 +100,7 @@ use List::MoreUtils 'uniq';
 # variable                             #
 
 my @now = localtime();
-my $timeStamp = sprintf( "carma_temp_%02d.%02d.%04d_%02d.%02d.%02d", $now[3], $now[4]+1, $now[5]+1900, $now[2], $now[1], $now[0] );
+my $timeStamp = sprintf( "carma_results_%02d.%02d.%04d_%02d.%02d.%02d", $now[3], $now[4]+1, $now[5]+1900, $now[2], $now[1], $now[0] );
 
 my $windows = '';
 my $linux = '';
@@ -3069,8 +3069,6 @@ sub resid_window {
         $frame_res0 -> Label( -text => "\nPlease specify the selections in ascending order for each chain\n", ) -> pack;
 
         &add_resid_bar;
-
-
     }
     else {
 
@@ -4789,7 +4787,7 @@ sub create_dir {
     # folder used for storing the results  #
     # of the program then terminate the    #
     # subroutine with a success status     #
-    if ( getcwd =~ /carma_temp/ ) {
+    if ( getcwd =~ /carma_results/ ) {
 
         return(0);
     }
@@ -4818,7 +4816,7 @@ sub create_dir {
         }
         else {
 
-            link ( $psf_file, "$dcd_name.psf", );
+            link ( $psf_file, "$psf_name.psf", );
             link ( $dcd_file, "$dcd_name.dcd", );
 
             `copy ..\\..\\carma.exe .`;
@@ -4836,6 +4834,7 @@ sub create_dir {
                                -type => 'ok',
                                -icon => 'warning', );
             $mw -> destroy;
+            exit 1;
         }
     }
 }
