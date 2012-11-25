@@ -124,6 +124,8 @@ my $active_dcd = '';
 
 # Declaration of the global scalars... #
 
+our $VERSION = '0.1';
+
 our $flag = '';
 our $custom_id_flag = '';
 our $seg_id_flag = '';
@@ -363,7 +365,7 @@ unless ( $run_from_terminal ) {
     my $x_position = int ( ( $mw -> screenwidth / 2 ) - ( $mw -> width / 2 ) );
     my $y_position = int ( ( ( $mw -> screenheight - 80 ) / 2 ) - ( $mw -> height / 2 ) );
 
-    my $mw_position = "+" . $x_position . "+" . $y_position;print $mw_position;
+    my $mw_position = "+" . $x_position . "+" . $y_position;
 
     $mw -> geometry ("$mw_position");
     $mw -> focusForce if ( $^O ne 'linux' );
@@ -381,16 +383,10 @@ my $f0 = $mw -> Frame();
 # normally                             #
 unless ( $run_from_terminal ) {
 
-    #~ $f0 -> pack( -side => 'top',
-                                  #~ -expand => 1,
-                                  #~ -fill => 'both', );
-        $mw -> waitVariable(\$have_files);
+    #~ $f0 -> pack( -side => 'top', -expand => 1, -fill => 'both', );
+    $mw -> waitVariable(\$have_files);
     $mw -> update;
 }
-#~ else {
-#~
-    #~
-#~ }
 
 ###################################################################################################
 ###   File Menu                                                                                 ###
@@ -400,7 +396,7 @@ unless ( $run_from_terminal ) {
 $mw -> configure( -menu => my $menubar = $mw -> Menu );
 
 # Create the menubutton "File" and the #
-# menubutton "help"                    #
+# menubutton "Help"                    #
 my $file = $menubar -> cascade( -label => '~File');
 my $help = $menubar -> cascade( -label => '~Help');
 
@@ -412,13 +408,15 @@ $file -> separator();
 $file -> command( -label => "Exit",
                   -underline => 1,
                   -command => [ $mw => 'destroy' ], );
+$help -> command( -label => 'About',
+				  -command => \&about, );
 
 ###################################################################################################
 ###   Menubutton Frame                                                                          ###
 ###################################################################################################
 
-my $font_12 = qw/-*-helvetica-bold-r-*-*-*-120-*-*-*-*-*-*/;
-my $font_20 = qw/-*-helvetica-bold-r-*-*-*-200-*-*-*-*-*-*/;
+my $font_12 = qw/-*-*-bold-r-*-*-*-120-*-*-*-*-*-*/;
+my $font_20 = qw/-*-*-bold-r-*-*-*-200-*-*-*-*-*-*/;
 
 # Draw the second frame ( menubuttons) #
 # on top of the first one              #
@@ -576,7 +574,7 @@ my $f4 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ ) -> pack( qw/ -expand
 # of the first one and immediately     #
 # after the fifth frame is drawn       #
 my $f5 = $f0 -> Frame( qw/ -borderwidth 1 -relief raised/ )
-                            -> pack( -after => $f1, -side => 'left', -fill => 'both', -expand => 1, );
+                           -> pack( -after => $f1, -side => 'left', -fill => 'both', -expand => 1, );
 
 our $text = $f5 -> Scrolled( "Text",
                          -bg => 'black',
@@ -2384,8 +2382,10 @@ sub auto_window {
 
             @contents = sort ( @contents );
 
+            my $dir = getcwd;
+
             $temp_top -> Label( -text => "\nContents of the folder", ) -> pack;
-            $temp_top -> Label( -text => getcwd, ) -> pack;
+            $temp_top -> Entry( -text => $dir, -width => 65, ) -> pack;
             $temp_top -> Label( -text => "\nClick on the file you want to view\n", ) -> pack;
 
             my $lb = $temp_top -> Listbox( -selectmode => "single", ) -> pack( -anchor => 'center', );
@@ -2399,7 +2399,7 @@ sub auto_window {
             $lb -> bind( '<Button-1>', sub {
 
                                             my $selection = $lb -> get( $lb -> curselection() );
-                                            system ( "$pdb_viewer $selection &" ) if ( $linux );
+                                            system ( "$pdb_viewer $selection &" ) if ( $linux && $pdb_viewer );
                                             `start $selection` if ( $windows );
                                         } );
         }
@@ -2777,8 +2777,10 @@ sub image_window {
 
     @contents = sort ( @contents );
 
+    my $dir = getcwd;
+
     $image_top -> Label( -text => "Displaying contens of the folder", ) -> pack;
-    $image_top -> Label( -text => getcwd, ) -> pack;
+    $image_top -> Entry( -text => $dir, -width => 65, ) -> pack;
     $image_top -> Label( -text => "\nClick on the image you want to view", ) -> pack;
     $image_top -> Label( -text => "or the file you would like to plot\n", ) -> pack;
 
@@ -2797,7 +2799,7 @@ sub image_window {
                                     my $selection = $lb -> get( $lb -> curselection() );
                                     if ( $selection =~ /.*ps$/ ) {
 
-                                        system ( "$ps_viewer $selection &" ) if ( $linux );
+                                        system ( "$ps_viewer $selection &" ) if ( $linux && $ps_viewer );
                                         `start $selection` if ( $windows );
                                     }
                                     else {
@@ -5187,4 +5189,32 @@ sub plot {
         $chart -> set_balloon();
         $chart -> plot( \@data );
     }
+}
+
+###################################################################################################
+###   Create the help window                                                                    ###
+###################################################################################################
+
+sub about {
+
+	my $top = $mw -> Toplevel( -title => "Help", );
+	$top -> geometry( "$toplevel_position" );
+
+	$top -> Label( -text => "This is grcarma v$VERSION", ) -> pack;
+	$top -> Button( -text => "View online documentation",
+					-command => sub {
+
+						if ( $linux ) {
+
+							system ( "x-www-browser https://github.com/pkoukos/grcarma" );
+						}
+						elsif ( $mac ) {
+
+							system ( "safari https://github.com/pkoukos/grcarma" );
+						}
+						elsif ( $windows ) {
+
+							system ( "https://github.com/pkoukos/grcarma" );
+						}
+					}, ) -> pack;
 }
