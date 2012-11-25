@@ -1,9 +1,7 @@
 #!/bin/bash
 
 #**********************************************************************#
-#                                                                      #
 #               This is an installer script for grcarma                #
-#                                                                      #
 #**********************************************************************#
 
 # If the user is not root when running the
@@ -26,8 +24,9 @@ if [[ $OSTYPE =~ 'linux' ]]; then
     if [[ $BitNess =~ 64 ]]; then
         # If running on 64bit linux and a carma executable
         # is found in /usr/local/bin ask the user if the
-        # previous executable should be replaced by the
-        # latest contained in the grcarma tarball
+        # previous executable should be replaced by the one
+        # contained in the grcarma tarball, otherwise just
+        # copy the executable to the same folder
         if [ $carma_location ]; then
             printf "\nA carma executable has been found in the folder $carma_location"
             printf "\nWould you like to replace it with version (1.2) [Y/n]?"
