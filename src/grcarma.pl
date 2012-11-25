@@ -81,8 +81,8 @@ use warnings;
 use Tk;
 use Tk::MsgBox;
 require Tk::Chart::Lines if ( $^O eq 'MSWin32' );
-require Tk::PlotDataset if ( $^O eq 'linux' );
-require Tk::LineGraphDataset if ( $^O eq 'linux' );
+require Tk::PlotDataset if ( $^O ne 'MSWin32' );
+require Tk::LineGraphDataset if ( $^O ne 'MSWin32' );
 require Tk::BrowseEntry;
 
 # Import the following core modules    #
@@ -107,15 +107,15 @@ my $linux = '';
 my $mac = '';
 
 if ( $^O eq 'MSWin32' ) {
-    
+
     $windows = 1;
 }
 elsif ( $^O eq 'linux' ) {
-    
+
     $linux = 1;
 }
 elsif ( $^O eq 'darwin' ) {
-    
+
     $mac = 1;
 }
 
@@ -640,7 +640,7 @@ our $active_dcd_label = $f6 -> Label( -text => "Active .dcd: $active_dcd", -fg =
                                       -> pack( -side => 'right', );
 
 my $go_back_button = $f6 -> Button( -text => 'Go back to original psf/dcd', -state => 'disabled', -command => sub {
-    
+
     $active_psf = $psf_name . '.psf';
     $active_dcd = $dcd_name . '.dcd';
     $active_psf_label -> configure( -text => "Active .psf: $active_psf", );
@@ -731,7 +731,7 @@ sub open_file {
             $active_psf = $2 . '.psf';
         }
         else {
-            
+
             $active_psf = $2 . '.psf';
             # else substitute the '/' for '\' in   #
             # $file as windows uses a backward     #
@@ -809,7 +809,7 @@ sub carma {
         $text -> insert( 'end', "$flag\n", 'info' );
         $text -> see( 'end', );
         $mw -> update;
-        
+
         system ( "carma.exe $flag $active_psf $active_dcd > carma.out.copy" );
     }
     else {
@@ -818,7 +818,7 @@ sub carma {
         $text -> insert( 'end', "$flag\n", 'info' );
         $text -> see( 'end', );
         $mw -> update;
-        
+
         system ( "xterm -geometry 80x25+800+200 -e \"carma $flag $active_psf $active_dcd | tee carma.out.copy\"" );
     }
 
@@ -1751,7 +1751,7 @@ sub cpca_window {
 ###################################################################################################
 
 sub auto_window {
-    
+
     my ( $remember_psf, $remember_dcd, ) = ( $active_psf, $active_dcd, );
 
     my $clusters;
@@ -1871,7 +1871,7 @@ sub auto_window {
 
                 close OUT;
                 close PSF;
-                
+
                 $active_dcd = "carma.cluster_0$i.dcd";
 
                 $flag = " -v -w -fit -index -atmid ALLID $seg_id_flag";
@@ -2271,9 +2271,9 @@ sub auto_window {
             mv ( "carma.fitted.dcd", "carma.fitted.cluster_0$i.dcd" );
 
             if ( $seg_custom || $seg_atm ) {
-                
+
                 $active_dcd = "carma.fitted.cluster_0$i.dcd";
-                
+
                 $flag = " -v -w -col -cov -dot -norm -super $seg_id_flag $custom_id_flag $atm_id_flag";
                 &carma ( 'auto' );
 
@@ -4359,7 +4359,7 @@ sub fit_window {
                     $active_dcd_label -> configure( -text => "Active .dcd: $active_dcd", );
                     $active_psf_label -> configure( -text => "Active .psf: $active_psf", );
                     $go_back_button -> configure( -state => 'normal', );
-                    
+
                     if ( $linux ) {
 
                         `mv carma.fitted.dcd carma.fitted_$dcd_count.dcd`;
@@ -5055,7 +5055,7 @@ sub plot {
     }
 
     close IN;
-    
+
     if ( $linux || $mac ) {
 
         my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6,);
@@ -5082,7 +5082,7 @@ sub plot {
                                                  -xData => \@frames,
                                                  -yData => \@q,
                                                  -color => 'purple', );
-                                                 
+
             $graph -> addDatasets( $dataset1, $dataset2, $dataset3, );
         }
         elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
@@ -5095,7 +5095,7 @@ sub plot {
                                                  -xData => \@frames,
                                                  -yData => \@Schlitter,
                                                  -color => 'green', );
-                                                 
+
             $graph -> addDatasets( $dataset4, $dataset5, );
         }
         elsif ( $input =~ /entropy/i ) {
@@ -5104,7 +5104,7 @@ sub plot {
                                                  -xData => \@frames,
                                                  -yData => \@Andricioaei,
                                                  -color => 'blue', );
-                                                 
+
             $graph -> addDatasets( $dataset4, );
         }
         else {
@@ -5113,14 +5113,14 @@ sub plot {
                                                  -xData => \@frames,
                                                  -yData => \@values,
                                                  -color => 'blue', );
-                                                 
+
             $graph -> addDatasets( $dataset6, );
         }
 
         $graph -> plot;
     }
     else {
-        
+
         my $tick = 0;
         if ( $header < 1000 ) {
 
@@ -5146,7 +5146,7 @@ sub plot {
 
             $tick = 99999;
         }
-        
+
         my $chart = $mw -> Lines( -background => 'snow',
                                   -xlabel => 'Frame',
                                   -ylabel => 'Value',
@@ -5155,9 +5155,9 @@ sub plot {
                                   -interval => 1,
                                   -linewidth => 2, )
                                   -> pack( -fill => 'both', -expand => 1, );
-        
+
         if ( $input =~ /qfract/i ) {
-            
+
             @data = ( [ @frames ], [ @Q ], [ @Qs ], [ @q ], );
             @legends = ( 'Q', 'Qs', 'q', );
         }
@@ -5183,7 +5183,7 @@ sub plot {
             -data        => \@legends,
             -titlecolors => 'blue',
         );
-        
+
         $chart -> set_balloon();
         $chart -> plot( \@data );
     }
