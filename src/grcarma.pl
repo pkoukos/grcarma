@@ -415,8 +415,8 @@ $help -> command( -label => 'About',
 ###   Menubutton Frame                                                                          ###
 ###################################################################################################
 
-my $font_12 = qw/-*-*-bold-r-*-*-*-120-*-*-*-*-*-*/;
-my $font_20 = qw/-*-*-bold-r-*-*-*-200-*-*-*-*-*-*/;
+my $font_12 = qw/-*-*-*-r-*-*-*-120-*-*-*-*-*-*/;
+my $font_20 = qw/-*-*-*-r-*-*-*-200-*-*-*-*-*-*/;
 
 # Draw the second frame ( menubuttons) #
 # on top of the first one              #
@@ -586,7 +586,7 @@ our $text = $f5 -> Scrolled( "Text",
                          -height => 26, )
                          ->pack();
 
-$text -> configure( -height => 33, ) if ( $linux );
+$text -> configure( -height => 33, ) if ( $linux || $mac );
 $text -> configure( -width => 85, ) if ( $windows );
 
 # Define three colored text tags       #
@@ -604,7 +604,7 @@ $text -> insert( 'end', "The size of carma_results folder is: $wd_size\n", );
 # If OS is *nix/unix-like insert a     #
 # line informing the user of the prog  #
 # selected for .ps viewing             #
-if ( $linux ) {
+if ( $linux || $mac  ) {
 
     if ( $ps_viewer ) {
 
@@ -715,7 +715,7 @@ sub open_file {
     # getOpen method is a .psf file        #
     if ( $file =~ /(.*)(\/|\\)(\w*)\.psf/ ) {
 
-        if ( $linux ) {
+        if ( $linux || $mac ) {
 
             # If on *nix invoke the abs_path       #
             # subroutine and store it's result in  #
@@ -747,7 +747,7 @@ sub open_file {
     # of the dcd file                      #
     elsif ( $file =~ /(.*)\/(\w*)\.dcd/ ) {
 
-        if ( $linux ) {
+        if ( $linux || $mac ) {
 
             $dcd_file = abs_path ( $file );
             $dcd_loc = $1;
@@ -811,7 +811,7 @@ sub carma {
 
         system ( "carma.exe $flag $active_psf $active_dcd > carma.out.copy" );
     }
-    else {
+    elsif ( $linux ) {
 
         $text -> insert( 'end', "Running carma with the flag :\n", 'valid' );
         $text -> insert( 'end', "$flag\n", 'info' );
@@ -819,6 +819,15 @@ sub carma {
         $mw -> update;
 
         system ( "xterm -geometry 80x25+800+200 -e \"carma $flag $active_psf $active_dcd | tee carma.out.copy\"" );
+    }
+    elsif ( $mac ) {
+        
+        $text -> insert( 'end', "Running carma with the flag :\n", 'valid' );
+        $text -> insert( 'end', "$flag\n", 'info' );
+        $text -> see( 'end', );
+        $mw -> update;
+
+        system ( "carma $flag $active_psf $active_dcd | tee carma.out.copy" );
     }
 
     # When the run is completed open the   #
@@ -915,7 +924,7 @@ sub parser {
     # carma run searching for the presence #
     # of the word 'Abort'                  #
     my $valid_psf_dcd_pair = '';
-    if ( $linux ) {
+    if ( $linux || $mac ) {
 
         $valid_psf_dcd_pair = `carma -v -fit -last 2 $psf_file $dcd_file`;
     }
@@ -983,7 +992,7 @@ sub parser {
 
 sub dcd_header_parser {
 
-    if ( $linux ) {
+    if ( $linux || $mac ) {
 
         `carma -v -fit -first 1 -last 2 $psf_file $dcd_file > carma.out`;
     }
@@ -1248,7 +1257,7 @@ sub rmsd_window {
 
 				my $coloring;
 				$coloring = `carma.exe -col - < carma.RMSD.matrix` if ( $windows );
-				$coloring = `carma -col - < carma.RMSD.matrix` if ( $linux );
+				$coloring = `carma -col - < carma.RMSD.matrix` if ( $linux || $mac );
 
 				if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
@@ -1812,7 +1821,7 @@ sub auto_window {
         $mw -> update;
 
 
-        if ( $linux ) {
+        if ( $linux || $mac ) {
 
             `carma -v -sort $file $active_dcd`;
             `mv carma.reordered.dcd carma.cluster_0$i.dcd`;
@@ -2400,7 +2409,7 @@ sub auto_window {
             $lb -> bind( '<Button-1>', sub {
 
                                             my $selection = $lb -> get( $lb -> curselection() );
-                                            system ( "$pdb_viewer $selection &" ) if ( $linux && $pdb_viewer );
+                                            system ( "$pdb_viewer $selection &" ) if ( ( $linux || $mac ) && $pdb_viewer );
                                             `start $selection` if ( $windows );
                                         } );
         }
@@ -2800,7 +2809,7 @@ sub image_window {
                                     my $selection = $lb -> get( $lb -> curselection() );
                                     if ( $selection =~ /.*ps$/ ) {
 
-                                        system ( "$ps_viewer $selection &" ) if ( $linux && $ps_viewer );
+                                        system ( "$ps_viewer $selection &" ) if ( ( $linux || $mac ) && $ps_viewer );
                                         `start $selection` if ( $windows );
                                     }
                                     else {
@@ -3584,7 +3593,7 @@ sub rms_window {
         }
         close RMS_OUT;
 
-        if ( $linux ) {
+        if ( $linux || $mac ) {
 
             `carma $average_ps_file $rmsdev_ps_file`;
         }
@@ -4135,7 +4144,7 @@ sub map_window {
                 $file = abs_path ( $file );
                 &create_dir;
 
-                if ( $linux ) {
+                if ( $linux || $mac ) {
 
                     `cp $file .`;
                 }
@@ -4361,7 +4370,7 @@ sub fit_window {
                     $active_psf_label -> configure( -text => "Active .psf: $active_psf", );
                     $go_back_button -> configure( -state => 'normal', );
 
-                    if ( $linux ) {
+                    if ( $linux || $mac ) {
 
                         `mv carma.fitted.dcd carma.fitted_$dcd_count.dcd`;
                         `mv carma.selected_atoms.psf carma.fitted_$dcd_count.psf`;
@@ -4465,7 +4474,7 @@ sub fit_index_window {
                                      -command => sub {
 
              &create_dir;
-             if ( $linux ) {
+             if ( $linux || $mac ) {
 
                 $seg_id_flag = '' if $seg_id_flag;
 
@@ -4656,7 +4665,7 @@ sub fit_index_window {
             &create_fit_index;
             my $num_atom_check = '';
 
-            if ( $linux ) {
+            if ( $linux || $mac ) {
 
                 foreach ( @index_seg_ids ) {
 
@@ -4810,7 +4819,7 @@ sub create_dir {
         # they are made the Cwd and links to   #
         # specified .psf and .dcd files are    #
         # created                              #
-        if ( $linux ) {
+        if ( $linux || $mac ) {
 
             `ln -s $psf_file .`;
             `ln -s $dcd_file .`;
