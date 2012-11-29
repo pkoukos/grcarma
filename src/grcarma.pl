@@ -230,19 +230,6 @@ if ( $linux || $mac ) {
 
     chomp $pdb_viewer if ( $pdb_viewer );
 }
-# Do the same thing for windows        #
-else {
-
-    if ( -d "carma_results" ) {
-
-        my $dir = `dir carma_results /s /-c | find "File(s)"`;
-
-        if ( $dir !~ /\d* File...\s*(\d*)/ ) {
-
-            $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
-        }
-    }
-}
 
 # check for input from terminal        #
 # if two files are specified           #
