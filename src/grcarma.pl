@@ -230,19 +230,6 @@ if ( $linux || $mac ) {
 
     chomp $pdb_viewer if ( $pdb_viewer );
 }
-# Do the same thing for windows        #
-else {
-
-    if ( -d "carma_results" ) {
-
-        my $dir = `dir carma_results /s /-c | find "File(s)"`;
-
-        if ( $dir !~ /\d* File...\s*(\d*)/ ) {
-
-            $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
-        }
-    }
-}
 
 # check for input from terminal        #
 # if two files are specified           #
@@ -1790,7 +1777,7 @@ sub auto_window {
 
     for ( $i = 1 ; $i <= $clusters ; $i++ ) {
 
-        open CLUSTERS, "carma.clusters.dat" || die "Cannot open carma.clusters.dat for reading: $!\n";
+        open CLUSTERS, '<', "carma.clusters.dat" || die "Cannot open carma.clusters.dat for reading: $!\n";
 
         my $file = "C_0$i.dat";
         open OUT, '>', $file || die "Cannot open $file for writing\n: $!";
@@ -1816,12 +1803,12 @@ sub auto_window {
 
         if ( $linux || $mac ) {
 
-            `carma -v -sort $file $active_dcd`;
+            `carma -v -sort $file $remember_dcd`;
             `mv carma.reordered.dcd carma.cluster_0$i.dcd`;
         }
         else {
 
-            `carma.exe -v -sort $file $active_dcd`;
+            `carma.exe -v -sort $file $remember_dcd`;
             `move carma.reordered.dcd carma.cluster_0$i.dcd`;
         }
 
@@ -1829,7 +1816,7 @@ sub auto_window {
 
         my (
              $seg_custom, $seg_atm, $seg, $res_custom, $res_atm,
-             $res,         $custom,  $atm, $nothing,
+             $res,        $custom,  $atm, $nothing,
         );
 
         $text -> insert( 'end', "\nNow fitting DCD files. ", 'valid', );
@@ -2349,6 +2336,36 @@ sub auto_window {
                 $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
                 $text -> insert( 'end', getcwd . "\n", 'info', );
             }
+
+            open IN, '<', "carma.rms-average.dat" || die "Cannot open carma.rms-average.dat for reading: $!";
+
+            my $smallest = 1000;
+            my $frame;
+            while ( <IN> ) {
+
+                if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
+
+                    if ( $2 < $smallest ) {
+
+                        $smallest = $2;
+                        $frame = $1;
+                    }
+                }
+            }
+
+            close IN;
+
+            if ( $linux || $mac ) {
+
+                `carma -v -w -first $frame -last $frame -pdb $active_dcd $active_psf`;
+            }
+            else {
+
+                `carma.exe -v -w -first $frame -last $frame -pdb $active_dcd $active_psf`;
+            }
+
+            $frame = sprintf ( "%.7d", $frame, );
+            mv ( "carma.fitted.cluster_0$i.dcd.$frame.pdb", "representative.cluster_0$i.pdb" );
         }
         else {
 
@@ -2358,56 +2375,6 @@ sub auto_window {
     }
     $active_dcd = $remember_dcd;
     $active_psf = $remember_psf;
-
-    if ( $super_check ) {
-
-        my $response = $mw -> messageBox( -message => "Would you like to view the created PDB files?",
-                                          -type => 'yesno',
-                                          -icon => 'question', );
-        if ( $response eq 'Yes' ) {
-
-            my $i = 0;
-            my $j = 0;
-            my @contents = '';
-
-            my $temp_top = $mw -> Toplevel( -title => 'PDB files', );
-            $temp_top -> geometry("$toplevel_position");
-            opendir IMAGE_DIR, getcwd || die "Cannot open " . getcwd . " : $!";
-            while ( readdir IMAGE_DIR ) {
-
-                if ( /.*\.pdb$/i ) {
-
-                    $contents[$i] = $_;
-                    $i++;
-                }
-            }
-            closedir IMAGE_DIR;
-
-            @contents = sort ( @contents );
-
-            my $dir = getcwd;
-
-            $temp_top -> Label( -text => "\nContents of the folder", ) -> pack;
-            $temp_top -> Entry( -text => $dir, -width => 65, ) -> pack;
-            $temp_top -> Label( -text => "\nClick on the file you want to view\n", ) -> pack;
-
-            my $lb = $temp_top -> Listbox( -selectmode => "single", ) -> pack( -anchor => 'center', );
-
-            $temp_top -> Button( -text => 'Done',
-                                 -command => [ $temp_top => 'destroy' ], )
-                                 -> pack( -side => 'bottom',
-                                          -anchor => 'center', );
-
-            $lb -> insert( 'end', @contents, );
-            $lb -> bind( '<Button-1>', sub {
-
-                                            my $selection = $lb -> get( $lb -> curselection() );
-                                            system ( "$pdb_viewer $selection &" ) if ( ( $linux || $mac ) && $pdb_viewer );
-                                            `start $selection` if ( $windows );
-                                        } );
-        }
-        $super_check = 0;
-    }
 }
 
 ###################################################################################################
@@ -2757,12 +2724,20 @@ sub image_window {
 
     my $i = 0;
     my $j = 0;
-    my @contents = '';
-    my $files = 'carma.Qfraction.dat|carma.Rgyration.dat|carma.distances|carma.torsions|carma.bendangles|carma.rms-average.dat|carma_entropy.dat';
-    #~ my $toplevel_position = "260x290" . $toplevel_position;
+    my @contents;
+    my $files =
+        'carma.Qfraction.dat|' .
+        'carma.Rgyration.dat|' .
+        'carma.distances|' .
+        'carma.fit-rms.dat|' .
+        'carma.torsions|' .
+        'carma.bendangles|' .
+        'carma.rms-average.dat|' .
+        'carma_entropy.dat';
 
     my $image_top = $mw -> Toplevel( -title => 'Latest Images', );
     $image_top -> geometry("$toplevel_position");
+
     opendir IMAGE_DIR, getcwd || die "Cannot open " . getcwd . ": $!";
     while ( readdir IMAGE_DIR ) {
 
@@ -2774,9 +2749,13 @@ sub image_window {
 
             push @contents, $_;
         }
+        elsif ( /.*\.pdb$/ ) {
+
+            push @contents, $_;
+        }
     }
     closedir IMAGE_DIR;
-    shift @contents;
+    #~ shift @contents unless ( scalar ( @contents ) == 1 );
 
     @contents = sort ( @contents );
 
@@ -2787,9 +2766,7 @@ sub image_window {
     $image_top -> Label( -text => "\nClick on the image you want to view", ) -> pack;
     $image_top -> Label( -text => "or the file you would like to plot\n", ) -> pack;
 
-    my $lb = $image_top -> Listbox( -selectmode => "single",
-                                    -width => 27, )
-                                    -> pack( -anchor => 'center', );
+    my $lb = $image_top -> Listbox( -selectmode => "single", ) -> pack;
 
     $image_top -> Button( -text => 'Return',
                           -command => [ $image_top => 'destroy' ], )
@@ -2799,17 +2776,22 @@ sub image_window {
     $lb -> insert( 'end', @contents, );
     $lb -> bind( '<Button-1>', sub {
 
-                                    my $selection = $lb -> get( $lb -> curselection() );
-                                    if ( $selection =~ /.*ps$/ ) {
+        my $selection = $lb -> get( $lb -> curselection() );
+        if ( $selection =~ /.*ps$/ ) {
 
-                                        system ( "$ps_viewer $selection &" ) if ( ( $linux || $mac ) && $ps_viewer );
-                                        `start $selection` if ( $windows );
-                                    }
-                                    else {
+            system ( "$ps_viewer $selection &" ) if ( ( $linux || $mac ) && $ps_viewer );
+            `start $selection` if ( $windows );
+        }
+        elsif ( $selection =~ /.*pdb$/ ) {
 
-                                        plot ( $selection );
-                                    }
-                                } );
+            system ( "$pdb_viewer $selection &" ) if ( ( $linux || $mac ) && $pdb_viewer );
+            `start $selection` if ( $windows );
+        }
+        else {
+
+            plot ( $selection );
+        }
+    } );
 }
 
 ###################################################################################################
@@ -2924,21 +2906,14 @@ sub create_fit_index {
     # The same as above but for the index  #
     # subroutine                           #
 
-    if ( $_[0] ) {
-
-        open PSF, '<', "selected_residues.psf" || die "Cannot open selected_residues.psf for reading: $!";
-    }
-    else {
-
-        open PSF, '<', "carma.selected_atoms.psf" || die "Cannot open carma.selected_atoms.psf for reading:$!\n";
-    }
+    open PSF, '<', "carma.selected_atoms.psf" || die "Cannot open carma.selected_atoms.psf for reading:$!\n";
 
     open OUT, ">fit.index" || die "Cannot open fit.index for writing: $!\n";
 
     $index_num_atoms = 0;
-    while ( <PSF_FILE> ) {
+    while ( <PSF> ) {
 
-        if ( /(\d*)\s*\!NATOM/ ) {
+        if ( /(\d*) \!NATOM/ ) {
 
             $index_num_atoms = $1;
             last;
@@ -2951,12 +2926,12 @@ sub create_fit_index {
 
         if ( $index_pos ) {
 
-            seek PSF_FILE, $index_pos, 0;
+            seek PSF, $index_pos, 0;
         }
 
-        while ( my $index_line = <PSF_FILE> ) {
+        while ( my $index_line = <PSF> ) {
 
-            if ( $index_line =~ /^(\s*)(\d*)(.*)$/ ) {
+            if ( $index_line =~ /^(\s+)(\d+)(\s+)(.+)$/ ) {
 
                 if ( $2 > $upper_fit_limit[$i] ) {
 
@@ -2966,7 +2941,7 @@ sub create_fit_index {
 
                 if ( $2 >= $lower_fit_limit[$i] && $2 <= $upper_fit_limit[$i] ) {
 
-                    $index_line = sprintf ( "%8d%s\n", $fit_atom_count, $3, );
+                    $index_line = sprintf ( "%8d %s\n", $fit_atom_count, $4, );
                     print OUT "$index_line";
                     $fit_atom_count++;
                 }
@@ -3583,7 +3558,7 @@ sub rms_window {
         $mw -> update;
 
         &carma;
-        open RMS_OUT, "carma.out.copy" || die "Cannot open carma.out.copy for reading";
+        open RMS_OUT, "carma.out.copy" || die "Cannot open carma.out.copy for reading: $!";
         while ( <RMS_OUT> ) {
 
             if ( /Writing postscript file (\w*\.dcd\.averag.ps)/ ) {
@@ -4527,7 +4502,7 @@ sub fit_index_window {
         my $frame_fit_index9 = $top_fit_index -> Frame() -> pack( -fill => 'x', );
         my $frame_fit_index7 = $top_fit_index -> Frame() -> pack( -fill => 'x', );
 
-        $frame_fit_index4 -> Label( -text => "\nATOMS TO USE FOR THE FITTING\n", ) -> pack;
+        $frame_fit_index4 -> Label( -text => "\nATOMS TO USE FOR THE FITTING\n", -font => "$font_20", ) -> pack;
 
         $frame_fit_index4 -> Label( -text => 'Atmid Selection' ) -> pack;
 
@@ -4581,26 +4556,6 @@ sub fit_index_window {
                                                                    -offvalue => '',
                                                                    -onvalue => " -segid $unique_chain_ids[$j]",
                                                                    -command => sub {
-
-                 if ( $index_seg_ids[$j] ne '' ) {
-
-                     $index_count++;
-                 }
-                 else {
-
-                     $index_count--;
-                 }
-
-                 if ( $unique_chain_ids[$j] =~ /^[A-Z]$/ && $index_seg_ids[$j] ne '' ) {
-
-                     $active_run_buttons = 'yes';
-                     $dpca_run_button -> configure( -state => 'normal', ) if ( $dpca_run_button );
-                 }
-                 elsif ( $unique_chain_ids[$j] =~ /^[A-Z]$/ && $index_count < 1 ) {
-
-                     $active_run_buttons = 'no';
-                     $dpca_run_button -> configure( -state => 'disabled', ) if ( $dpca_run_button );
-                 }
              }, );
 
             $index_check_b[$j] -> pack( -side => 'left', -anchor => 'w', );
@@ -4710,7 +4665,7 @@ sub fit_index_window {
 
             my $index_fitting_num_atoms = 0;
 
-            if ( $num_atom_check =~ /3?3?m?(\d*).*declared in the PSF file/ ) {
+            if ( $num_atom_check =~ /3?3?m?(\d+).*declared in the PSF file/ ) {
 
                 $index_fitting_num_atoms = $1;
             }
@@ -4722,6 +4677,8 @@ sub fit_index_window {
                                               -icon => 'warning', );
             }
             else {
+
+                $index_seg_id_flag = '' if ( $index_seg_id_flag );
 
                 foreach ( @index_seg_ids ) {
 
@@ -5046,7 +5003,7 @@ sub plot {
     my $i = 0;
     while ( <IN> ) {
 
-        if ( defined $step[$i] && $input =~ /qfract/i && /\s+(.*?$step[$i])\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+        if ( defined $step[$i] && $input =~ /qfract/i && /\s+($step[$i])\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
 
             $frames[$i] = $1;
             $Q[$i] = $2;
@@ -5061,7 +5018,7 @@ sub plot {
             $Schlitter[$i] = $3 if ( $3 );
             $i++;
         }
-        elsif ( defined $step[$i] && $input =~ /fit|rgyr|bend|tors|dist|rms-av|surf/i && /\s+(.*?$step[$i])\s+([+-]?\d+\.?\d*)/ ) {
+        elsif ( defined $step[$i] && $input =~ /fit|rgyr|bend|tors|dist|rms-av|surf/i && /\s+($step[$i])\s+([+-]?\d+\.?\d*)/ ) {
 
             $frames[$i] = $1;
             $values[$i] = $2;
