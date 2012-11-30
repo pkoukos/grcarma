@@ -230,6 +230,19 @@ if ( $linux || $mac ) {
 
     chomp $pdb_viewer if ( $pdb_viewer );
 }
+# Do the same thing for windows        #
+else {
+
+    if ( -d "carma_results" ) {
+
+        my $dir = `dir carma_results /s /-c | find "File(s)"`;
+
+        if ( $dir !~ /\d* File...\s*(\d*)/ ) {
+
+            $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
+        }
+    }
+}
 
 # check for input from terminal        #
 # if two files are specified           #
@@ -388,7 +401,7 @@ $file -> command( -label => "Exit",
                   -underline => 1,
                   -command => [ $mw => 'destroy' ], );
 $help -> command( -label => 'About',
-                  -command => \&about, );
+				  -command => \&about, );
 
 ###################################################################################################
 ###   Menubutton Frame                                                                          ###
@@ -565,7 +578,7 @@ our $text = $f5 -> Scrolled( "Text",
                          -height => 26, )
                          ->pack();
 
-#~ $text -> configure( -height => 33, ) if ( $linux || $mac );
+$text -> configure( -height => 41, ) if ( $mac );
 $text -> configure( -width => 85, ) if ( $windows );
 
 # Define three colored text tags       #
@@ -578,7 +591,7 @@ $text -> tagConfigure( "info", -foreground => "orange1" );
 # Also tie the STDOUT to the textbox   #
 tie *STDOUT, 'Tk::Text', $text -> Subwidget( 'scrolled' );
 
-$text -> insert( 'end', "The size of carma_results folder is: $wd_size\n", );
+$text -> insert( 'end', "The size of carma_results folder is: $wd_size\n", ) if ( $linux || $mac );
 
 # If OS is *nix/unix-like insert a     #
 # line informing the user of the prog  #
@@ -709,7 +722,7 @@ sub open_file {
         }
         else {
 
-            $psf_name = $3;
+			$psf_name = $3;
             $active_psf = $3 . '.psf';
             # else substitute the '/' for '\' in   #
             # $file as windows uses a backward     #
@@ -807,7 +820,7 @@ sub carma {
         $text -> see( 'end', );
         $mw -> update;
 
-        system ( "open \"carma $flag $active_psf $active_dcd\" | tee carma.out.copy" );
+        system ( "xterm -geometry 80x25+800+200 -e \"carma $flag $active_psf $active_dcd | tee carma.out.copy\"" );
     }
 
     # When the run is completed open the   #
@@ -1025,6 +1038,7 @@ sub dcd_header_parser {
     }
 
     $have_files = 1;
+    $mw -> minsize ( 960, 645 ) if ( $mac && $mw );
 }
 
 ###################################################################################################
@@ -1195,11 +1209,11 @@ sub rmsd_window {
         $frame_rmsd2 -> Button( -text => 'Run',
                                 -command => sub {
 
-            $rmsd_first_flag = ( $rmsd_first ? " -first $rmsd_first" : '' );
-            $rmsd_last_flag = ( $rmsd_last ? " -last $rmsd_last" : '' );
-            $rmsd_step_flag = ( $rmsd_step ? " -step $rmsd_step" : '' );
-            $rmsd_min_flag = ( $rmsd_min ? " -min $rmsd_min" : '' );
-            $rmsd_max_flag = ( $rmsd_max ? " -max $rmsd_max" : '' );
+			$rmsd_first_flag = ( $rmsd_first ? " -first $rmsd_first" : '' );
+			$rmsd_last_flag = ( $rmsd_last ? " -last $rmsd_last" : '' );
+			$rmsd_step_flag = ( $rmsd_step ? " -step $rmsd_step" : '' );
+			$rmsd_min_flag = ( $rmsd_min ? " -min $rmsd_min" : '' );
+			$rmsd_max_flag = ( $rmsd_max ? " -max $rmsd_max" : '' );
 
             $rmsd_top -> destroy();
             $mw -> update;
@@ -1235,24 +1249,24 @@ sub rmsd_window {
 
             if ( $all_done ) {
 
-                my $coloring;
-                $coloring = `carma.exe -col - < carma.RMSD.matrix` if ( $windows );
-                $coloring = `carma -col - < carma.RMSD.matrix` if ( $linux || $mac );
+				my $coloring;
+				$coloring = `carma.exe -col - < carma.RMSD.matrix` if ( $windows );
+				$coloring = `carma -col - < carma.RMSD.matrix` if ( $linux || $mac );
 
-                if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
+				if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
-                    $text -> insert( 'end', "\nCalculation finished. Plotted .ps image from $1.$2 to $3.$4\n", 'valid' );
-                    $text -> insert( 'end', "Use \"View Results\"\n", 'valid' );
-                    $text -> see( 'end', );
-                    $image_menu -> configure( -state => 'normal', );
-                }
-            }
-            else {
+					$text -> insert( 'end', "\nCalculation finished. Plotted .ps image from $1.$2 to $3.$4\n", 'valid' );
+					$text -> insert( 'end', "Use \"View Results\"\n", 'valid' );
+					$text -> see( 'end', );
+					$image_menu -> configure( -state => 'normal', );
+				}
+			}
+			else {
 
-                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-                $text -> insert( 'end', getcwd . "\n", 'info', );
-                $text -> see( 'end', );
-            }
+				$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+				$text -> insert( 'end', getcwd . "\n", 'info', );
+				$text -> see( 'end', );
+			}
             }, )
             -> grid( -row => 2, -column => 2, );
 
@@ -1314,8 +1328,8 @@ sub qfract_window {
                                        -> pack( -side => 'bottom', -anchor => 'w',);
 
         $frame_qfract5 -> Button( -text => 'Return',
-                                  -command => [ $top_qfract => 'withdraw' ], )
-                                  -> grid( -row => 3, -column => 1, );
+								  -command => [ $top_qfract => 'withdraw' ], )
+								  -> grid( -row => 3, -column => 1, );
 
         $frame_qfract5 -> Button( -text => 'Run',
                                -command => sub {
@@ -1352,13 +1366,13 @@ sub qfract_window {
                         if ( $all_done ) {
 
                             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-                            $text -> see( 'end', );
-                            $image_menu -> configure( -state => 'normal', );
+							$text -> see( 'end', );
+							$image_menu -> configure( -state => 'normal', );
 
                             if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
 
-                                plot ( 'carma.Qfraction.dat' );
-                                $qfract_plot = 0;
+								plot ( 'carma.Qfraction.dat' );
+								$qfract_plot = 0;
                             }
                         }
                         else {
@@ -2343,29 +2357,29 @@ sub auto_window {
             my $frame;
             while ( <IN> ) {
 
-                if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
+				if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
 
-                    if ( $2 < $smallest ) {
+					if ( $2 < $smallest ) {
 
-                        $smallest = $2;
-                        $frame = $1;
-                    }
-                }
-            }
+						$smallest = $2;
+						$frame = $1;
+					}
+				}
+			}
 
-            close IN;
+			close IN;
 
-            if ( $linux || $mac ) {
+			if ( $linux || $mac ) {
 
-                `carma -v -w -first $frame -last $frame -pdb $active_dcd $active_psf`;
-            }
-            else {
+				`carma -v -w -first $frame -last $frame -pdb $active_dcd $active_psf`;
+			}
+			else {
 
-                `carma.exe -v -w -first $frame -last $frame -pdb $active_dcd $active_psf`;
-            }
+				`carma.exe -v -w -first $frame -last $frame -pdb $active_dcd $active_psf`;
+			}
 
-            $frame = sprintf ( "%.7d", $frame, );
-            mv ( "carma.fitted.cluster_0$i.dcd.$frame.pdb", "representative.cluster_0$i.pdb" );
+			$frame = sprintf ( "%.7d", $frame, );
+			mv ( "carma.fitted.cluster_0$i.dcd.$frame.pdb", "representative.cluster_0$i.pdb" );
         }
         else {
 
@@ -2726,14 +2740,14 @@ sub image_window {
     my $j = 0;
     my @contents;
     my $files =
-        'carma.Qfraction.dat|' .
-        'carma.Rgyration.dat|' .
-        'carma.distances|' .
-        'carma.fit-rms.dat|' .
-        'carma.torsions|' .
-        'carma.bendangles|' .
-        'carma.rms-average.dat|' .
-        'carma_entropy.dat';
+		'carma.Qfraction.dat|' .
+		'carma.Rgyration.dat|' .
+		'carma.distances|' .
+		'carma.fit-rms.dat|' .
+		'carma.torsions|' .
+		'carma.bendangles|' .
+		'carma.rms-average.dat|' .
+		'carma_entropy.dat';
 
     my $image_top = $mw -> Toplevel( -title => 'Latest Images', );
     $image_top -> geometry("$toplevel_position");
@@ -2751,8 +2765,8 @@ sub image_window {
         }
         elsif ( /.*\.pdb$/ ) {
 
-            push @contents, $_;
-        }
+			push @contents, $_;
+		}
     }
     closedir IMAGE_DIR;
     #~ shift @contents unless ( scalar ( @contents ) == 1 );
@@ -2776,22 +2790,22 @@ sub image_window {
     $lb -> insert( 'end', @contents, );
     $lb -> bind( '<Button-1>', sub {
 
-        my $selection = $lb -> get( $lb -> curselection() );
-        if ( $selection =~ /.*ps$/ ) {
+		my $selection = $lb -> get( $lb -> curselection() );
+		if ( $selection =~ /.*ps$/ ) {
 
-            system ( "$ps_viewer $selection &" ) if ( ( $linux || $mac ) && $ps_viewer );
-            `start $selection` if ( $windows );
-        }
-        elsif ( $selection =~ /.*pdb$/ ) {
+			system ( "$ps_viewer $selection &" ) if ( ( $linux || $mac ) && $ps_viewer );
+			`start $selection` if ( $windows );
+		}
+		elsif ( $selection =~ /.*pdb$/ ) {
 
-            system ( "$pdb_viewer $selection &" ) if ( ( $linux || $mac ) && $pdb_viewer );
-            `start $selection` if ( $windows );
-        }
-        else {
+			system ( "$pdb_viewer $selection &" ) if ( ( $linux || $mac ) && $pdb_viewer );
+			`start $selection` if ( $windows );
+		}
+		else {
 
-            plot ( $selection );
-        }
-    } );
+			plot ( $selection );
+		}
+	} );
 }
 
 ###################################################################################################
@@ -2906,7 +2920,7 @@ sub create_fit_index {
     # The same as above but for the index  #
     # subroutine                           #
 
-    open PSF, '<', "carma.selected_atoms.psf" || die "Cannot open carma.selected_atoms.psf for reading:$!\n";
+	open PSF, '<', "carma.selected_atoms.psf" || die "Cannot open carma.selected_atoms.psf for reading:$!\n";
 
     open OUT, ">fit.index" || die "Cannot open fit.index for writing: $!\n";
 
@@ -3283,7 +3297,7 @@ sub entropy_window {
 
                             $text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
                             $text -> see( 'end', );
-                            $image_menu -> configure( -state => 'normal', );
+							$image_menu -> configure( -state => 'normal', );
                         }
                         else {
 
@@ -3316,9 +3330,9 @@ sub entropy_window {
 
                 if ( $entropy_plot ) {
 
-                    plot ( 'carma_entropy.dat' );
-                    $entropy_plot = 0;
-                }
+					plot ( 'carma_entropy.dat' );
+					$entropy_plot = 0;
+				}
         }, )
         -> pack( -side => 'right', );
     }
@@ -3499,12 +3513,12 @@ sub rms_window {
         $frame_rms5 -> Button( -text => 'Run',
                                -command => sub {
 
-        $rms_first_flag = ( $rms_first ? " -first $rms_first" : '' );
-        $rms_last_flag = ( $rms_last ? " -last $rms_last" : '' );
-        $rms_step_flag = ( $rms_step ? " -step $rms_step" : '' );
-        $rms_min_flag = ( $rms_min ? " -min $rms_min" : '' );
-        $rms_max_flag = ( $rms_max ? " -max $rms_max" : '' );
-        $rms_mrms_flag = ( $rms_mrms ? " -mrms $rms_mrms" : '' );
+		$rms_first_flag = ( $rms_first ? " -first $rms_first" : '' );
+		$rms_last_flag = ( $rms_last ? " -last $rms_last" : '' );
+		$rms_step_flag = ( $rms_step ? " -step $rms_step" : '' );
+		$rms_min_flag = ( $rms_min ? " -min $rms_min" : '' );
+		$rms_max_flag = ( $rms_max ? " -max $rms_max" : '' );
+		$rms_mrms_flag = ( $rms_mrms ? " -mrms $rms_mrms" : '' );
 
         $top_rms -> destroy;
 
@@ -3656,8 +3670,8 @@ sub rgr_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-            $text -> see( 'end', );
-            $image_menu -> configure( -state => 'normal', );
+			$text -> see( 'end', );
+			$image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -3752,8 +3766,8 @@ sub dis_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-            $text -> see( 'end', );
-            $image_menu -> configure( -state => 'normal', );
+			$text -> see( 'end', );
+			$image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -3854,8 +3868,8 @@ sub bnd_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-            $text -> see( 'end', );
-            $image_menu -> configure( -state => 'normal', );
+			$text -> see( 'end', );
+			$image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -3959,8 +3973,8 @@ sub tor_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-            $text -> see( 'end', );
-            $image_menu -> configure( -state => 'normal', );
+			$text -> see( 'end', );
+			$image_menu -> configure( -state => 'normal', );
         }
         else {
 
@@ -4083,8 +4097,8 @@ sub map_window {
             if ( $all_done ) {
 
                 $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-                $text -> see( 'end', );
-                $image_menu -> configure( -state => 'normal', );
+				$text -> see( 'end', );
+				$image_menu -> configure( -state => 'normal', );
             }
             else {
 
@@ -4160,7 +4174,7 @@ sub sur_window {
         &checkbuttons ( $frame_sur2 );
         &otherbuttons ( $frame_sur3 );
 
-        $frame_sur5 -> Label( -text => 'Various options', ) -> pack;
+		$frame_sur5 -> Label( -text => 'Various options', ) -> pack;
 
         $frame_sur5 -> Checkbutton( -text => 'Automatically create a plot of the results file',
                                     -variable => \$sur_plot,
@@ -4209,14 +4223,14 @@ sub sur_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-            $text -> see( 'end', );
-            $image_menu -> configure( -state => 'normal', );
+			$text -> see( 'end', );
+			$image_menu -> configure( -state => 'normal', );
 
             if ( $sur_plot ) {
 
-                &plot ( 'carma.surface.dat' );
-                $sur_plot = 0;
-            }
+				&plot ( 'carma.surface.dat' );
+				$sur_plot = 0;
+			}
         }
         else {
 
@@ -4333,8 +4347,8 @@ sub fit_window {
             if ( $all_done ) {
 
                 $text -> insert( 'end', "Fitting complete. Use \"View Results\"\n", 'valid' );
-                $text -> see( 'end', );
-                $image_menu -> configure( -state => 'normal', );
+				$text -> see( 'end', );
+				$image_menu -> configure( -state => 'normal', );
 
                 my $response = $frame_fit1 -> messageBox( -message => "Would you like to use this PSF - DCD pair in other calculations?",
                                                           -type => 'yesno',
@@ -4369,9 +4383,9 @@ sub fit_window {
 
                 if ( $fit_plot ) {
 
-                    &plot ( 'carma.fit-rms.dat' );
-                    $fit_plot = 0;
-                }
+					&plot ( 'carma.fit-rms.dat' );
+					$fit_plot = 0;
+				}
             }
             else {
 
@@ -4678,7 +4692,7 @@ sub fit_index_window {
             }
             else {
 
-                $index_seg_id_flag = '' if ( $index_seg_id_flag );
+				$index_seg_id_flag = '' if ( $index_seg_id_flag );
 
                 foreach ( @index_seg_ids ) {
 
@@ -4986,17 +5000,17 @@ sub plot {
          @values,    @data, @step,  @legends,
          @Schlitter, @Andricioaei, );
 
-    my $mw = MainWindow -> new( -title => "Results Plot", );
+	my $mw = MainWindow -> new( -title => "Results Plot", );
 
-    my $screenwidth = $mw -> screenwidth;
+	my $screenwidth = $mw -> screenwidth;
     my $interval;
 
-    $interval = ( ( $screenwidth <= $header ) ? int ( $header / $screenwidth + 0.5 ) : 1 );
+	$interval = ( ( $screenwidth <= $header ) ? int ( $header / $screenwidth + 0.5 ) : 1 );
 
     for ( 1 .. $screenwidth ) {
 
-        push ( @step, $interval * $_ );
-    }
+		push ( @step, $interval * $_ );
+	}
 
     open IN, '<', $input || die "Cannot open $input for reading: $!";
 
@@ -5026,7 +5040,7 @@ sub plot {
         }
     }
 
-    close IN;
+	close IN;
 
     if ( $linux || $mac ) {
 
@@ -5167,26 +5181,26 @@ sub plot {
 
 sub about {
 
-    my $top = $mw -> Toplevel( -title => "Help", );
-    $top -> geometry( "$toplevel_position" );
+	my $top = $mw -> Toplevel( -title => "Help", );
+	$top -> geometry( "$toplevel_position" );
 
-    $top -> Label( -text => "This is grcarma v$VERSION", ) -> pack;
-    $top -> Button( -text => "View online documentation",
-                    -command => sub {
+	$top -> Label( -text => "This is grcarma v$VERSION", ) -> pack;
+	$top -> Button( -text => "View online documentation",
+					-command => sub {
 
-                        if ( $linux ) {
+						if ( $linux ) {
 
-                            system ( "x-www-browser https://github.com/pkoukos/grcarma" );
-                        }
-                        elsif ( $mac ) {
+							system ( "x-www-browser https://github.com/pkoukos/grcarma" );
+						}
+						elsif ( $mac ) {
 
-                            system ( "open https://github.com/pkoukos/grcarma" );
-                        }
-                        elsif ( $windows ) {
+							system ( "open https://github.com/pkoukos/grcarma" );
+						}
+						elsif ( $windows ) {
 
-                            system ( "start https://github.com/pkoukos/grcarma" );
-                        }
-                    }, ) -> pack;
+							system ( "start https://github.com/pkoukos/grcarma" );
+						}
+					}, ) -> pack;
 }
 
 ###################################################################################################
@@ -5195,25 +5209,25 @@ sub about {
 
 sub folder_size {
 
-    my $input = shift;
-    $input .= '/carma_results*';
+	my $input = shift;
+	$input .= '/carma_results*';
 
-    if ( $linux || $mac ) {
+	if ( $linux || $mac ) {
 
-        $wd_size = `du -hsc $input | grep total`;
-        chomp $wd_size;
-        if ( $wd_size =~ /(\d+,?\d*.?)/ ) {
+		$wd_size = `du -hsc $input | grep total`;
+		chomp $wd_size;
+		if ( $wd_size =~ /(\d+,?\d*.?)/ ) {
 
-            $wd_size = $1 . "B";
-        }
-    }
-    else {
+			$wd_size = $1 . "B";
+		}
+	}# TO DO #
+	# else {
 
-        my $dir = `dir $input /s /-c | find "File(s)"`;
+		# my $dir = `dir $input /s /-c | find "File(s)"`;
 
-        if ( $dir !~ /\d* File...\s*(\d*)/ ) {
+		# if ( $dir !~ /\d* File...\s*(\d*)/ ) {
 
-            $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
-        }
-    }
+			# $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
+		# }
+	# }
 }
