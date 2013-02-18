@@ -424,17 +424,17 @@ my $font_20 = qw/-*-*-*-r-*-*-*-200-*-*-*-*-*-*/;
 # on top of the first one              #
 my $f1 = $f0 -> Frame ( qw/ -relief raised -borderwidth 1/ ) -> pack ( qw/ -side left -expand 1 -fill both/ );
 
+# ... the fitting menu                 #
+my $fitting_menu = $f1 -> Button( -text => 'Fitting',
+                                  -command => \&fit_window,
+                                  -width => 24,
+                                  -font => "$font_12", ) -> pack;
+
 #Draw the button for the rmsd menu...  #
 my $rmsd_menu = $f1 -> Button( -text => 'RMSD Matrix',
                                -command => \&rmsd_window,
                                -width => 24,
                                -font => "$font_12", ) -> pack;
-
-#Draw the button for the qfract menu...#
-my $qfract_menu = $f1 -> Button( -text => 'Qfract',
-                                 -command => \&qfract_window,
-                                 -width => 24,
-                                 -font => "$font_12", ) -> pack;
 
 # ... the dpca menu                    #
 my $dpca_menu = $f1 -> Button( -text => 'Dihedral PCA',
@@ -448,44 +448,28 @@ my $cpca_menu = $f1 -> Button( -text => 'Cartesian PCA',
                                -width => 24,
                                -font => "$font_12", ) -> pack;
 
+
+
 # ... the eigen calculations menu      #
-my $eigen_menu = $f1 -> Button( -text => 'Eigen calculations',
-                                -command => \&eigen_window,
-                                -width => 24,
-                                -font => "$font_12", ) -> pack;
+#~ my $eigen_menu = $f1 -> Button( -text => 'Eigen calculations',
+                                #~ -command => \&eigen_window,
+                                #~ -width => 24,
+                                #~ -font => "$font_12", ) -> pack;
 
 # ... the var_covar matrix menu        #
-my $varcov_menu = $f1 -> Button( -text => 'Covariance matrix',
-                                 -command => \&varcov_window,
+my $varcov_menu = $f1 -> Button( -text => "Covariance, average and\nrepresentative structures",
+                                 -command => \&cov_avg_rep_window,
                                  -width => 24,
                                  -font => "$font_12", ) -> pack;
 
-# ... the entropy menu                 #
-my $entropy_menu = $f1 -> Button( -text => 'Solute entropy calculation',
-                                  -command => \&entropy_window,
-                                  -width => 24,
-                                  -font => "$font_12", ) -> pack;
-
-# ... the fitting menu                 #
-my $fitting_menu = $f1 -> Button( -text => 'Fitting',
-                                  -command => \&fit_window,
-                                  -width => 24,
-                                  -font => "$font_12", ) -> pack;
-
-# ... the index fitting menu           #
-my $_menu = $f1 -> Button( -text => "Average and representative\nstructures",
-                                  -command => \&avg_rep_window,
-                                  -width => 24,
-                                  -font => "$font_12", ) -> pack;
-
-# ... the pdb menu                    #
-my $pdb_menu = $f1 -> Button( -text => 'Extract PDB',
-                              -command => \&pdb_window,
-                              -width => 24,
-                              -font => "$font_12", ) -> pack;
+#Draw the button for the qfract menu...#
+my $qfract_menu = $f1 -> Button( -text => 'Fraction of native contacts',
+                                 -command => \&qfract_window,
+                                 -width => 24,
+                                 -font => "$font_12", ) -> pack;
 
 # ... the average distances menu      #
-my $rms_menu = $f1 -> Button( -text => 'Ca - Ca distances',
+my $rms_menu = $f1 -> Button( -text => 'Distance maps',
                               -command => \&rms_window,
                               -width => 24,
                               -font => "$font_12", ) -> pack;
@@ -493,6 +477,30 @@ my $rms_menu = $f1 -> Button( -text => 'Ca - Ca distances',
 # ... the gyration menu               #
 my $rgr_menu = $f1 -> Button( -text => 'Radius of gyration',
                               -command => \&rgr_window,
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
+
+# ... the entropy menu                 #
+my $entropy_menu = $f1 -> Button( -text => 'Entropy',
+                                  -command => \&entropy_window,
+                                  -width => 24,
+                                  -font => "$font_12", ) -> pack;
+
+# ... the pdb menu                    #
+my $pdb_menu = $f1 -> Button( -text => 'Extract PDB(s)',
+                              -command => \&pdb_window,
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
+
+# ... the surface area menu           #
+my $sur_menu = $f1 -> Button( -text => 'Surface area',
+                              -command => \&sur_window,
+                              -width => 24,
+                              -font => "$font_12", ) -> pack;
+
+# ... the map menu                    #
+my $map_menu = $f1 -> Button( -text => 'Ion-water distribution',
+                              -command => \&map_window,
                               -width => 24,
                               -font => "$font_12", ) -> pack;
 
@@ -514,17 +522,11 @@ my $tor_menu = $f1 -> Button( -text => 'Torsion Angles',
                               -width => 24,
                               -font => "$font_12", ) -> pack;
 
-# ... the map menu                    #
-my $map_menu = $f1 -> Button( -text => 'Map ion & water',
-                              -command => \&map_window,
-                              -width => 24,
-                              -font => "$font_12", ) -> pack;
-
-# ... the surface area menu           #
-my $sur_menu = $f1 -> Button( -text => 'Surface area',
-                              -command => \&sur_window,
-                              -width => 24,
-                              -font => "$font_12", ) -> pack;
+# ... the index fitting menu           #
+#~ my $_menu = $f1 -> Button( -text => "Average and representative\nstructures",
+                                  #~ -command => \&avg_rep_window,
+                                  #~ -width => 24,
+                                  #~ -font => "$font_12", ) -> pack;
 
 $f1 -> Label( -text => "\n", ) -> pack( -side => 'top', );
 
@@ -1303,7 +1305,7 @@ sub rmsd_window {
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_max, )
                                -> grid( -row => 2, -column => 4, );
 
-        $frame_rmsd1 -> Checkbutton( -text => 'Reverse',
+        $frame_rmsd1 -> Checkbutton( -text => 'Reverse color gradient',
                                      -variable => \$rmsd_reverse,
                                      -offvalue => '',
                                      -onvalue => " -reverse", )
@@ -1341,11 +1343,11 @@ sub rmsd_window {
 
             if ( $seg_id_flag ) {
 
-                $flag = " -v -w -cross $rmsd_first_flag $rmsd_last_flag $rmsd_step_flag $rmsd_min_flag $rmsd_max_flag $rmsd_reverse $seg_id_flag $atm_id_flag $custom_id_flag $res_id_flag";
+                $flag = " -v -w -cross $rmsd_first_flag $rmsd_last_flag $rmsd_step_flag $rmsd_min_flag $rmsd_max_flag $seg_id_flag $atm_id_flag $custom_id_flag $res_id_flag";
             }
             else {
 
-                $flag = " -v -w -cross $rmsd_first_flag $rmsd_last_flag $rmsd_step_flag $rmsd_min_flag $rmsd_max_flag $rmsd_reverse $atm_id_flag $custom_id_flag $res_id_flag";
+                $flag = " -v -w -cross $rmsd_first_flag $rmsd_last_flag $rmsd_step_flag $rmsd_min_flag $rmsd_max_flag $atm_id_flag $custom_id_flag $res_id_flag";
             }
             &create_dir;
 
@@ -1364,8 +1366,8 @@ sub rmsd_window {
 				sleep 1;
 
 				my $coloring;
-				$coloring = `carma.exe -col - < carma.RMSD.matrix` if ( $windows );
-				$coloring = `carma -col - < carma.RMSD.matrix` if ( $linux || $mac );
+				$coloring = `carma.exe -reverse -col - < carma.RMSD.matrix` if ( $windows );
+				$coloring = `carma -reverse -col - < carma.RMSD.matrix` if ( $linux || $mac );
 
 				if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
@@ -1373,6 +1375,7 @@ sub rmsd_window {
 					$text -> insert( 'end', "Use \"View Results\"\n", 'valid' );
 					$text -> see( 'end', );
 					$image_menu -> configure( -state => 'normal', );
+					mv ( "carma.stdin.ps", "carma.RMSD_matrix.ps" );
 				}
 			}
 			else {
@@ -1594,13 +1597,13 @@ sub dpca_window {
                               -> grid( -row => 3, -column => 1, -sticky => 'w', );
         $dpca_frame -> Entry( -textvariable => \$dpca_combinations,)
                               -> grid( -row => 3, -column => 3, );
-        $dpca_frame -> Label( -text => 'Sigma cutoff(optional): ',
+        $dpca_frame -> Label( -text => "Sigma cutoff ( automatically\ndetermined if left undefined ): ",
                               -anchor => 'e',)
                               -> grid( -row => 4, -column => 1, -sticky => 'w', );
         $dpca_frame -> Entry( -textvariable => \$dpca_cutoff,)
                               -> grid( -row => 4, -column => 3, );
 
-        $dpca_frame -> Checkbutton( -text => 'DG width: ',
+        $dpca_frame -> Checkbutton( -text => 'Set limits for principal components: ',
                                     -anchor => 'e',
                                     -variable => \$dpca_dgwidth,
                                     -onvalue => " -dgwidth",
@@ -1825,12 +1828,12 @@ sub cpca_window {
                               -> grid( -row => 3, -column => 1, -sticky => 'w', );
         $cpca_frame -> Entry( -textvariable => \$cpca_combinations,)
                               -> grid( -row => 3, -column => 3, );
-        $cpca_frame -> Label( -text => 'Sigma cutoff(optional): ',
+        $cpca_frame -> Label( -text => 'Sigma cutoff ( automatically determined if left undefined ): ',
                               -anchor => 'e',)
                               -> grid( -row => 4, -column => 1, -sticky => 'w', );
         $cpca_frame -> Entry( -textvariable => \$cpca_cutoff,)
                               -> grid( -row => 4, -column => 3, );
-        $cpca_frame -> Checkbutton( -text => 'DG width: ',
+        $cpca_frame -> Checkbutton( -text => 'Set limits for principal components: ',
                                     -anchor => 'e',
                                     -variable => \$cpca_dgwidth,
                                     -onvalue => " -dgwidth",
@@ -1974,7 +1977,7 @@ sub cpca_window {
                                           }, )
                                       -> grid( -row => 2, -column => 1, -sticky => 'w', );
 
-        $cpca_frame_4 -> Checkbutton( -text => 'Mass',
+        $cpca_frame_4 -> Checkbutton( -text => 'Use mass weighting',
                                       -variable => \$cpca_mass,
                                       -offvalue => '',
                                       -onvalue => " -mass", )
@@ -3000,10 +3003,10 @@ sub auto_window {
 }
 
 ###################################################################################################
-###   Draw the window for average and representative structure calculation                      ###
+###   Draw the window for covariance, average and representative structure calculation          ###
 ###################################################################################################
 
-sub avg_rep_window {
+sub cov_avg_rep_window {
 
     my $avg_dot = '';
     my $avg_norm = '';
@@ -3035,7 +3038,7 @@ sub avg_rep_window {
         $frame_avg4 -> Label( -text => 'Various Options' )
                               -> pack( -side => 'top', );
 
-        my $avg_dot_b = $frame_avg4 -> Checkbutton( -text => 'Calculate dot',
+        my $avg_dot_b = $frame_avg4 -> Checkbutton( -text => 'Use dot product (needed for average structures)',
                                     -variable => \$avg_dot,
                                     -offvalue => '',
                                     -onvalue => " -dot", )
@@ -3109,48 +3112,51 @@ sub avg_rep_window {
 
             &carma;
 
-            open IN, '<', "carma.rms-average.dat" || die "Cannot open carma.rms-average.dat for reading: $!";
+            if ( $avg_dot ) {
 
-            my $smallest = 1000;
-            my $frame;
-            while ( <IN> ) {
+				open IN, '<', "carma.rms-average.dat" || die "Cannot open carma.rms-average.dat for reading: $!";
 
-				if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
+				my $smallest = 1000;
+				my $frame;
+				while ( <IN> ) {
 
-					if ( $2 < $smallest ) {
+					if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
 
-						$smallest = $2;
-						$frame = $1;
+						if ( $2 < $smallest ) {
+
+							$smallest = $2;
+							$frame = $1;
+						}
 					}
 				}
-			}
 
-			close IN;
+				close IN;
 
-			if ( $linux || $mac ) {
+				if ( $linux || $mac ) {
 
-				if ( $res_id_flag ) {
+					if ( $res_id_flag ) {
 
-					`carma -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+						`carma -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+					}
+					else {
+
+						`carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+					}
 				}
 				else {
 
-					`carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+					if ( $res_id_flag ) {
+
+						`carma.exe -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+					}
+					else {
+
+						`carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+					}
 				}
+
+				$frame = sprintf ( "%.7d", $frame, );
 			}
-			else {
-
-				if ( $res_id_flag ) {
-
-					`carma.exe -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-				}
-				else {
-
-					`carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-				}
-			}
-
-			$frame = sprintf ( "%.7d", $frame, );
 
 			$text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
 			$text -> see( 'end', );
@@ -3162,329 +3168,6 @@ sub avg_rep_window {
 
         $top_avg -> deiconify;
         $top_avg -> raise;
-    }
-}
-
-###################################################################################################
-###   Draw the window for eigenvector and eigenvalue calculations                               ###
-###################################################################################################
-
-sub eigen_window {
-
-    my $eig_dot = '';
-    my $eig_norm = '';
-    my $eig_3d = '';
-    my $eig_use = '';
-    my $eig_out = '';
-    my $eig_out_first = '';
-    my $eig_out_last = '';
-    my $eig_out_step = '';
-    my $eig_play_max = '';
-    my $eig_play_min = '';
-    my $top_eig;
-
-    if ( !Exists ( $top_eig ) ) {
-
-        $top_eig = $mw -> Toplevel( -title => 'Eigenvector and eigenvalue calculations', );
-        $top_eig -> geometry("$toplevel_position");
-        $top_eig -> protocol( 'WM_DELETE_WINDOW' => sub { $top_eig -> withdraw }, );
-
-        my $frame_eig2 = $top_eig -> Frame() -> pack( -expand => 1, -fill => 'x', );
-        my $frame_eig3 = $top_eig -> Frame() -> pack( -expand => 1, -fill => 'x', );
-        my $frame_eig4 = $top_eig -> Frame() -> pack( -expand => 1, -fill => 'x', );
-
-        &radiobuttons ( $frame_eig2 );
-        &checkbuttons ( $frame_eig3 );
-        &otherbuttons ( $frame_eig4 );
-
-        $frame_eig1 = $top_eig -> Frame() -> pack( -fill => 'x', );
-
-        $frame_eig1 -> Checkbutton( -text => 'Calculate dot',
-                                    -variable => \$eig_dot,
-                                    -offvalue => '',
-                                    -onvalue => " -dot", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-        $frame_eig1 -> Checkbutton( -text => 'Calculate normalised matrices',
-                                    -variable => \$eig_norm,
-                                    -offvalue => '',
-                                    -onvalue => " -norm", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-        $frame_eig1 -> Checkbutton( -text => 'Create 3D landscapes',
-                                    -variable => \$eig_3d,
-                                    -offvalue => '',
-                                    -onvalue => " -3d", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-        $frame_eig1 -> Checkbutton( -text => 'Use previously calculated eigenvalues',
-                                    -variable => \$eig_use,
-                                    -offvalue => '',
-                                    -onvalue => " -use", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-        $frame_eig1 -> Checkbutton( -text => 'Output projections to a file',
-                                    -variable => \$eig_out,
-                                    -offvalue => '',
-                                    -onvalue => " -out", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-
-        $frame_eig1 -> Label( -text => 'First: ', )-> pack( -side => 'left', -anchor => 'w', );
-        $frame_eig1 -> Entry( -textvariable => \$eig_out_first, )-> pack( -side => 'left', -anchor => 'w', );
-        $frame_eig1 -> Label( -text => 'Last: ', )-> pack( -side => 'left', -anchor => 'w', );
-        $frame_eig1 -> Entry( -textvariable => \$eig_out_last, )-> pack( -side => 'left', -anchor => 'w', );
-        $frame_eig1 -> Label( -text => 'Step: ', )-> pack( -side => 'left', -anchor => 'w', );
-        $frame_eig1 -> Entry( -textvariable => \$eig_out_step, )-> pack( -side => 'left', -anchor => 'w', );
-
-		my $eig_play_min = '';
-		my $eig_play_max = '';
-        if ( -e "carma.PCA.fluctuations.dat" ) {
-
-			open FLUCTUATIONS, "carma.PCA.fluctuations.dat" || die "Cannot open carma.PCA.fluctuations.dat for reading\n";
-
-			my $i = 0;
-			while ( <FLUCTUATIONS> ) {
-
-				if ( /\s+\d+\s+(-?\d+\.\d*)/ ) {
-
-					$amplitudes[$i] = $1;
-					$i++;
-				}
-			}
-			close FLUCTUATIONS;
-
-			my @sorted_amplitudes = sort { $a <=> $b } @amplitudes;
-			$eig_play_max = $sorted_amplitudes[scalar ( @sorted_amplitudes ) - 1];
-			$eig_play_min = $sorted_amplitudes[0];
-
-			my $frame_eigA = $top_eig -> Frame() -> pack( -fill => 'x', -after => $frame_eig1, );
-			my $frame_eigB = $top_eig -> Frame() -> pack( -fill => 'x', -after => $frame_eig1, );
-
-			$frame_eigA -> Checkbutton( -text => 'Motion of the eigenvector',
-										-variable => \$eig_play,
-										-offvalue => '',
-										-onvalue => " -play", )
-										-> pack( -side => 'top', -anchor => 'w', );
-
-			$frame_eigA -> Label( -text => 'Eigenvector: ', )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigA -> Entry( -textvariable => \$eig_play_vector, )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigA -> Label( -text => 'Max: ', )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigA -> Entry( -textvariable => \$eig_play_max, )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigA -> Label( -text => 'Min: ', )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigA -> Entry( -textvariable => \$eig_play_min, )-> pack( -side => 'left', -anchor => 'w', );
-
-			$frame_eigB -> Checkbutton( -text => 'Artificial',
-										-variable => \$eig_art,
-										-offvalue => '',
-										-onvalue => " -art", )
-										-> pack( -side => 'top', -anchor => 'w', );
-
-			$frame_eigB -> Label( -text => 'Vectors: ', )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigB -> Entry( -textvariable => \$eig_art_vectors, )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigB -> Label( -text => 'Frames: ', )-> pack( -side => 'left', -anchor => 'w', );
-			$frame_eigB -> Entry( -textvariable => \$eig_art_frames, )-> pack( -side => 'left', -anchor => 'w', );
-        }
-
-        my $frame_eig5 = $top_eig -> Frame()-> pack( -expand => 0, );
-
-        $frame_eig5 -> Button( -text => 'Return',
-                               -command => [ $top_eig => 'withdraw' ], )
-                               -> pack( -side => 'left', );
-        $frame_eig5 -> Button( -text => 'Run',
-                               -command => sub {
-
-            $top_eig -> destroy;
-
-            $seg_id_flag = '' if $seg_id_flag;
-
-            foreach ( @seg_ids ) {
-
-                if ( defined ( $_ ) ) {
-
-                    $seg_id_flag = $seg_id_flag . $_;
-                }
-            }
-
-            if ( $seg_id_flag ) {
-
-                $flag = " -v -cov -eigen $eig_dot $eig_norm $eig_3d $eig_art $eig_play $eig_play_vector $eig_art_vectors $eig_art_frames $eig_play_max $eig_play_min $eig_use $eig_out $eig_out_first $eig_out_last $eig_out_step $atm_id_flag $seg_id_flag $res_id_flag";
-            }
-            else {
-
-                $flag = " -v -cov -eigen $eig_dot $eig_norm $eig_3d $eig_art $eig_play $eig_play_vector $eig_art_vectors $eig_art_frames $eig_play_max $eig_play_min $eig_use $eig_out $eig_out_first $eig_out_last $eig_out_step $atm_id_flag $res_id_flag";
-            }
-            &create_dir;
-
-            $text -> insert( 'end', "\nNow calculating eigenvectors and eigenvalues. Running carma with flag :\n", 'valid', );
-            $mw -> update;
-
-            &carma;
-
-            if ( $all_done ) {
-
-                $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-                $text -> see( 'end', );
-                $image_menu -> configure( -state => 'normal', );
-            }
-            else {
-
-                $text -> insert( 'end' , "Something went wrong\nCheck carma.out.copy for details\n", 'error' );
-                $text -> see( 'end', );
-            }
-        }, )
-        -> pack( -side => 'right', );
-
-    }
-    else {
-
-        $top_eig -> deiconify;
-        $top_eig -> raise;
-    }
-}
-
-###################################################################################################
-###   Draw the window for eigenvector and eigenvalue calculations                               ###
-###################################################################################################
-
-sub varcov_window {
-
-    my $var_dot = '';
-    my $var_norm = '';
-    my $var_mass = '';
-    my $var_first = '';
-    my $var_last = '';
-    my $var_step = '';
-    my $var_min = '';
-    my $var_max = '';
-    my $var_reverse = '';
-    my $var_first_flag = '';
-    my $var_last_flag = '';
-    my $var_step_flag = '';
-    my $var_min_flag = '';
-    my $var_max_flag = '';
-    my $top_var;
-
-    if ( !Exists ( $top_var ) ) {
-
-        $top_var = $mw -> Toplevel( -title => 'Variance Covariance Matrix', );
-        $top_var -> geometry("$toplevel_position");
-        $top_var -> protocol( 'WM_DELETE_WINDOW' => sub { $top_var -> withdraw }, );
-
-        my $frame_var1 = $top_var -> Frame() -> pack( -expand => 1, -fill => 'x', );
-        my $frame_var2 = $top_var -> Frame() -> pack( -expand => 1, -fill => 'x', );
-        my $frame_var3 = $top_var -> Frame() -> pack( -expand => 1, -fill => 'x', );
-
-        &radiobuttons ( $frame_var1 );
-        &checkbuttons ( $frame_var2 );
-        &otherbuttons ( $frame_var3 );
-
-        my $frame_var4 = $top_var -> Frame() -> pack( -fill => 'x', );
-        $frame_var4 -> Label( -text => 'Various Options' )
-                              -> pack( -side => 'top', );
-
-        $frame_var4 -> Checkbutton( -text => 'Calculate dot',
-                                    -variable => \$var_dot,
-                                    -offvalue => '',
-                                    -onvalue => " -dot", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-        $frame_var4 -> Checkbutton( -text => 'Calculate normalised matrices',
-                                    -variable => \$var_norm,
-                                    -offvalue => '',
-                                    -onvalue => " -norm", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-        $frame_var4 -> Checkbutton( -text => 'Calculate mass-weighted matrices',
-                                    -variable => \$var_mass,
-                                    -offvalue => '',
-                                    -onvalue => " -mass", )
-                                    -> pack( -side => 'top', -anchor => 'w', );
-
-        my $frame_var5 = $top_var -> Frame()-> pack( -expand => 0, );
-
-        $frame_var5 -> Label( -text => 'First: ', )
-                              -> grid( -row => 1, -column => 1, );
-        $frame_var5 -> Entry( -textvariable => \$var_first, )
-                              -> grid( -row => 1, -column => 2, );
-        $frame_var5 -> Label( -text => 'Last: ', )
-                              -> grid( -row => 2, -column => 1, );
-        $frame_var5 -> Entry( -textvariable => \$var_last, )
-                              -> grid( -row => 2, -column => 2, );
-        $frame_var5 -> Label( -text => 'Step: ', )
-                              -> grid( -row => 3, -column => 1, );
-        $frame_var5 -> Entry( -textvariable => \$var_step, )
-                              -> grid( -row => 3, -column => 2, );
-
-        $frame_var5 -> Label( -text => 'Min: ', )
-                              -> grid( -row => 1, -column => 3, );
-        $frame_var5 -> Entry( -textvariable => \$var_min, )
-                              -> grid( -row => 1, -column => 4, );
-        $frame_var5 -> Label( -text => 'Max: ', )
-                              -> grid( -row => 2, -column => 3, );
-        $frame_var5 -> Entry( -textvariable => \$var_max, )
-                              -> grid( -row => 2, -column => 4, );
-        $frame_var5 -> Checkbutton( -text => 'Reverse',
-                                    -variable => \$var_reverse,
-                                    -offvalue => '',
-                                    -onvalue => " -reverse", )
-                                    -> grid( -row => 3, -column => 3, );
-
-        my $frame_var6 = $top_var -> Frame() -> pack( -expand => 0, );
-
-        $frame_var6 -> Button( -text => 'Return',
-                               -command => [ $top_var => 'withdraw' ], )
-                               -> pack( -side => 'left', );
-
-        $frame_var6 -> Button( -text => 'Run',
-                               -command => sub {
-
-            $top_var -> destroy;
-
-            $var_first_flag = ( $var_first ? " -first $var_first" : '' );
-            $var_last_flag = ( $var_last ? " -last $var_last" : '' );
-            $var_step_flag = ( $var_step ? " -step $var_step" : '' );
-            $var_min_flag = ( $var_min ? " -min $var_min" : '' );
-            $var_max_flag = ( $var_max ? " -max $var_max" : '' );
-
-            $seg_id_flag = '' if $seg_id_flag;
-
-            foreach ( @seg_ids ) {
-
-                if ( defined ( $_ ) ) {
-
-                    $seg_id_flag = $seg_id_flag . $_;
-                }
-            }
-
-            if ( $seg_id_flag ) {
-
-                $flag = " -v -w -col -cov $var_dot $var_norm $var_mass $var_max_flag $var_min_flag $var_step_flag $var_last_flag $var_first_flag $var_reverse $atm_id_flag $seg_id_flag $res_id_flag";
-            }
-            else {
-
-                $flag = " -v -w -col -cov $var_dot $var_norm $var_mass $var_max_flag $var_min_flag $var_step_flag $var_last_flag $var_first_flag $var_reverse $atm_id_flag $res_id_flag";
-            }
-
-            &create_dir;
-
-            $text -> insert( 'end', "\nNow calculating variance covariance matrix. Running carma with flag :\n", 'valid', );
-            $text -> see( 'end', );
-            $mw -> update;
-
-            &carma;
-
-            if ( $all_done ) {
-
-                $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-                $text -> see( 'end', );
-                $image_menu -> configure( -state => 'normal', );
-            }
-            else {
-
-                $text -> insert( 'end' , "Something went wrong\nCheck carma.out.copy for details\n", 'error' );
-                $text -> see( 'end', );
-            }
-        }, )
-        -> pack( -side => 'right', );
-    }
-    else {
-
-        $top_var -> deiconify;
-        $top_var -> raise;
     }
 }
 
@@ -4025,7 +3708,7 @@ sub entropy_window {
                                             -relief => 'groove',)
                                             -> pack( -fill => 'x', );
 
-        my $mass_check = $frame_ent1 -> Checkbutton( -text => "Mass",
+        my $mass_check = $frame_ent1 -> Checkbutton( -text => "Use mass weighting",
                                                      -variable => \$ent_mass,
                                                      -onvalue => '-mass',
                                                      -offvalue => '', )
@@ -4383,7 +4066,7 @@ sub rms_window {
         $frame_rms4 -> Entry( -textvariable => \$rms_mrms, )
                               -> grid( -row => 3, -column => 4, );
 
-        $frame_rms4 -> Checkbutton( -text => 'Reverse',
+        $frame_rms4 -> Checkbutton( -text => 'Reverse color gradient',
                                     -variable => \$rms_reverse,
                                     -offvalue => '',
                                     -onvalue => " -reverse", )
