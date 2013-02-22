@@ -182,7 +182,7 @@ our (
     @upper_res_limit,   @lower_res_limit,       @upper_fit_limit,
     @lower_fit_limit,   @frame_res1,            @frame_fit_index4,
     %num_residues,      %substitutions,         @frame_fit6,
-    @fit_drop,			@fit_drop_value,
+    @fit_drop,          @fit_drop_value,
 );
 
 # If the OS is *nix/unix-like and the  #
@@ -236,12 +236,12 @@ if ( $linux || $mac ) {
 
     if ( `which vmd` ) {
 
-		$vmd = 1;
-	}
-	if ( `which stride` ) {
+        $vmd = 1;
+    }
+    if ( `which stride` ) {
 
-		$stride = 1;
-	}
+        $stride = 1;
+    }
 }
 # Do the same thing for windows        #
 else {
@@ -414,7 +414,7 @@ $file -> command( -label => "Exit",
                   -underline => 1,
                   -command => [ $mw => 'destroy' ], );
 $help -> command( -label => 'About',
-				  -command => \&about, );
+                  -command => \&about, );
 
 ###################################################################################################
 ###   Menubutton Frame                                                                          ###
@@ -469,11 +469,11 @@ my $varcov_menu = $f1 -> Button( -text => "Covariance, average and\nrepresentati
 my $stride_menu;
 if ( $linux or $mac ) {
 
-	$stride_menu = $f1 -> Button( -text => "Secondary structure",
-								  -command => \&stride_window,
-								  -state => 'disabled',
-								  -width => 24,
-								  -font => "$font_12", ) -> pack;
+    $stride_menu = $f1 -> Button( -text => "Secondary structure",
+                                  -command => \&stride_window,
+                                  -state => 'disabled',
+                                  -width => 24,
+                                  -font => "$font_12", ) -> pack;
 }
 
 #Draw the button for the qfract menu...#
@@ -641,12 +641,12 @@ if ( $linux || $mac  ) {
 
     if ( $stride ) {
 
-		$stride_menu -> configure( -state => 'normal', );
-	}
-	else {
+        $stride_menu -> configure( -state => 'normal', );
+    }
+    else {
 
-		$text -> insert( 'end', "Secondary structure assignments have been turned-off because no 'stride' executable could be located in the PATH\n", 'info' );
-	}
+        $text -> insert( 'end', "Secondary structure assignments have been turned-off because no 'stride' executable could be located in the PATH\n", 'info' );
+    }
 }
 
 $text -> insert( 'end', "\nSELECT A TASK FROM THE LEFT PANEL\n" );
@@ -763,7 +763,7 @@ sub open_file {
         }
         else {
 
-			$psf_name = $3;
+            $psf_name = $3;
             $active_psf = $3 . '.psf';
             # else substitute the '/' for '\' in   #
             # $file as windows uses a backward     #
@@ -1168,8 +1168,8 @@ sub carma {
         }
         else {
 
-			$all_done = 0;
-		}
+            $all_done = 0;
+        }
     }
 
     close TEMP_OUT;
@@ -1346,11 +1346,11 @@ sub rmsd_window {
         $frame_rmsd2 -> Button( -text => 'Run',
                                 -command => sub {
 
-			$rmsd_first_flag = ( $rmsd_first ? " -first $rmsd_first" : '' );
-			$rmsd_last_flag = ( $rmsd_last ? " -last $rmsd_last" : '' );
-			$rmsd_step_flag = ( $rmsd_step ? " -step $rmsd_step" : '' );
-			$rmsd_min_flag = ( $rmsd_min ? " -min $rmsd_min" : '' );
-			$rmsd_max_flag = ( $rmsd_max ? " -max $rmsd_max" : '' );
+            $rmsd_first_flag = ( $rmsd_first ? " -first $rmsd_first" : '' );
+            $rmsd_last_flag = ( $rmsd_last ? " -last $rmsd_last" : '' );
+            $rmsd_step_flag = ( $rmsd_step ? " -step $rmsd_step" : '' );
+            $rmsd_min_flag = ( $rmsd_min ? " -min $rmsd_min" : '' );
+            $rmsd_max_flag = ( $rmsd_max ? " -max $rmsd_max" : '' );
 
             $rmsd_top -> destroy();
             $mw -> update;
@@ -1386,31 +1386,31 @@ sub rmsd_window {
 
             if ( $all_done ) {
 
-				$text -> insert( 'end', "Calculation finished. Now creating a postcript plot of carma.RMSD.matrix", 'valid' );
-				$text -> see( 'end', );
+                $text -> insert( 'end', "Calculation finished. Now creating a postcript plot of carma.RMSD.matrix", 'valid' );
+                $text -> see( 'end', );
 
-				$mw -> update;
-				sleep 1;
+                $mw -> update;
+                sleep 1;
 
-				my $coloring;
-				$coloring = `carma.exe -reverse -col - < carma.RMSD.matrix` if ( $windows );
-				$coloring = `carma -reverse -col - < carma.RMSD.matrix` if ( $linux || $mac );
+                my $coloring;
+                $coloring = `carma.exe -reverse -col - < carma.RMSD.matrix` if ( $windows );
+                $coloring = `carma -reverse -col - < carma.RMSD.matrix` if ( $linux || $mac );
 
-				if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
+                if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
-					$text -> insert( 'end', "\nPlotted .ps image from $1.$2 to $3.$4\n", 'valid' );
-					$text -> insert( 'end', "Use \"View Results\"\n", 'valid' );
-					$text -> see( 'end', );
-					$image_menu -> configure( -state => 'normal', );
-					mv ( "carma.stdin.ps", "carma.RMSD_matrix.ps" );
-				}
-			}
-			else {
+                    $text -> insert( 'end', "\nPlotted .ps image from $1.$2 to $3.$4\n", 'valid' );
+                    $text -> insert( 'end', "Use \"View Results\"\n", 'valid' );
+                    $text -> see( 'end', );
+                    $image_menu -> configure( -state => 'normal', );
+                    mv ( "carma.stdin.ps", "carma.RMSD_matrix.ps" );
+                }
+            }
+            else {
 
-				$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-				$text -> insert( 'end', getcwd . "\n", 'info', );
-				$text -> see( 'end', );
-			}
+                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                $text -> insert( 'end', getcwd . "\n", 'info', );
+                $text -> see( 'end', );
+            }
             }, )
             -> grid( -row => 2, -column => 2, );
 
@@ -1476,17 +1476,17 @@ sub qfract_window {
                                        -onvalue => 1, )
                                        -> pack( -anchor => 'w', );
         $nat_button = $frame_qfract4 -> Checkbutton( -text => 'Use pdb file to define the native structure',
-													 -variable => \$qfract_nat,
-													 -offvalue => '',
-													 -onvalue => ' -nat',
-													 -command => sub {
+                                                     -variable => \$qfract_nat,
+                                                     -offvalue => '',
+                                                     -onvalue => ' -nat',
+                                                     -command => sub {
 
-			$nat_pdb_file = $top_qfract -> getOpenFile( -filetypes => [ [ 'Native structure PDB file', '.pdb' ] ], );
-			unless ( $nat_pdb_file ) {
+            $nat_pdb_file = $top_qfract -> getOpenFile( -filetypes => [ [ 'Native structure PDB file', '.pdb' ] ], );
+            unless ( $nat_pdb_file ) {
 
-				$nat_button -> toggle;
-			}
-		}, )
+                $nat_button -> toggle;
+            }
+        }, )
         -> pack( -anchor => 'w', );
 
         $frame_qfract4 -> Checkbutton( -text => 'Use frame ',
@@ -1500,60 +1500,60 @@ sub qfract_window {
                                  -> pack( -side => 'left', -anchor => 'n', );
 
         $frame_qfract5 -> Button( -text => 'Return',
-								  -command => [ $top_qfract => 'withdraw' ], )
-								  -> grid( -row => 3, -column => 1, );
+                                  -command => [ $top_qfract => 'withdraw' ], )
+                                  -> grid( -row => 3, -column => 1, );
 
         $qfract_run_button = $frame_qfract5 -> Button( -text => 'Run',
                                                        -state => 'disabled',
                                                        -command => sub {
 
-			$top_qfract -> destroy;
+            $top_qfract -> destroy;
 
-			$seg_id_flag = '' if $seg_id_flag;
+            $seg_id_flag = '' if $seg_id_flag;
 
-			foreach ( @seg_ids ) {
+            foreach ( @seg_ids ) {
 
-				if ( defined ( $_ ) ) {
+                if ( defined ( $_ ) ) {
 
-					$seg_id_flag = $seg_id_flag . $_;
-				}
-			}
+                    $seg_id_flag = $seg_id_flag . $_;
+                }
+            }
 
-			if ( $seg_id_flag ) {
+            if ( $seg_id_flag ) {
 
-				$flag = " -v -qf $qfract_cutoff $qfract_dist $qfract_nat $nat_pdb_file $qfract_ref $qfract_ref_num $atm_id_flag $seg_id_flag $res_id_flag";
-			}
-			else {
+                $flag = " -v -qf $qfract_cutoff $qfract_dist $qfract_nat $nat_pdb_file $qfract_ref $qfract_ref_num $atm_id_flag $seg_id_flag $res_id_flag";
+            }
+            else {
 
-				$flag = " -v -qf $qfract_cutoff $qfract_dist $qfract_nat $nat_pdb_file $qfract_ref $qfract_ref_num $atm_id_flag $res_id_flag";
-			}
+                $flag = " -v -qf $qfract_cutoff $qfract_dist $qfract_nat $nat_pdb_file $qfract_ref $qfract_ref_num $atm_id_flag $res_id_flag";
+            }
 
-			&create_dir;
+            &create_dir;
 
-			$text -> insert( 'end', "\nNow calculating qfract. Running carma with flag :\n", 'valid', );
-			$text -> see( 'end', );
-			$mw -> update;
+            $text -> insert( 'end', "\nNow calculating qfract. Running carma with flag :\n", 'valid', );
+            $text -> see( 'end', );
+            $mw -> update;
 
-			&carma;
+            &carma;
 
-			if ( $all_done ) {
+            if ( $all_done ) {
 
-				$text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-				$text -> see( 'end', );
-				$image_menu -> configure( -state => 'normal', );
+                $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
+                $text -> see( 'end', );
+                $image_menu -> configure( -state => 'normal', );
 
-				if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
+                if ( $qfract_plot && -e "carma.Qfraction.dat" ) {
 
-					plot ( 'carma.Qfraction.dat' );
-					$qfract_plot = 0;
-				}
-			}
-			else {
+                    plot ( 'carma.Qfraction.dat' );
+                    $qfract_plot = 0;
+                }
+            }
+            else {
 
-				$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-				$text -> insert( 'end', getcwd . "\n", 'info', );
-				$text -> see( 'end', );
-			}
+                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                $text -> insert( 'end', getcwd . "\n", 'info', );
+                $text -> see( 'end', );
+            }
         }, )
         -> grid( -row => 3, -column => 2, );
 
@@ -1580,6 +1580,7 @@ sub qfract_window {
 
 sub dpca_window {
 
+    my $dpca_top;
     my $dpca_eigenvectors = '';
     my $dpca_combinations = '';
     my $dpca_temp = '';
@@ -1595,9 +1596,8 @@ sub dpca_window {
     my $dpca_step_flag = '';
     our $chi1 = '';
     our $include_segid = '';
-    my $dpca_top;
-	our $dpca_auto_entry;
-	our $dpca_auto_entry_num = 10;
+    our $dpca_auto_entry;
+    our $dpca_auto_entry_num = 10;
 
     our $res_id_flag;
     our @cluster_stats = '';
@@ -1637,17 +1637,17 @@ sub dpca_window {
         $dpca_frame -> Entry( -textvariable => \$dpca_cutoff,)
                               -> grid( -row => 4, -column => 3, );
         $dpca_frame -> Label( -text => 'First: ',
-							  -anchor => 'w', )
+                              -anchor => 'w', )
                               -> grid( -row => 5, -column => 1, );
         $dpca_frame -> Entry( -textvariable => \$dpca_first, )
                               -> grid( -row => 5, -column => 3, );
         $dpca_frame -> Label( -text => 'Last: ',
-							  -anchor => 'w', )
+                              -anchor => 'w', )
                               -> grid( -row => 6, -column => 1, );
         $dpca_frame -> Entry( -textvariable => \$dpca_last, )
                               -> grid( -row => 6, -column => 3, );
         $dpca_frame -> Label( -text => 'Step: ',
-							  -anchor => 'w', )
+                              -anchor => 'w', )
                               -> grid( -row => 7, -column => 1, );
         $dpca_frame -> Entry( -textvariable => \$dpca_step, )
                               -> grid( -row => 7, -column => 3, );
@@ -1674,9 +1674,9 @@ sub dpca_window {
         $dpca_run_button = $dpca_frame ->Button( -text => 'Run',
                                                  -command => sub {
 
-			$dpca_first_flag = ( $dpca_first ? " -first $dpca_first" : '' );
-			$dpca_last_flag = ( $dpca_last ? " -last $dpca_last" : '' );
-			$dpca_step_flag = ( $dpca_step ? " -step $dpca_step" : '' );
+            $dpca_first_flag = ( $dpca_first ? " -first $dpca_first" : '' );
+            $dpca_last_flag = ( $dpca_last ? " -last $dpca_last" : '' );
+            $dpca_step_flag = ( $dpca_step ? " -step $dpca_step" : '' );
 
             $dpca_top -> withdraw;
 
@@ -1692,56 +1692,79 @@ sub dpca_window {
 
             if ( $res_id_flag ) {
 
-				if ( $dpca_auto_entry -> cget( -state, ) eq 'normal' ) {
+                if ( $dpca_auto_entry -> cget( -state, ) eq 'normal' ) {
 
-					my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
-																  'like the output .pdb files to include all atoms ?',
-													  -type => 'yesno',
-													  -icon => 'question', );
+                    my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
+                                                                  'like the output .pdb files to include all atoms ?',
+                                                      -type => 'yesno',
+                                                      -icon => 'question', );
 
-					if ( $response =~ /yes/i ) {
+                    if ( $response =~ /yes/i ) {
 
-						$include_segid = 1;
-					}
-					else {
+                        $include_segid = 1;
+                    }
+                    else {
 
-						$include_segid = 0;
-						$seg_id_flag = '';
-					}
+                        $include_segid = 0;
+                        $seg_id_flag = '';
+                    }
 
-					$flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
-				}
-				elsif ( $seg_id_flag ) {
+                    $flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
+                }
+                elsif ( $seg_id_flag ) {
 
-					my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
-																  'like the principal component analysis to include' .
-																  ' all atoms ?',
-													  -type => 'yesno',
-													  -icon => 'question', );
+                    my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
+                                                                  'like the principal component analysis to include' .
+                                                                  ' all atoms ?',
+                                                      -type => 'yesno',
+                                                      -icon => 'question', );
 
-					if ( $response =~ /yes/i ) {
+                    if ( $response =~ /yes/i ) {
 
-						$flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag $seg_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
-					}
-					else {
+                        $flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag $seg_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
+                    }
+                    else {
 
-						$flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
-					}
-				}
-			}
-			else {
+                        $flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
+                    }
+                }
+            }
+            else {
 
-				$flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $seg_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
-			}
+                $flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $seg_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
+            }
 
             &create_dir;
+            if ( $dpca_auto_entry -> cget( -state, ) eq 'normal' ) {
+
+                opendir CWD, getcwd || die "Cannot open " . getcwd . ": $!";
+                while ( my $dh = readdir CWD ) {
+
+                    if ( $dh =~ /carma\.dPCA\.cluster_01.dcd/ ) {
+                        
+                        my $response = $dpca_top -> messageBox( -message => 'The analysis you are about to perform will produce files ' .
+                                                                            'that already exist in the working directory. Would you like to' .
+                                                                            ' delete the old files before proceeding ?',
+                                                                -icon => 'question',
+                                                                -type => 'yesno', );
+                        if ( $response =~ /yes/i ) {
+
+                            unlink <*dPCA*>;
+                        }
+                    }
+                }
+                closedir CWD;
+            }
 
             $text -> insert( 'end', "\nNow performing dPCA. Running carma with flag :\n", 'valid', );
             $text -> see( 'end', );
             $mw -> update;
 
             &carma ( "pca" );
-            &auto_window ( 'dPCA' ) if ( $dpca_auto_entry -> cget( -state, ) eq 'normal' );
+            if ( $dpca_auto_entry -> cget( -state, ) eq 'normal' ) {
+
+                &auto_window ( 'dPCA' ) ;
+            }
             if ( $all_done ) {
 
                 $text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
@@ -1751,12 +1774,12 @@ sub dpca_window {
 
                 if ( $dpca_auto_entry -> cget( -state, ) eq 'normal' ) {
 
-					foreach ( @cluster_stats ) {
+                    foreach ( @cluster_stats ) {
 
-						$text -> insert( 'end', "$_\n", 'info' );
-						$text -> see( 'end', );
-					}
-				}
+                        $text -> insert( 'end', "$_\n", 'info' );
+                        $text -> see( 'end', );
+                    }
+                }
             }
             else {
 
@@ -1853,9 +1876,9 @@ sub cpca_window {
     my $cpca_use = '';
     my $cpca_top;
     our $include_segid;
-	our $cpca_auto_entry;
-	our $cpca_auto_entry_num = 10;
-	our @cluster_stats = '';
+    our $cpca_auto_entry;
+    our $cpca_auto_entry_num = 10;
+    our @cluster_stats = '';
 
     if ( !Exists( $cpca_top ) ) {
 
@@ -1923,9 +1946,9 @@ sub cpca_window {
         $cpca_frame ->Button( -text => 'Run',
                               -command => sub {
 
-			$cpca_first_flag = ( $cpca_first ? " -first $cpca_first" : '' );
-			$cpca_last_flag = ( $cpca_last ? " -last $cpca_last" : '' );
-			$cpca_step_flag = ( $cpca_step ? " -step $cpca_step" : '' );
+            $cpca_first_flag = ( $cpca_first ? " -first $cpca_first" : '' );
+            $cpca_last_flag = ( $cpca_last ? " -last $cpca_last" : '' );
+            $cpca_step_flag = ( $cpca_step ? " -step $cpca_step" : '' );
 
             $cpca_top -> withdraw;
 
@@ -1941,49 +1964,69 @@ sub cpca_window {
 
             if ( $res_id_flag ) {
 
-				if ( $cpca_auto_entry -> cget( -state, ) eq 'normal' ) {
+                if ( $cpca_auto_entry -> cget( -state, ) eq 'normal' ) {
 
-					my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
-																  'like the output .pdb files to include all atoms ?',
-													  -type => 'yesno',
-													  -icon => 'question', );
+                    my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
+                                                                  'like the output .pdb files to include all atoms ?',
+                                                      -type => 'yesno',
+                                                      -icon => 'question', );
 
-					if ( $response =~ /yes/i ) {
+                    if ( $response =~ /yes/i ) {
 
-						$include_segid = 1;
-					}
-					else {
+                        $include_segid = 1;
+                    }
+                    else {
 
-						$include_segid = 0;
-						$seg_id_flag = '';
-					}
+                        $include_segid = 0;
+                        $seg_id_flag = '';
+                    }
 
-					$flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
-				}
-				elsif ( $seg_id_flag ) {
+                    $flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
+                }
+                elsif ( $seg_id_flag ) {
 
-					my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
-																  'like the principal component analysis to include' .
-																  ' all atoms ?',
-													  -type => 'yesno',
-													  -icon => 'question', );
+                    my $response = $mw -> messageBox( -message => 'You have specified a resid selection. Would you ' .
+                                                                  'like the principal component analysis to include' .
+                                                                  ' all atoms ?',
+                                                      -type => 'yesno',
+                                                      -icon => 'question', );
 
-					if ( $response =~ /yes/i ) {
+                    if ( $response =~ /yes/i ) {
 
-						$flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $seg_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
-					}
-					else {
+                        $flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $seg_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
+                    }
+                    else {
 
-						$flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
-					}
-				}
-			}
-			else {
+                        $flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
+                    }
+                }
+            }
+            else {
 
-				$flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $seg_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
-			}
+                $flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $seg_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
+            }
 
             &create_dir;
+            if ( $cpca_auto_entry -> cget( -state, ) eq 'normal' ) {
+
+                opendir CWD, getcwd || die "Cannot open " . getcwd . ": $!";
+                while ( my $dh = readdir CWD ) {
+
+                    if ( $dh =~ /carma\.cPCA\.cluster_01.dcd/ ) {
+                        
+                        my $response = $cpca_top -> messageBox( -message => 'The analysis you are about to perform will produce files ' .
+                                                                            'that already exist in the working directory. Would you like to' .
+                                                                            ' delete the old files before proceeding ?',
+                                                                -icon => 'question',
+                                                                -type => 'yesno', );
+                        if ( $response =~ /yes/i ) {
+
+                            unlink <*cPCA*>;
+                        }
+                    }
+                }
+                closedir CWD;
+            }
 
             $text -> insert( 'end', "\nNow performing cPCA. Running carma with flag :\n", 'valid', );
             $text -> see( 'end', );
@@ -2001,12 +2044,12 @@ sub cpca_window {
 
                 if ( $cpca_auto_entry -> cget( -state, ) eq 'normal' ) {
 
-					foreach ( @cluster_stats ) {
+                    foreach ( @cluster_stats ) {
 
-						$text -> insert( 'end', "$_\n", 'info' );
-						$text -> see( 'end', );
-					}
-				}
+                        $text -> insert( 'end', "$_\n", 'info' );
+                        $text -> see( 'end', );
+                    }
+                }
             }
             else {
 
@@ -2081,17 +2124,17 @@ sub cpca_window {
 
 sub auto_window {
 
-	our $dpca_auto_entry;
-	our $dpca_auto_entry_num;
-	our $cpca_auto_entry;
-	our $cpca_auto_entry_num;
+    our $dpca_auto_entry;
+    our $dpca_auto_entry_num;
+    our $cpca_auto_entry;
+    our $cpca_auto_entry_num;
 
-	our $chi1;
-	our $include_segid;
+    our $chi1;
+    our $include_segid;
 
-	our @cluster_stats;
-	my $cluster_number;
-	my $cluster_size = 0;
+    our @cluster_stats;
+    my $cluster_number;
+    my $cluster_size = 0;
 
     my ( $remember_psf, $remember_dcd, ) = ( $active_psf, $active_dcd, );
 
@@ -2154,7 +2197,7 @@ sub auto_window {
         $cluster_size = sprintf ( "%7d", $cluster_size, );
         push ( @cluster_stats, "Cluster $cluster_number comprises $cluster_size frames (out of $header)" );
 
-		$cluster_size = 0;
+        $cluster_size = 0;
 
         if ( $i == 1 ) {
 
@@ -2191,70 +2234,70 @@ sub auto_window {
 
         if ( $include_segid ) {
 
-			my @selected_atoms = split ' -atmid ', $custom_id_flag if ( $custom_id_flag );
-			shift @selected_atoms if ( @selected_atoms );
+            my @selected_atoms = split ' -atmid ', $custom_id_flag if ( $custom_id_flag );
+            shift @selected_atoms if ( @selected_atoms );
 
-			my $line_count = 1;
-			my $regex_var = '';
+            my $line_count = 1;
+            my $regex_var = '';
 
-			{
-				local $" = '|';
-				if ( $_[0] eq 'cPCA' ) {
+            {
+                local $" = '|';
+                if ( $_[0] eq 'cPCA' ) {
 
-					if ( $custom_id_flag ) {
+                    if ( $custom_id_flag ) {
 
-						$regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)(@selected_atoms)(\s+.*)};
-					}
-					elsif ( $atm_id_flag =~ /heavy/i ) {
+                        $regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)(@selected_atoms)(\s+.*)};
+                    }
+                    elsif ( $atm_id_flag =~ /heavy/i ) {
 
-						$regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)([^H].*)(\s+.*)};
-					}
-					elsif ( $atm_id_flag =~ /allid/i ) {
+                        $regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)([^H].*)(\s+.*)};
+                    }
+                    elsif ( $atm_id_flag =~ /allid/i ) {
 
-						$regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)(\w+)(\s+.*)};
-					}
-					else {
+                        $regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)(\w+)(\s+.*)};
+                    }
+                    else {
 
-						$regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)};
-					}
-				}
-				else {
-
-					$regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)} if ( $_[0] eq 'dPCA' );
+                        $regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)};
+                    }
                 }
-			}
+                else {
 
-			open PSF, '<', "selected_residues.psf" || die "Cannot open selected_residues.psf for reading: $!";
-			open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
+                    $regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)($backbone)(\s+.*)} if ( $_[0] eq 'dPCA' );
+                }
+            }
 
-			while ( <PSF> ) {
+            open PSF, '<', "selected_residues.psf" || die "Cannot open selected_residues.psf for reading: $!";
+            open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!";
 
-				if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
+            while ( <PSF> ) {
 
-					last;
-				}
-				elsif ( /$regex_var/i ) {
+                if ( /!N(BOND|THETA|PHI|IMPHI|DON|ACC|NBB|GRP)/ ) {
 
-					print OUT "$1$2$3$4$5$6\n";
-				}
-			}
+                    last;
+                }
+                elsif ( /$regex_var/i ) {
 
-			close OUT;
-			close PSF;
+                    print OUT "$1$2$3$4$5$6\n";
+                }
+            }
 
-			$active_dcd = "carma.$_[0].cluster_0$i.dcd";
-			$active_psf = "selected_residues.psf";
+            close OUT;
+            close PSF;
+
+            $active_dcd = "carma.$_[0].cluster_0$i.dcd";
+            $active_psf = "selected_residues.psf";
 
             $flag = " -v -w -fit -index -atmid ALLID";
 
-			&carma ( 'auto' );
+            &carma ( 'auto' );
 
-			if ( $all_done ) {
+            if ( $all_done ) {
 
-				$seg_res = 1;
-				$fit_check = 1;
-			}
-		}
+                $seg_res = 1;
+                $fit_check = 1;
+            }
+        }
         elsif ( $seg_id_flag ) {
 
             my @chains = split ' -segid ', $seg_id_flag;
@@ -2293,7 +2336,7 @@ sub auto_window {
 
                 $active_dcd = "carma.$_[0].cluster_0$i.dcd";
 
-				$flag = " -v -w -fit -index -atmid ALLID $seg_id_flag";
+                $flag = " -v -w -fit -index -atmid ALLID $seg_id_flag";
 
                 &carma ( 'auto' );
 
@@ -2412,7 +2455,7 @@ sub auto_window {
 #~
                 #~ {
                     #~ local $" = '|';
-					#~ $regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)(@selected_atoms)(\s+.*)};
+                    #~ $regex_var = qr{^(\s*\d+)(\s*)(Z)(\s*\d+\s*\w+\s+)(@selected_atoms)(\s+.*)};
                 #~ }
 #~
                 #~ open PSF, '<', "selected_residues.psf" || die "Cannot open selected_residues.psf for reading: $!";
@@ -2438,12 +2481,12 @@ sub auto_window {
 
                 if ( $_[0] eq 'dPCA' ) {
 
-					$flag = " -v -w -fit $res_id_flag";
-				}
-				else {
+                    $flag = " -v -w -fit $res_id_flag";
+                }
+                else {
 
-					$flag = " -v -w -fit $res_id_flag $custom_id_flag";
-				}
+                    $flag = " -v -w -fit $res_id_flag $custom_id_flag";
+                }
 
                 &carma ( 'auto' );
 
@@ -2498,66 +2541,66 @@ sub auto_window {
 
                 if ( $_[0] eq 'dPCA' ) {
 
-					$flag = " -v -w -fit $res_id_flag";
-				}
-				else {
+                    $flag = " -v -w -fit $res_id_flag";
+                }
+                else {
 
-					$flag = " -v -w -fit $res_id_flag $atm_id_flag";
-				}
+                    $flag = " -v -w -fit $res_id_flag $atm_id_flag";
+                }
 
                 &carma ( 'auto' );
 
                 if ( $all_done ) {
 
-					#~ if ( $linux or $mac ) {
+                    #~ if ( $linux or $mac ) {
 #~
-						#~ if ( $_[0] eq 'dpca' ) {
+                        #~ if ( $_[0] eq 'dpca' ) {
 #~
-							#~ if ( $chi1 ) {
+                            #~ if ( $chi1 ) {
 #~
-								#~ `carma -v -w -last 1 -atmid ALLID -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-							#~ }
-							#~ else {
+                                #~ `carma -v -w -last 1 -atmid ALLID -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                            #~ }
+                            #~ else {
 #~
-								#~ `carma -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-							#~ }
-						#~ }
-						#~ else  {
+                                #~ `carma -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                            #~ }
+                        #~ }
+                        #~ else  {
 #~
-							#~ `carma -v -w -last 1 $atm_id_flag -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-						#~ }
-					#~ }
-					#~ else {
+                            #~ `carma -v -w -last 1 $atm_id_flag -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                        #~ }
+                    #~ }
+                    #~ else {
 #~
-						#~ if ( $_[0] eq 'dpca' ) {
+                        #~ if ( $_[0] eq 'dpca' ) {
 #~
-							#~ if ( $chi1 ) {
+                            #~ if ( $chi1 ) {
 #~
-								#~ `carma.exe -v -w -last 1 -atmid ALLID -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-							#~ }
-							#~ else {
+                                #~ `carma.exe -v -w -last 1 -atmid ALLID -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                            #~ }
+                            #~ else {
 #~
-								#~ `carma.exe -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-							#~ }
-						#~ }
-						#~ else  {
+                                #~ `carma.exe -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                            #~ }
+                        #~ }
+                        #~ else  {
 #~
-							#~ `carma.exe -v -w -last 1 $atm_id_flag -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-						#~ }
-					#~ }
+                            #~ `carma.exe -v -w -last 1 $atm_id_flag -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                        #~ }
+                    #~ }
 #~
-					#~ open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!\n";
-					#~ open OUT, '>', "new.selected_residues.psf" or die "Cannot open new.selected_residues.psf for writing: $!\n";
+                    #~ open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!\n";
+                    #~ open OUT, '>', "new.selected_residues.psf" or die "Cannot open new.selected_residues.psf for writing: $!\n";
 #~
-					#~ while ( <IN> ) {
+                    #~ while ( <IN> ) {
 #~
-						#~ print OUT $_;
-					#~ }
+                        #~ print OUT $_;
+                    #~ }
 #~
-					#~ close ( OUT );
-					#~ close ( IN );
+                    #~ close ( OUT );
+                    #~ close ( IN );
 #~
-					#~ $active_psf = 'new.selected_residues.psf';
+                    #~ $active_psf = 'new.selected_residues.psf';
 
                     $res_atm = 1;
                     $fit_check = 1;
@@ -2596,38 +2639,38 @@ sub auto_window {
 
                 if ( $_[0] eq 'dPCA' and $chi1 ) {
 
-					$flag = " -v -w -fit $res_id_flag -atmid ALLID";
-				}
+                    $flag = " -v -w -fit $res_id_flag -atmid ALLID";
+                }
                 else {
 
-					$flag = " -v -w -fit $res_id_flag -atmid C -atmid CA -atmid N -atmid O";
-				}
+                    $flag = " -v -w -fit $res_id_flag -atmid C -atmid CA -atmid N -atmid O";
+                }
 
                 &carma ( 'auto' );
 
                 if ( $all_done ) {
 
-					#~ if ( $linux or $mac ) {
+                    #~ if ( $linux or $mac ) {
 #~
-						#~ `carma -v -w -last 1 -atmid CA -atmid C -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-					#~ }
-					#~ else {
+                        #~ `carma -v -w -last 1 -atmid CA -atmid C -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                    #~ }
+                    #~ else {
 #~
-						#~ `carma.exe -v -w -last 1 -atmid CA -atmid C -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
-					#~ }
+                        #~ `carma.exe -v -w -last 1 -atmid CA -atmid C -atmid N -atmid O -segid Z carma.cluster_0$i.dcd selected_residues.psf`;
+                    #~ }
 #~
-					#~ open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!\n";
-					#~ open OUT, '>', "new.selected_residues.psf" or die "Cannot open new.selected_residues.psf for writing: $!\n";
+                    #~ open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!\n";
+                    #~ open OUT, '>', "new.selected_residues.psf" or die "Cannot open new.selected_residues.psf for writing: $!\n";
 #~
-					#~ while ( <IN> ) {
+                    #~ while ( <IN> ) {
 #~
-						#~ print OUT $_;
-					#~ }
+                        #~ print OUT $_;
+                    #~ }
 #~
-					#~ close ( OUT );
-					#~ close ( IN );
+                    #~ close ( OUT );
+                    #~ close ( IN );
 #~
-					#~ $active_psf = 'new.selected_residues.psf';
+                    #~ $active_psf = 'new.selected_residues.psf';
 
                     $res = 1;
                     $fit_check = 1;
@@ -2772,7 +2815,7 @@ sub auto_window {
         if ( $fit_check ) {
 
             mv ( "carma.fitted.dcd", "carma.$_[0].fitted.cluster_0$i.dcd" );
-			$active_dcd = "carma.$_[0].fitted.cluster_0$i.dcd";
+            $active_dcd = "carma.$_[0].fitted.cluster_0$i.dcd";
 
             if ( $seg_res ) {
 
@@ -2807,100 +2850,100 @@ sub auto_window {
             }
             elsif ( $res_custom || $res_atm || $res ) {
 
-				if ( $linux or $mac ) {
+                if ( $linux or $mac ) {
 
-					if ( $_[0] eq 'dPCA' ) {
+                    if ( $_[0] eq 'dPCA' ) {
 
-						if ( $chi1 ) {
+                        if ( $chi1 ) {
 
-							`carma -v -w -last 1 -atmid ALLID -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-						else {
+                            `carma -v -w -last 1 -atmid ALLID -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                        else {
 
-							`carma -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-					}
-					else {
+                            `carma -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                    }
+                    else {
 
-						if ( $custom_id_flag ) {
+                        if ( $custom_id_flag ) {
 
-							`carma -v -w -last 1 $custom_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-						elsif ( $atm_id_flag ) {
+                            `carma -v -w -last 1 $custom_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                        elsif ( $atm_id_flag ) {
 
-							`carma -v -w -last 1 $atm_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-						else {
+                            `carma -v -w -last 1 $atm_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                        else {
 
-							`carma -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-					}
-				}
-				else {
+                            `carma -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                    }
+                }
+                else {
 
-					if ( $_[0] eq 'dPCA' ) {
+                    if ( $_[0] eq 'dPCA' ) {
 
-						if ( $chi1 ) {
+                        if ( $chi1 ) {
 
-							`carma.exe -v -w -last 1 -atmid ALLID -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-						else {
+                            `carma.exe -v -w -last 1 -atmid ALLID -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                        else {
 
-							`carma.exe -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-					}
-					else {
+                            `carma.exe -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                    }
+                    else {
 
-						if ( $custom_id_flag ) {
+                        if ( $custom_id_flag ) {
 
-							`carma.exe -v -w -last 1 $custom_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-						elsif ( $atm_id_flag ) {
+                            `carma.exe -v -w -last 1 $custom_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                        elsif ( $atm_id_flag ) {
 
-							`carma.exe -v -w -last 1 $atm_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-						else {
+                            `carma.exe -v -w -last 1 $atm_id_flag -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                        else {
 
-							`carma.exe -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
-						}
-					}
-				}
+                            `carma.exe -v -w -last 1 -atmid C -atmid CA -atmid N -atmid O -segid Z carma.$_[0].cluster_0$i.dcd selected_residues.psf`;
+                        }
+                    }
+                }
 
-				open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!\n";
-				open OUT, '>', "new.selected_residues.psf" or die "Cannot open new.selected_residues.psf for writing: $!\n";
+                open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!\n";
+                open OUT, '>', "new.selected_residues.psf" or die "Cannot open new.selected_residues.psf for writing: $!\n";
 
-				while ( <IN> ) {
+                while ( <IN> ) {
 
-					print OUT $_;
-				}
+                    print OUT $_;
+                }
 
-				close ( OUT );
-				close ( IN );
+                close ( OUT );
+                close ( IN );
 
-				$active_psf = 'new.selected_residues.psf';
-				$active_dcd = "carma.$_[0].fitted.cluster_0$i.dcd";
+                $active_psf = 'new.selected_residues.psf';
+                $active_dcd = "carma.$_[0].fitted.cluster_0$i.dcd";
 
-				if ( $_[0] eq 'cPCA' ) {
+                if ( $_[0] eq 'cPCA' ) {
 
-					$flag = " -v -w -col -cov -dot -norm -super -segid Z $custom_id_flag $atm_id_flag";
-				}
-				else {
+                    $flag = " -v -w -col -cov -dot -norm -super -segid Z $custom_id_flag $atm_id_flag";
+                }
+                else {
 
-					if ( $chi1 ) {
+                    if ( $chi1 ) {
 
-						$flag = " -v -w -col -cov -dot -norm -super -segid Z -atmid ALLID";
-					}
-					else {
+                        $flag = " -v -w -col -cov -dot -norm -super -segid Z -atmid ALLID";
+                    }
+                    else {
 
-						$flag = " -v -w -col -cov -dot -norm -super -segid Z";
-					}
-				}
+                        $flag = " -v -w -col -cov -dot -norm -super -segid Z";
+                    }
+                }
 
-				&carma ( 'auto' );
+                &carma ( 'auto' );
 
-				$res_custom = 0;
-				$res_atm = 0;
-				$res = 0;
+                $res_custom = 0;
+                $res_atm = 0;
+                $res = 0;
             }
             #~ elsif ( $res ) {
 #~
@@ -2951,121 +2994,121 @@ sub auto_window {
             my $frame;
             while ( <IN> ) {
 
-				if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
+                if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
 
-					if ( $2 < $smallest ) {
+                    if ( $2 < $smallest ) {
 
-						$smallest = $2;
-						$frame = $1;
-					}
-				}
-			}
+                        $smallest = $2;
+                        $frame = $1;
+                    }
+                }
+            }
 
-			close IN;
+            close IN;
             mv ( "carma.rms-average.dat", "carma.$_[0].rms-average.cluster_0$i.dat" );
 
-				if ( $linux or $mac ) {
+                if ( $linux or $mac ) {
 
-					if ( $_[0] eq 'dPCA' ) {
+                    if ( $_[0] eq 'dPCA' ) {
 
-						if ( $chi1 ) {
+                        if ( $chi1 ) {
 
-							`carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						else {
+                            `carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        else {
 
-							`carma -v -w -atmid C -atmid CA -atmid N -atmid O $seg_id_flag $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-					}
-					else {
+                            `carma -v -w -atmid C -atmid CA -atmid N -atmid O $seg_id_flag $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                    }
+                    else {
 
-						if ( $include_segid ) {
+                        if ( $include_segid ) {
 
-							`carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						elsif ( $custom_id_flag ) {
+                            `carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        elsif ( $custom_id_flag ) {
 
-							`carma -v -w $custom_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						elsif ( $atm_id_flag ) {
+                            `carma -v -w $custom_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        elsif ( $atm_id_flag ) {
 
-							`carma -v -w $atm_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						else {
+                            `carma -v -w $atm_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        else {
 
-							`carma -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-					}
-				}
-				else {
+                            `carma -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                    }
+                }
+                else {
 
-					if ( $_[0] eq 'dPCA' ) {
+                    if ( $_[0] eq 'dPCA' ) {
 
-						if ( $chi1 ) {
+                        if ( $chi1 ) {
 
-							`carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						else {
+                            `carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        else {
 
-							`carma.exe -v -w -atmid C -atmid CA -atmid N -atmid O $seg_id_flag $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-					}
-					else {
+                            `carma.exe -v -w -atmid C -atmid CA -atmid N -atmid O $seg_id_flag $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                    }
+                    else {
 
-						if ( $custom_id_flag ) {
+                        if ( $custom_id_flag ) {
 
-							`carma.exe -v -w $custom_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						elsif ( $atm_id_flag ) {
+                            `carma.exe -v -w $custom_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        elsif ( $atm_id_flag ) {
 
-							`carma.exe -v -w $atm_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						else {
+                            `carma.exe -v -w $atm_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        else {
 
-							`carma.exe -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-					}
-				}
+                            `carma.exe -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                    }
+                }
 
-			#~ if ( $linux || $mac ) {
+            #~ if ( $linux || $mac ) {
 #~
-				#~ if ( $chi1 ) {
+                #~ if ( $chi1 ) {
 #~
-					#~ if ( $include_segid ) {
+                    #~ if ( $include_segid ) {
 #~
-						#~ `carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-					#~ }
-					#~ else {
+                        #~ `carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                    #~ }
+                    #~ else {
 #~
-						#~ `carma -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-					#~ }
-				#~ }
-				#~ else {
+                        #~ `carma -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                    #~ }
+                #~ }
+                #~ else {
 #~
-					#~ if ( $include_segid ) {
+                    #~ if ( $include_segid ) {
 #~
-						#~ `carma -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
-					#~ }
-					#~ else {
+                        #~ `carma -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                    #~ }
+                    #~ else {
 #~
-						#~ `carma -v -w -atmid C -atmid CA -atmid N -atmid O $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-					#~ }
-				#~ }
-			#~ }
-			#~ else {
+                        #~ `carma -v -w -atmid C -atmid CA -atmid N -atmid O $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                    #~ }
+                #~ }
+            #~ }
+            #~ else {
 #~
-				#~ if ( $chi1 ) {
+                #~ if ( $chi1 ) {
 #~
-					#~ `carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-				#~ }
-				#~ else {
+                    #~ `carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                #~ }
+                #~ else {
 #~
-					#~ `carma.exe -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
-				#~ }
-			#~ }
+                    #~ `carma.exe -v -w -atmid C -atmid CA -atmid N -atmid O -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                #~ }
+            #~ }
 
-			$frame = sprintf ( "%.7d", $frame, );
-			mv ( "carma.fitted.cluster_0$i.dcd.$frame.pdb", "representative.$_[0].cluster_0$i.pdb" );
+            $frame = sprintf ( "%.7d", $frame, );
+            mv ( "carma.fitted.cluster_0$i.dcd.$frame.pdb", "representative.$_[0].cluster_0$i.pdb" );
         }
         else {
 
@@ -3170,7 +3213,7 @@ sub cov_avg_rep_window {
                 }
             }
 
-			&create_dir;
+            &create_dir;
 
             $text -> insert( 'end', "\nNow calculating average and representative structures. Running carma with flag :\n", 'valid', );
             $text -> see( 'end', );
@@ -3189,62 +3232,62 @@ sub cov_avg_rep_window {
 
             if ( $all_done ) {
 
-				if ( $avg_dot ) {
+                if ( $avg_dot ) {
 
-					open IN, '<', "carma.rms-average.dat" || die "Cannot open carma.rms-average.dat for reading: $!";
+                    open IN, '<', "carma.rms-average.dat" || die "Cannot open carma.rms-average.dat for reading: $!";
 
-					my $smallest = 1000;
-					my $frame;
-					while ( <IN> ) {
+                    my $smallest = 1000;
+                    my $frame;
+                    while ( <IN> ) {
 
-						if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
+                        if ( /^\s+(\d+)\s+(\d+\.\d+).*?$/ ) {
 
-							if ( $2 < $smallest ) {
+                            if ( $2 < $smallest ) {
 
-								$smallest = $2;
-								$frame = $1;
-							}
-						}
-					}
+                                $smallest = $2;
+                                $frame = $1;
+                            }
+                        }
+                    }
 
-					close IN;
+                    close IN;
 
-					if ( $linux || $mac ) {
+                    if ( $linux || $mac ) {
 
-						if ( $res_id_flag ) {
+                        if ( $res_id_flag ) {
 
-							`carma -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						else {
+                            `carma -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        else {
 
-							`carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-					}
-					else {
+                            `carma -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                    }
+                    else {
 
-						if ( $res_id_flag ) {
+                        if ( $res_id_flag ) {
 
-							`carma.exe -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-						else {
+                            `carma.exe -v -w -atmid ALLID $res_id_flag -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                        else {
 
-							`carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
-						}
-					}
+                            `carma.exe -v -w -atmid ALLID -first $frame -last $frame -pdb $active_dcd $active_psf`;
+                        }
+                    }
 
-					$frame = sprintf ( "%.7d", $frame, );
-				}
+                    $frame = sprintf ( "%.7d", $frame, );
+                }
 
-				$text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-				$text -> see( 'end', );
-				$image_menu -> configure( -state => 'normal', );
-			}
-			else {
+                $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
+                $text -> see( 'end', );
+                $image_menu -> configure( -state => 'normal', );
+            }
+            else {
 
-				$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-				$text -> insert( 'end', getcwd . "\n", 'info', );
-				$text -> see( 'end', );
-			}
+                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                $text -> insert( 'end', getcwd . "\n", 'info', );
+                $text -> see( 'end', );
+            }
         }, )
         -> pack( -side => 'right', );
     }
@@ -3318,15 +3361,15 @@ sub stride_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
-		else {
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )-> pack( -side => 'right', );
     }
     else {
@@ -3347,21 +3390,21 @@ sub image_window {
     my ( @pdb, @dat, @ps, );
 
     my $files =
-		'carma.Qfraction.dat|' .
-		'carma.Rgyration.dat|' .
-		'carma.surface.dat|' .
-		'carma.distances|' .
-		'carma..PCA.fit-rms.*.dat|' .
-		'carma.torsions|' .
-		'carma.bendangles|' .
-		'carma..PCA.rms-average.*.dat|' .
-		'carma_entropy.dat|' .
-		'carma.variance_explained.dat';
+        'carma.Qfraction.dat|' .
+        'carma.Rgyration.dat|' .
+        'carma.surface.dat|' .
+        'carma.distances|' .
+        'carma..PCA.fit-rms.*.dat|' .
+        'carma.torsions|' .
+        'carma.bendangles|' .
+        'carma..PCA.rms-average.*.dat|' .
+        'carma_entropy.dat|' .
+        'carma.variance_explained.dat';
 
-	if ( $vmd ) {
+    if ( $vmd ) {
 
-		$files .= '|.*.cns';
-	}
+        $files .= '|.*.cns';
+    }
 
     our $image_top = $mw -> Toplevel( -title => 'Latest Results', );
     $image_top -> geometry("$toplevel_position");
@@ -3379,8 +3422,8 @@ sub image_window {
         }
         elsif ( $dh =~ /.*\.pdb$/ ) {
 
-			push @pdb, $dh;
-		}
+            push @pdb, $dh;
+        }
     }
     closedir IMAGE_DIR;
 
@@ -3390,12 +3433,12 @@ sub image_window {
 
     my $dir = getcwd;
 
-	my $frame_image1 = $image_top -> Frame() -> grid( -row => 5, -column => 1, );
-	my $frame_image2 = $image_top -> Frame() -> grid( -row => 5, -column => 3, );
-	my $frame_image3 = $image_top -> Frame() -> grid( -row => 5, -column => 2, );
-	my $frame_image4 = $image_top -> Frame() -> grid( -row => 6, -column => 1, );
-	my $frame_image5 = $image_top -> Frame() -> grid( -row => 6, -column => 3, );
-	my $frame_image6 = $image_top -> Frame() -> grid( -row => 7, -column => 2, );
+    my $frame_image1 = $image_top -> Frame() -> grid( -row => 5, -column => 1, );
+    my $frame_image2 = $image_top -> Frame() -> grid( -row => 5, -column => 3, );
+    my $frame_image3 = $image_top -> Frame() -> grid( -row => 5, -column => 2, );
+    my $frame_image4 = $image_top -> Frame() -> grid( -row => 6, -column => 1, );
+    my $frame_image5 = $image_top -> Frame() -> grid( -row => 6, -column => 3, );
+    my $frame_image6 = $image_top -> Frame() -> grid( -row => 7, -column => 2, );
 
     $image_top -> Label( -text => "Displaying contens of the folder", ) -> grid( -row => 1, -column => 2, );
     $image_top -> Entry( -text => $dir, -width => 0, ) -> grid( -row => 2, -column => 2, );
@@ -3410,43 +3453,43 @@ sub image_window {
     my $lb2 = $frame_image2 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 30, ) -> pack;
     my $lb3 = $frame_image3 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 40, ) -> pack;
 
-	my $vmd_check;
-	my $vmd_check_var;
-	if ( $vmd ) {
+    my $vmd_check;
+    my $vmd_check_var;
+    if ( $vmd ) {
 
-		$vmd_check = $frame_image4 -> Checkbutton( -text => 'Use VMD to view .pdb files',
-												   -variable => \$vmd_check_var, )
-												   -> pack( -side => 'left', );
-	}
+        $vmd_check = $frame_image4 -> Checkbutton( -text => 'Use VMD to view .pdb files',
+                                                   -variable => \$vmd_check_var, )
+                                                   -> pack( -side => 'left', );
+    }
 
-	$frame_image5 -> Button( -text => 'Empty the current working directory',
-							 -command => sub {
+    $frame_image5 -> Button( -text => 'Empty the current working directory',
+                             -command => sub {
 
-		my $response = $frame_image5 -> messageBox( -message => "Are you sure? All non psf/dcd files will be permanently deleted.",
-													-type => 'yesno',
-													-icon => 'question', );
+        my $response = $frame_image5 -> messageBox( -message => "Are you sure? All non psf/dcd files will be permanently deleted.",
+                                                    -type => 'yesno',
+                                                    -icon => 'question', );
 
-		if ( $response =~ /yes/i ) {
+        if ( $response =~ /yes/i ) {
 
-			$image_top -> destroy;
-			$image_menu -> configure( -state => 'disabled', );
+            $image_top -> destroy;
+            $image_menu -> configure( -state => 'disabled', );
 
-			opendir CWD, getcwd or die "Cannot open cwd: $!";
-			while ( my $cwd = readdir CWD ) {
+            opendir CWD, getcwd or die "Cannot open cwd: $!";
+            while ( my $cwd = readdir CWD ) {
 
-				unless ( $cwd =~ /psf$|dcd$/ ) {
+                unless ( $cwd =~ /psf$|dcd$/ ) {
 
-					unlink $cwd;
-				}
-			}
+                    unlink $cwd;
+                }
+            }
 
-			closedir CWD;
-		}
-	}, ) -> pack( -side => 'right', );
+            closedir CWD;
+        }
+    }, ) -> pack( -side => 'right', );
 
     $frame_image6 -> Button( -text => 'Return',
-							 -command => [ $image_top => 'destroy' ], )
-							 -> pack;
+                             -command => [ $image_top => 'destroy' ], )
+                             -> pack;
 
     $lb1 -> insert( 'end', @pdb, );
     $lb2 -> insert( 'end', @dat, );
@@ -3454,38 +3497,38 @@ sub image_window {
 
     $lb1 -> bind( '<Button-1>', sub {
 
-		my $selection = $lb1 -> get( $lb1 -> curselection() );
+        my $selection = $lb1 -> get( $lb1 -> curselection() );
 
-		if ( $vmd_check_var ) {
+        if ( $vmd_check_var ) {
 
-			system ( "vmd $selection" ) if ( $linux || $mac );
-		}
-		else {
+            system ( "vmd $selection" ) if ( $linux || $mac );
+        }
+        else {
 
-			system ( "$pdb_viewer $selection &" ) if ( ( $linux || $mac ) && $pdb_viewer );
-			`start $selection` if ( $windows );
-		}
-	} );
+            system ( "$pdb_viewer $selection &" ) if ( ( $linux || $mac ) && $pdb_viewer );
+            `start $selection` if ( $windows );
+        }
+    } );
     $lb2 -> bind( '<Button-1>', sub {
 
-		my $selection = $lb2 -> get( $lb2 -> curselection() );
+        my $selection = $lb2 -> get( $lb2 -> curselection() );
 
-		if ( $selection =~ /cns$/ ) {
+        if ( $selection =~ /cns$/ ) {
 
-			system ( "vmd $selection" );
-		}
-		else {
+            system ( "vmd $selection" );
+        }
+        else {
 
-			plot ( $selection );
-		}
-	} );
+            plot ( $selection );
+        }
+    } );
     $lb3 -> bind( '<Button-1>', sub {
 
-		my $selection = $lb3 -> get( $lb3 -> curselection() );
+        my $selection = $lb3 -> get( $lb3 -> curselection() );
 
-		system ( "$ps_viewer $selection &" ) if ( ( $linux || $mac ) && $ps_viewer );
-		`start $selection` if ( $windows );
-	} );
+        system ( "$ps_viewer $selection &" ) if ( ( $linux || $mac ) && $ps_viewer );
+        `start $selection` if ( $windows );
+    } );
 }
 
 ###################################################################################################
@@ -3591,12 +3634,12 @@ sub select_residues {
     $qfract_run_button -> configure( -state => 'normal', ) if ( $qfract_run_button );
 
     $text -> insert ( 'end', "\nYou have submitted a residue selection which " .
-							 "resulted in the creation of a new .psf file." .
-							 "While the \"Change\" radiobutton is selected all" .
-							 " the calculations will be made with the custom " .
-							 ".psf file. By selecting the \"All\" radiobutton" .
-							 " the selected .psf file reverts to the one " .
-							 "originally specified\n", 'info' );
+                             "resulted in the creation of a new .psf file." .
+                             "While the \"Change\" radiobutton is selected all" .
+                             " the calculations will be made with the custom " .
+                             ".psf file. By selecting the \"All\" radiobutton" .
+                             " the selected .psf file reverts to the one " .
+                             "originally specified\n", 'info' );
     $text -> see( 'end', );
 
     $active_psf_label -> configure( -text => "Active .psf: $active_psf", );
@@ -3643,7 +3686,7 @@ sub create_fit_index {
     # The same as above but for the index  #
     # subroutine                           #
 
-	open PSF, '<', "carma.selected_atoms.psf" || die "Cannot open carma.selected_atoms.psf for reading:$!\n";
+    open PSF, '<', "carma.selected_atoms.psf" || die "Cannot open carma.selected_atoms.psf for reading:$!\n";
 
     open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!\n";
 
@@ -3690,7 +3733,7 @@ sub create_fit_index {
     close PSF_FILE;
 
     $text -> insert ( 'end', "\nYou have submitted a residue selection which " .
-							 "resulted in the creation of a fit.index file.", 'info' );
+                             "resulted in the creation of a fit.index file.", 'info' );
     $text -> see( 'end', );
 
 }
@@ -3758,50 +3801,50 @@ sub resid_window {
         $frame_res2 -> Button( -text => 'Submit',
                                -command => sub {
 
-			my $i;
-			my $check = 0;
-			for ( $i = 0 ; $i <= $resid_bar_count ; $i++ ) {
+            my $i;
+            my $check = 0;
+            for ( $i = 0 ; $i <= $resid_bar_count ; $i++ ) {
 
-				if ( $lower_res_limit[$i] and $upper_res_limit[$i] and $dropdown_value[$i] ) {
+                if ( $lower_res_limit[$i] and $upper_res_limit[$i] and $dropdown_value[$i] ) {
 
-					$check++;
-				}
-			}
+                    $check++;
+                }
+            }
 
-			if ( $check == $i ) {
+            if ( $check == $i ) {
 
-				if ( $seg_id_flag ) {
+                if ( $seg_id_flag ) {
 
-					$seg_id_flag = '';
-				}
-				&select_residues;
-				if ( $f4_b ) {
+                    $seg_id_flag = '';
+                }
+                &select_residues;
+                if ( $f4_b ) {
 
-					$f4_b -> destroy;
-					$f4_b = $f4 -> Frame() -> pack;
-					for ( my $i = 0 ; $i <= $resid_bar_count ; $i++ ) {
+                    $f4_b -> destroy;
+                    $f4_b = $f4 -> Frame() -> pack;
+                    for ( my $i = 0 ; $i <= $resid_bar_count ; $i++ ) {
 
-						$f4_b -> Label( -text => "$lower_res_limit[$i] - $upper_res_limit[$i], $dropdown_value[$i]" )
-										-> pack( -anchor => 'w', );
-					}
-				}
-				else {
+                        $f4_b -> Label( -text => "$lower_res_limit[$i] - $upper_res_limit[$i], $dropdown_value[$i]" )
+                                        -> pack( -anchor => 'w', );
+                    }
+                }
+                else {
 
-					$f4_b = $f4 -> Frame() -> pack;
-					for ( my $i = 0 ; $i <= $resid_bar_count ; $i++ ) {
+                    $f4_b = $f4 -> Frame() -> pack;
+                    for ( my $i = 0 ; $i <= $resid_bar_count ; $i++ ) {
 
-						$f4_b -> Label( -text => "$lower_res_limit[$i] - $upper_res_limit[$i], $dropdown_value[$i]" )
-										-> pack( -anchor => 'w', );
-					}
-				}
+                        $f4_b -> Label( -text => "$lower_res_limit[$i] - $upper_res_limit[$i], $dropdown_value[$i]" )
+                                        -> pack( -anchor => 'w', );
+                    }
+                }
 
-				$top_res -> withdraw;
-			}
-			else {
+                $top_res -> withdraw;
+            }
+            else {
 
-				$top_res -> messageBox( -message => 'All of the boxes must be filled in order to submit a residue selection',
-										-icon => 'warning', );
-			}
+                $top_res -> messageBox( -message => 'All of the boxes must be filled in order to submit a residue selection',
+                                        -icon => 'warning', );
+            }
         }, )
         -> pack( -side => 'right', );
 
@@ -3843,13 +3886,13 @@ sub add_resid_bar {
     $dropdown[$resid_bar_count] = $frame_res1[$resid_bar_count] -> BrowseEntry( -label => "in chain: ",
                                                                                 -variable => \$dropdown_value[$resid_bar_count], )
                                                                                 -> grid( -row => "$resid_row", -column => "$resid_column" + 4, );
-	if ( $resid_bar_count == 0 ) {
+    if ( $resid_bar_count == 0 ) {
 
-		foreach ( keys %num_residues ) {
+        foreach ( keys %num_residues ) {
 
-			$dropdown[0] -> insert( 'end', $_ );
-		}
-	}
+            $dropdown[0] -> insert( 'end', $_ );
+        }
+    }
 }
 
 ###################################################################################################
@@ -3873,13 +3916,13 @@ sub add_index_bar {
     $fit_drop[$index_bar_count] = $frame_fit6[$index_bar_count] -> BrowseEntry( -label => "in chain: ",
                                                                                 -variable => \$fit_drop_value[$index_bar_count], )
                                                                                 -> grid( -row => "$index_row", -column => "$index_column" + 4, );
-	if ( $index_bar_count == 0 ) {
+    if ( $index_bar_count == 0 ) {
 
-		foreach ( keys %num_residues ) {
+        foreach ( keys %num_residues ) {
 
-			$fit_drop[0] -> insert( 'end', $_ );
-		}
-	}
+            $fit_drop[0] -> insert( 'end', $_ );
+        }
+    }
 }
 
 ###################################################################################################
@@ -3955,161 +3998,161 @@ sub entropy_window {
         $frame_ent5 -> Button( -text => 'Run',
                                -command => sub {
 
-				if ( $ent_step and $ent_temp ) {
+                if ( $ent_step and $ent_temp ) {
 
-					# Make ten repeat runs each time using #
-					# $ent_step more steps. This means in  #
-					# the first run the first tenth of the #
-					# frames will be used, in the second   #
-					# the first fifth...                   #
-					$top_ent -> destroy;
+                    # Make ten repeat runs each time using #
+                    # $ent_step more steps. This means in  #
+                    # the first run the first tenth of the #
+                    # frames will be used, in the second   #
+                    # the first fifth...                   #
+                    $top_ent -> destroy;
 
-					$text -> insert( 'end', "\nNow calculating entropy. Running carma with flag :\n", 'valid', );
-					$text -> see( 'end', );
-					$mw -> update;
+                    $text -> insert( 'end', "\nNow calculating entropy. Running carma with flag :\n", 'valid', );
+                    $text -> see( 'end', );
+                    $mw -> update;
 
-					# The result of the $i * $ent_step     #
-					# multiplication is the number of the  #
-					# frame that will be used after the    #
-					# ' -last' flag                        #
-					for ( my $i = 0 ; ( $i * $ent_step ) < $header ; $i++ ) {
+                    # The result of the $i * $ent_step     #
+                    # multiplication is the number of the  #
+                    # frame that will be used after the    #
+                    # ' -last' flag                        #
+                    for ( my $i = 0 ; ( $i * $ent_step ) < $header ; $i++ ) {
 
-						# If that number exceeds the number of #
-						# frames in the .dcd header then that  #
-						# number will be used instead          #
-						if ( ( $header - ( $i * $ent_step ) ) > $ent_step ) {
+                        # If that number exceeds the number of #
+                        # frames in the .dcd header then that  #
+                        # number will be used instead          #
+                        if ( ( $header - ( $i * $ent_step ) ) > $ent_step ) {
 
-							$lower_ent_limit = 1;
-							$upper_ent_limit = ( ( $i + 1 ) * $ent_step );
-							$text -> insert( 'end', "\nCalculating entropy for frames $lower_ent_limit - $upper_ent_limit :\n", 'valid' );
-							$text -> see( 'end', );
+                            $lower_ent_limit = 1;
+                            $upper_ent_limit = ( ( $i + 1 ) * $ent_step );
+                            $text -> insert( 'end', "\nCalculating entropy for frames $lower_ent_limit - $upper_ent_limit :\n", 'valid' );
+                            $text -> see( 'end', );
 
-							$seg_id_flag = '' if $seg_id_flag;
+                            $seg_id_flag = '' if $seg_id_flag;
 
-							foreach ( @seg_ids ) {
+                            foreach ( @seg_ids ) {
 
-								if ( defined ( $_ ) ) {
+                                if ( defined ( $_ ) ) {
 
-									$seg_id_flag = $seg_id_flag . $_;
-								}
-							}
+                                    $seg_id_flag = $seg_id_flag . $_;
+                                }
+                            }
 
-							if ( $seg_id_flag ) {
+                            if ( $seg_id_flag ) {
 
-								$flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $seg_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
-							}
-							else {
+                                $flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $seg_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
+                            }
+                            else {
 
-								$flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
-							}
-							&create_dir;
-							&carma;
+                                $flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
+                            }
+                            &create_dir;
+                            &carma;
 
-						}
-						else {
+                        }
+                        else {
 
-							$lower_ent_limit = 1;
-							$upper_ent_limit = $header;
-							$text -> insert( 'end', "\nCalculating entropy for frames $lower_ent_limit - $upper_ent_limit :\n", 'valid' );
-							$text -> see( 'end', );
+                            $lower_ent_limit = 1;
+                            $upper_ent_limit = $header;
+                            $text -> insert( 'end', "\nCalculating entropy for frames $lower_ent_limit - $upper_ent_limit :\n", 'valid' );
+                            $text -> see( 'end', );
 
-							$seg_id_flag = '' if $seg_id_flag;
+                            $seg_id_flag = '' if $seg_id_flag;
 
-							foreach ( @seg_ids ) {
+                            foreach ( @seg_ids ) {
 
-								if ( defined ( $_ ) ) {
+                                if ( defined ( $_ ) ) {
 
-									$seg_id_flag = $seg_id_flag . $_;
-								}
-							}
+                                    $seg_id_flag = $seg_id_flag . $_;
+                                }
+                            }
 
-							if ( $seg_id_flag ) {
+                            if ( $seg_id_flag ) {
 
-								$flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $seg_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
-							}
-							else {
+                                $flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $seg_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
+                            }
+                            else {
 
-								$flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
-							}
-							&create_dir;
-							&carma;
-						}
-						open READ_ENTROPY, '<' , "carma.out.copy" || die "Cannot open carma.out.copy for reading:$!";
-						open WRITE_ENTROPY, '>>', "carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing:$!";
+                                $flag = " -v -cov -eigen $ent_mass -temp $ent_temp $atm_id_flag $res_id_flag -first $lower_ent_limit -last $upper_ent_limit";
+                            }
+                            &create_dir;
+                            &carma;
+                        }
+                        open READ_ENTROPY, '<' , "carma.out.copy" || die "Cannot open carma.out.copy for reading:$!";
+                        open WRITE_ENTROPY, '>>', "carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing:$!";
 
-						# Parse the output file for the lines  #
-						# containing the results and save them #
-						# in a file named 'carma_entropy.dat'  #
-						# and two arrays, one for every type   #
-						# of entropy calculated by carma       #
-						while ( <READ_ENTROPY> ) {
+                        # Parse the output file for the lines  #
+                        # containing the results and save them #
+                        # in a file named 'carma_entropy.dat'  #
+                        # and two arrays, one for every type   #
+                        # of entropy calculated by carma       #
+                        while ( <READ_ENTROPY> ) {
 
-							if ( /Entropy \(Andricioaei\)(\s*)is (\d*\.\d*) (\(J\/molK\))/ ) {
+                            if ( /Entropy \(Andricioaei\)(\s*)is (\d*\.\d*) (\(J\/molK\))/ ) {
 
-								$a_entropy[$i] = $2;
-								printf WRITE_ENTROPY ("%3d %15.5f\n", $i + 1, $2, );
-								$text -> insert( 'end', "$_", 'valid' );
-								$text -> see( 'end', );
-							}
-							if ( /Entropy \(Schlitter\)(\s*)is (\d*\.\d*) (\(J\/molK\))/ ) {
+                                $a_entropy[$i] = $2;
+                                printf WRITE_ENTROPY ("%3d %15.5f\n", $i + 1, $2, );
+                                $text -> insert( 'end', "$_", 'valid' );
+                                $text -> see( 'end', );
+                            }
+                            if ( /Entropy \(Schlitter\)(\s*)is (\d*\.\d*) (\(J\/molK\))/ ) {
 
-								$s_entropy[$i] = $2;
-								printf WRITE_ENTROPY ("%3d %15.5f\n", $i + 1, $2, );
-								$text -> insert( 'end', "$_", 'valid' );
-								$text -> see( 'end', );
-							}
-						}
-						close READ_ENTROPY;
+                                $s_entropy[$i] = $2;
+                                printf WRITE_ENTROPY ("%3d %15.5f\n", $i + 1, $2, );
+                                $text -> insert( 'end', "$_", 'valid' );
+                                $text -> see( 'end', );
+                            }
+                        }
+                        close READ_ENTROPY;
 
-						if ( $upper_ent_limit == $header ) {
+                        if ( $upper_ent_limit == $header ) {
 
-							if ( $all_done ) {
+                            if ( $all_done ) {
 
-								$text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
-								$text -> see( 'end', );
-								$image_menu -> configure( -state => 'normal', );
-							}
-							else {
+                                $text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
+                                $text -> see( 'end', );
+                                $image_menu -> configure( -state => 'normal', );
+                            }
+                            else {
 
-								$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-								$text -> insert( 'end', getcwd . "\n", 'info', );
-								$text -> see( 'end', );
-							}
-							$upper_ent_limit = 0;
-						}
-					}
-					close WRITE_ENTROPY;
+                                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                                $text -> insert( 'end', getcwd . "\n", 'info', );
+                                $text -> see( 'end', );
+                            }
+                            $upper_ent_limit = 0;
+                        }
+                    }
+                    close WRITE_ENTROPY;
 
-					# If arrays for both entropies exist   #
-					# overwrite the entropy file with the  #
-					# contents of those arrays             #
-					if ( @a_entropy && @s_entropy ) {
+                    # If arrays for both entropies exist   #
+                    # overwrite the entropy file with the  #
+                    # contents of those arrays             #
+                    if ( @a_entropy && @s_entropy ) {
 
-						open WRITE_ENTROPY, '>', "carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing";
-						my $k = 0;
-						foreach ( @s_entropy ) {
+                        open WRITE_ENTROPY, '>', "carma_entropy.dat" || die "Cannot open carma_entropy.dat for writing";
+                        my $k = 0;
+                        foreach ( @s_entropy ) {
 
-							$k++;
-						}
+                            $k++;
+                        }
 
-						for ( my $j = 0 ; $j < $k ; $j++ ) {
+                        for ( my $j = 0 ; $j < $k ; $j++ ) {
 
-							printf WRITE_ENTROPY ( "%3d %15.5f %15.5f\n", $j + 1, $a_entropy[$j], $s_entropy[$j], );
-						}
-						close WRITE_ENTROPY;
-					}
+                            printf WRITE_ENTROPY ( "%3d %15.5f %15.5f\n", $j + 1, $a_entropy[$j], $s_entropy[$j], );
+                        }
+                        close WRITE_ENTROPY;
+                    }
 
-					if ( $entropy_plot ) {
+                    if ( $entropy_plot ) {
 
-						plot ( 'carma_entropy.dat' );
-						$entropy_plot = 0;
-					}
-				}
-				else {
+                        plot ( 'carma_entropy.dat' );
+                        $entropy_plot = 0;
+                    }
+                }
+                else {
 
-					$top_ent -> messageBox( -message => 'Both step and temperature need to be defined for entropy calculation',
-											-icon => 'warning', );
-				}
+                    $top_ent -> messageBox( -message => 'Both step and temperature need to be defined for entropy calculation',
+                                            -icon => 'warning', );
+                }
         }, )
         -> pack( -side => 'right', );
     }
@@ -4195,16 +4238,16 @@ sub pdb_window {
         &carma;
         if ( $all_done ) {
 
-			$text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
-		}
-		else {
+            $text -> insert( 'end', "\nCalculation finished. Use \"View Results\"\n", 'valid' );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
+        }
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )
         -> pack( -side => 'right', );
 
@@ -4302,12 +4345,12 @@ sub rms_window {
         $frame_rms5 -> Button( -text => 'Run',
                                -command => sub {
 
-		$rms_first_flag = ( $rms_first ? " -first $rms_first" : '' );
-		$rms_last_flag = ( $rms_last ? " -last $rms_last" : '' );
-		$rms_step_flag = ( $rms_step ? " -step $rms_step" : '' );
-		$rms_min_flag = ( $rms_min ? " -min $rms_min" : '' );
-		$rms_max_flag = ( $rms_max ? " -max $rms_max" : '' );
-		$rms_mrms_flag = ( $rms_mrms ? " -mrms $rms_mrms" : '' );
+        $rms_first_flag = ( $rms_first ? " -first $rms_first" : '' );
+        $rms_last_flag = ( $rms_last ? " -last $rms_last" : '' );
+        $rms_step_flag = ( $rms_step ? " -step $rms_step" : '' );
+        $rms_min_flag = ( $rms_min ? " -min $rms_min" : '' );
+        $rms_max_flag = ( $rms_max ? " -max $rms_max" : '' );
+        $rms_mrms_flag = ( $rms_mrms ? " -mrms $rms_mrms" : '' );
 
         $top_rms -> destroy;
 
@@ -4364,39 +4407,39 @@ sub rms_window {
 
         if ( $all_done ) {
 
-			open RMS_OUT, "carma.out.copy" || die "Cannot open carma.out.copy for reading: $!";
-			while ( <RMS_OUT> ) {
+            open RMS_OUT, "carma.out.copy" || die "Cannot open carma.out.copy for reading: $!";
+            while ( <RMS_OUT> ) {
 
-				if ( /Writing postscript file (\w*\.dcd\.averag.ps)/ ) {
+                if ( /Writing postscript file (\w*\.dcd\.averag.ps)/ ) {
 
-					$average_ps_file = $1;
-				}
-				if ( /Writing postscript file (\w*\.dcd\.rmsdev.ps)/ ) {
+                    $average_ps_file = $1;
+                }
+                if ( /Writing postscript file (\w*\.dcd\.rmsdev.ps)/ ) {
 
-					$rmsdev_ps_file = $1;
-				}
-			}
-			close RMS_OUT;
+                    $rmsdev_ps_file = $1;
+                }
+            }
+            close RMS_OUT;
 
-			if ( $linux || $mac ) {
+            if ( $linux || $mac ) {
 
-				`carma $average_ps_file $rmsdev_ps_file`;
-			}
-			else {
+                `carma $average_ps_file $rmsdev_ps_file`;
+            }
+            else {
 
-				`carma.exe $average_ps_file $rmsdev_ps_file`;
-			}
+                `carma.exe $average_ps_file $rmsdev_ps_file`;
+            }
 
-			$text -> insert( 'end', "Calculation finished. Use \'View Results\'\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
-		}
-		else {
+            $text -> insert( 'end', "Calculation finished. Use \'View Results\'\n", 'valid' );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
+        }
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )-> pack( -side => 'right', );
     }
     else {
@@ -4469,15 +4512,15 @@ sub rgr_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
-		else {
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )-> pack( -side => 'right', );
     }
     else {
@@ -4507,33 +4550,33 @@ sub dis_window {
 
         my $frame_dis1 = $top_dis -> Frame() -> pack;
 
-		$frame_dis1 -> Label( -text => 'Atom 1', ) -> grid( -row => 1, -column => 1, );
-		$frame_dis1 -> Label( -text => 'Atom 2', ) -> grid( -row => 1, -column => 2, );
+        $frame_dis1 -> Label( -text => 'Atom 1', ) -> grid( -row => 1, -column => 1, );
+        $frame_dis1 -> Label( -text => 'Atom 2', ) -> grid( -row => 1, -column => 2, );
 
-		our $dist_list1 = $frame_dis1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
-									  -> grid( -row => 2, -column => 1, );
-		our $dist_list2 = $frame_dis1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
-									  -> grid( -row => 2, -column => 2, );
+        our $dist_list1 = $frame_dis1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 1, );
+        our $dist_list2 = $frame_dis1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 2, );
 
-		$dist_list1 -> insert( 'end', @list, );
-		$dist_list2 -> insert( 'end', @list, );
+        $dist_list1 -> insert( 'end', @list, );
+        $dist_list2 -> insert( 'end', @list, );
 
-		$dist_list1 -> bind( '<Button-1>', sub {
+        $dist_list1 -> bind( '<Button-1>', sub {
 
-			$dis_atom1 = $dist_list1 -> get( $dist_list1 -> curselection() );
-			if ( $dis_atom1 =~ /(\d+)/ ) {
+            $dis_atom1 = $dist_list1 -> get( $dist_list1 -> curselection() );
+            if ( $dis_atom1 =~ /(\d+)/ ) {
 
-				$dis_atom1 = $1;
-			}
-		} );
-		$dist_list2 -> bind( '<Button-1>', sub {
+                $dis_atom1 = $1;
+            }
+        } );
+        $dist_list2 -> bind( '<Button-1>', sub {
 
-			$dis_atom2 = $dist_list2 -> get( $dist_list2 -> curselection() );
-			if ( $dis_atom2 =~ /(\d+)/ ) {
+            $dis_atom2 = $dist_list2 -> get( $dist_list2 -> curselection() );
+            if ( $dis_atom2 =~ /(\d+)/ ) {
 
-				$dis_atom2 = $1;
-			}
-		} );
+                $dis_atom2 = $1;
+            }
+        } );
 
         our $frame_dis2 = $top_dis -> Frame() -> pack( -fill => 'x', );
         my $frame_dis3 = $top_dis -> Frame() -> pack( -fill => 'x', );
@@ -4584,15 +4627,15 @@ sub dis_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
-		else {
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )-> pack( -side => 'right', );
     }
     else {
@@ -4612,6 +4655,8 @@ sub bnd_window {
     my $bnd_atom2 = '';
     my $bnd_atom3 = '';
     my $top_bnd;
+    
+    my ( @list, ) = helper_function();
 
     if ( !Exists ( $top_bnd ) ) {
 
@@ -4625,20 +4670,48 @@ sub bnd_window {
 
         $frame_bnd1 -> Label( -text => 'Atom 1', )
                               -> grid( -row => 1, -column => 1, );
-        $frame_bnd1 -> Entry( -textvariable => \$bnd_atom1, )
-                              -> grid( -row => 2, -column => 1, );
-
         $frame_bnd1 -> Label( -text => 'Atom 2', )
                               -> grid( -row => 1, -column => 2, );
-        $frame_bnd1 -> Entry( -textvariable => \$bnd_atom2, )
-                              -> grid( -row => 2, -column => 2, );
-
         $frame_bnd1 -> Label( -text => 'Atom 3', )
                               -> grid( -row => 1, -column => 3, );
-        $frame_bnd1 -> Entry( -textvariable => \$bnd_atom3, )
-                              -> grid( -row => 2, -column => 3, );
 
-        my $frame_bnd2 = $top_bnd -> Frame() -> pack( -fill => 'x', );
+        our $bend_list1 = $frame_bnd1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 1, );
+        our $bend_list2 = $frame_bnd1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 2, );
+        our $bend_list3 = $frame_bnd1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 3, );
+
+        $bend_list1 -> insert( 'end', @list, );
+        $bend_list2 -> insert( 'end', @list, );
+        $bend_list3 -> insert( 'end', @list, );
+
+        $bend_list1 -> bind( '<Button-1>', sub {
+
+            $bnd_atom1 = $bend_list1 -> get( $bend_list1 -> curselection() );
+            if ( $bnd_atom1 =~ /(\d+)/ ) {
+
+                $bnd_atom1 = $1;
+            }
+        } );
+        $bend_list2 -> bind( '<Button-1>', sub {
+
+            $bnd_atom2 = $bend_list2 -> get( $bend_list2 -> curselection() );
+            if ( $bnd_atom2 =~ /(\d+)/ ) {
+
+                $bnd_atom2 = $1;
+            }
+        } );
+        $bend_list3 -> bind( '<Button-1>', sub {
+
+            $bnd_atom3 = $bend_list3 -> get( $bend_list3 -> curselection() );
+            if ( $bnd_atom3 =~ /(\d+)/ ) {
+
+                $bnd_atom3 = $1;
+            }
+        } );
+
+        our $frame_bnd2 = $top_bnd -> Frame() -> pack( -fill => 'x', );
         my $frame_bnd3 = $top_bnd -> Frame() -> pack( -fill => 'x', );
         my $frame_bnd4 = $top_bnd -> Frame() -> pack( -fill => 'x', );
 
@@ -4687,15 +4760,15 @@ sub bnd_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
-		else {
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )-> pack( -side => 'right', );
     }
     else {
@@ -4716,6 +4789,8 @@ sub tor_window {
     my $tor_atom3 = '';
     my $tor_atom4 = '';
     my $top_tor;
+    
+    my @list = helper_function();
 
     if ( !Exists ( $top_tor ) ) {
 
@@ -4729,22 +4804,61 @@ sub tor_window {
 
         $frame_tor1 -> Label( -text => 'Atom 1', )
                               -> grid( -row => 1, -column => 1, );
-        $frame_tor1 -> Entry( -textvariable => \$tor_atom1, )
-                              -> grid( -row => 2, -column => 1, );
         $frame_tor1 -> Label( -text => 'Atom 2', )
                               -> grid( -row => 1, -column => 2, );
-        $frame_tor1 -> Entry( -textvariable => \$tor_atom2, )
-                              -> grid( -row => 2, -column => 2, );
         $frame_tor1 -> Label( -text => 'Atom 3', )
                               -> grid( -row => 1, -column => 3, );
-        $frame_tor1 -> Entry( -textvariable => \$tor_atom3, )
-                              -> grid( -row => 2, -column => 3, );
         $frame_tor1 -> Label( -text => 'Atom 4', )
                               -> grid( -row => 1, -column => 4, );
-        $frame_tor1 -> Entry( -textvariable => \$tor_atom4, )
-                              -> grid( -row => 2, -column => 4, );
 
-        my $frame_tor2 = $top_tor -> Frame() -> pack( -fill => 'x', );
+        our $tors_list1 = $frame_tor1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 1, );
+        our $tors_list2 = $frame_tor1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 2, );
+        our $tors_list3 = $frame_tor1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 3, );
+        our $tors_list4 = $frame_tor1 -> Scrolled( "Listbox", -scrollbars => 'oe', -selectmode => "single", -width => 12, )
+                                      -> grid( -row => 2, -column => 4, );
+
+        $tors_list1 -> insert( 'end', @list, );
+        $tors_list2 -> insert( 'end', @list, );
+        $tors_list3 -> insert( 'end', @list, );
+        $tors_list4 -> insert( 'end', @list, );
+
+        $tors_list1 -> bind( '<Button-1>', sub {
+
+            $tor_atom1 = $tors_list1 -> get( $tors_list1 -> curselection() );
+            if ( $tor_atom1 =~ /(\d+)/ ) {
+
+                $tor_atom1 = $1;
+            }
+        } );
+        $tors_list2 -> bind( '<Button-1>', sub {
+
+            $tor_atom2 = $tors_list2 -> get( $tors_list2 -> curselection() );
+            if ( $tor_atom2 =~ /(\d+)/ ) {
+
+                $tor_atom2 = $1;
+            }
+        } );
+        $tors_list3 -> bind( '<Button-1>', sub {
+
+            $tor_atom3 = $tors_list3 -> get( $tors_list3 -> curselection() );
+            if ( $tor_atom3 =~ /(\d+)/ ) {
+
+                $tor_atom3 = $1;
+            }
+        } );
+        $tors_list4 -> bind( '<Button-1>', sub {
+
+            $tor_atom4 = $tors_list4 -> get( $tors_list4 -> curselection() );
+            if ( $tor_atom4 =~ /(\d+)/ ) {
+
+                $tor_atom4 = $1;
+            }
+        } );
+
+        our $frame_tor2 = $top_tor -> Frame() -> pack( -fill => 'x', );
         my $frame_tor3 = $top_tor -> Frame() -> pack( -fill => 'x', );
         my $frame_tor4 = $top_tor -> Frame() -> pack( -fill => 'x', );
 
@@ -4793,15 +4907,15 @@ sub tor_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
         }
-		else {
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )-> pack( -side => 'right', );
     }
     else {
@@ -4817,36 +4931,36 @@ sub tor_window {
 
 sub helper_function {
 
-	create_dir();
+    create_dir();
 
-	my ( @atom_data, );
+    my ( @atom_data, );
 
-	if ( $linux or $mac ) {
+    if ( $linux or $mac ) {
 
-		`carma -w -last 1 $atm_id_flag $custom_id_flag $active_psf $active_dcd`;
-	}
-	else {
+        `carma -w -last 1 $atm_id_flag $custom_id_flag $active_psf $active_dcd`;
+    }
+    else {
 
-		`carma.exe -w -last 1 $atm_id_flag $custom_id_flag $active_psf $active_dcd`;
-	}
+        `carma.exe -w -last 1 $atm_id_flag $custom_id_flag $active_psf $active_dcd`;
+    }
 
-	unlink ( "$active_dcd.0000001.dat", "$active_dcd.0000001.ps" );
+    unlink ( "$active_dcd.0000001.dat", "$active_dcd.0000001.ps" );
 
-	open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!";
+    open IN, '<', "carma.selected_atoms.psf" or die "Cannot open carma.selected_atoms.psf for reading: $!";
 
-	my $i = 0;
-	while ( <IN> ) {
+    my $i = 0;
+    while ( <IN> ) {
 
-		if ( /(\s+\d+)\s+\w+\s+\d+\s+\w\w\w(\s+\w+)\s+.+/ ) {
+        if ( /(\s+\d+)\s+\w+\s+\d+\s+\w\w\w(\s+\w+)\s+.+/ ) {
 
-			$atom_data[$i] = "$1$2";
-			$i++;
-		}
-	}
+            $atom_data[$i] = "$1$2";
+            $i++;
+        }
+    }
 
-	close IN;
+    close IN;
 
-	return ( @atom_data, );
+    return ( @atom_data, );
 }
 
 ###################################################################################################
@@ -4956,15 +5070,15 @@ sub map_window {
             if ( $all_done ) {
 
                 $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-				$text -> see( 'end', );
-				$image_menu -> configure( -state => 'normal', );
+                $text -> see( 'end', );
+                $image_menu -> configure( -state => 'normal', );
             }
-			else {
+            else {
 
-				$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-				$text -> insert( 'end', getcwd . "\n", 'info', );
-				$text -> see( 'end', );
-			}
+                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                $text -> insert( 'end', getcwd . "\n", 'info', );
+                $text -> see( 'end', );
+            }
             }, )-> pack( -side => 'right', );
         }
         else {
@@ -5034,7 +5148,7 @@ sub sur_window {
         &checkbuttons ( $frame_sur2 );
         &otherbuttons ( $frame_sur3 );
 
-		$frame_sur5 -> Label( -text => 'Various options', ) -> pack;
+        $frame_sur5 -> Label( -text => 'Various options', ) -> pack;
 
         $frame_sur5 -> Checkbutton( -text => 'Automatically create a plot of the results file',
                                     -variable => \$sur_plot,
@@ -5083,21 +5197,21 @@ sub sur_window {
         if ( $all_done ) {
 
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
-			$text -> see( 'end', );
-			$image_menu -> configure( -state => 'normal', );
+            $text -> see( 'end', );
+            $image_menu -> configure( -state => 'normal', );
 
             if ( $sur_plot ) {
 
-				&plot ( 'carma.surface.dat' );
-				$sur_plot = 0;
-			}
+                &plot ( 'carma.surface.dat' );
+                $sur_plot = 0;
+            }
         }
-		else {
+        else {
 
-			$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-			$text -> insert( 'end', getcwd . "\n", 'info', );
-			$text -> see( 'end', );
-		}
+            $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+            $text -> insert( 'end', getcwd . "\n", 'info', );
+            $text -> see( 'end', );
+        }
         }, )-> pack( -side => 'right', );
     }
     else {
@@ -5142,77 +5256,77 @@ sub fit_window {
         $index_bar_count = 0;
         $frame_fit6[$index_bar_count] = $top_fit -> Frame() -> pack();
         $frame_fit6[0] -> Label( -text => "\n", )
-								 -> grid ( -row => 0, -column => 3, );
-		$frame_fit6[0] -> Button( -text => 'Confirm',
-								  -width => 10,
-								  -command => sub {
+                                 -> grid ( -row => 0, -column => 3, );
+        $frame_fit6[0] -> Button( -text => 'Confirm',
+                                  -width => 10,
+                                  -command => sub {
 
-			my $i;
-			my $check = 0;
-			for ( $i = 0 ; $i <= $index_bar_count ; $i++ ) {
+            my $i;
+            my $check = 0;
+            for ( $i = 0 ; $i <= $index_bar_count ; $i++ ) {
 
-				if ( $lower_fit_limit[$i] and $upper_fit_limit[$i] and $fit_drop_value[$i] ) {
+                if ( $lower_fit_limit[$i] and $upper_fit_limit[$i] and $fit_drop_value[$i] ) {
 
-					$check++;
-				}
-			}
+                    $check++;
+                }
+            }
 
-			if ( $check == $i ) {
+            if ( $check == $i ) {
 
-				&create_dir;
+                &create_dir;
 
-				if ( $linux || $mac ) {
+                if ( $linux || $mac ) {
 
-					$seg_id_flag = '' if $seg_id_flag;
+                    $seg_id_flag = '' if $seg_id_flag;
 
-					foreach ( @seg_ids ) {
+                    foreach ( @seg_ids ) {
 
-						if ( defined ( $_ ) ) {
+                        if ( defined ( $_ ) ) {
 
-							$seg_id_flag = $seg_id_flag . $_;
-						}
-					}
+                            $seg_id_flag = $seg_id_flag . $_;
+                        }
+                    }
 
-					if ( $seg_id_flag ) {
+                    if ( $seg_id_flag ) {
 
-						`carma -v -w -last 1 $atm_id_flag $res_id_flag $custom_id_flag $seg_id_flag $active_psf $active_dcd`;
-					}
-					else {
+                        `carma -v -w -last 1 $atm_id_flag $res_id_flag $custom_id_flag $seg_id_flag $active_psf $active_dcd`;
+                    }
+                    else {
 
-						`carma -v -w -last 1 $atm_id_flag $custom_id_flag $res_id_flag $active_psf $active_dcd`;
-					}
-				}
-				else {
+                        `carma -v -w -last 1 $atm_id_flag $custom_id_flag $res_id_flag $active_psf $active_dcd`;
+                    }
+                }
+                else {
 
-					$seg_id_flag = '' if $seg_id_flag;
+                    $seg_id_flag = '' if $seg_id_flag;
 
-					foreach ( @seg_ids ) {
+                    foreach ( @seg_ids ) {
 
-						if ( defined ( $_ ) ) {
+                        if ( defined ( $_ ) ) {
 
-							$seg_id_flag = $seg_id_flag . $_;
-						}
-					}
+                            $seg_id_flag = $seg_id_flag . $_;
+                        }
+                    }
 
-					if ( $seg_id_flag ) {
+                    if ( $seg_id_flag ) {
 
-						`carma.exe -v -w -last 1 $atm_id_flag $res_id_flag $custom_id_flag $seg_id_flag $active_psf $active_dcd"`;
-					}
-					else {
+                        `carma.exe -v -w -last 1 $atm_id_flag $res_id_flag $custom_id_flag $seg_id_flag $active_psf $active_dcd"`;
+                    }
+                    else {
 
-						`carma.exe -v -w -last 1 $atm_id_flag $res_id_flag $custom_id_flag $active_psf $active_dcd`;
-					}
-				}
+                        `carma.exe -v -w -last 1 $atm_id_flag $res_id_flag $custom_id_flag $active_psf $active_dcd`;
+                    }
+                }
 
-				&create_fit_index;
-				$index = ' -index';
-			}
-			else {
+                &create_fit_index;
+                $index = ' -index';
+            }
+            else {
 
-				$top_fit -> messageBox( -message => 'All of the boxes must be filled in order to submit a residue selection',
-										-icon => 'warning', );
-			}
-		}, ) -> grid( -row => 1, -column => 7, );
+                $top_fit -> messageBox( -message => 'All of the boxes must be filled in order to submit a residue selection',
+                                        -icon => 'warning', );
+            }
+        }, ) -> grid( -row => 1, -column => 7, );
 
         $frame_fit6[0] -> packForget;
 
@@ -5236,12 +5350,12 @@ sub fit_window {
                                                          -width => 10,
                                                          -command => sub {
 
-					$frame_fit6[$index_bar_count] -> destroy;
-					$index_bar_count--;
+                    $frame_fit6[$index_bar_count] -> destroy;
+                    $index_bar_count--;
                 }, )
                 -> grid( -row => "$index_row", -column => "$index_column" + 5, );
             } }, )
-		-> grid( -row => 1, -column => 6, );
+        -> grid( -row => 1, -column => 6, );
 
         my $index_row = 1;
         my $index_column = 4;
@@ -5258,23 +5372,23 @@ sub fit_window {
         $frame_fit2a -> Label( -text => 'Optional settings', -font => "$font_20", )
                                -> pack( -side => 'bottom', );
 
-		my $index_bool;
-		my $index_button = $frame_fit4 -> Checkbutton( -text => 'Perform selective fitting',
-													   -variable => \$index_bool,
-													   -command => sub {
+        my $index_bool;
+        my $index_button = $frame_fit4 -> Checkbutton( -text => 'Perform selective fitting',
+                                                       -variable => \$index_bool,
+                                                       -command => sub {
 
-			if ( $index_bool ) {
+            if ( $index_bool ) {
 
-				$frame_fit6[0] -> pack;
-			}
-			else {
+                $frame_fit6[0] -> pack;
+            }
+            else {
 
-				for ( my $i = 0 ; $i <= $index_bar_count ; $i++ ) {
+                for ( my $i = 0 ; $i <= $index_bar_count ; $i++ ) {
 
-					$frame_fit6[$i] -> packForget;
-				}
-			}
-		}, ) -> grid( -row => 4, -column => 1, -sticky => 'w', );
+                    $frame_fit6[$i] -> packForget;
+                }
+            }
+        }, ) -> grid( -row => 4, -column => 1, -sticky => 'w', );
 
         my $ref_fit_entry = $frame_fit4 -> Entry( -textvariable => \$ref_atom_num,
                                                   -state => 'disabled', )
@@ -5337,8 +5451,8 @@ sub fit_window {
             if ( $all_done ) {
 
                 $text -> insert( 'end', "Fitting complete. Use \"View Results\"\n", 'valid' );
-				$text -> see( 'end', );
-				$image_menu -> configure( -state => 'normal', );
+                $text -> see( 'end', );
+                $image_menu -> configure( -state => 'normal', );
 
                 my $response = $frame_fit1 -> messageBox( -message => "Would you like to use this PSF - DCD pair in other calculations?",
                                                           -type => 'yesno',
@@ -5370,23 +5484,23 @@ sub fit_window {
                     #~ my $line_counter = 1;
                     #~ while ( <PSF> ) {
 #~
-						#~ print OUT "$_";
-						#~ if ( /!NATOM/ ) {
+                        #~ print OUT "$_";
+                        #~ if ( /!NATOM/ ) {
 #~
-							#~ last;
-						#~ }
-					#~ }
-					#~ while ( <PSF> ) {
+                            #~ last;
+                        #~ }
+                    #~ }
+                    #~ while ( <PSF> ) {
 #~
-						#~ if ( /(\s+)(\d+)(\s+\w+\s+.+)/ ) {
+                        #~ if ( /(\s+)(\d+)(\s+\w+\s+.+)/ ) {
 #~
-							#~ printf OUT ( "%8s%s\n", $line_counter, $3 );
-							#~ $line_counter++;
-						#~ }
-					#~ }
+                            #~ printf OUT ( "%8s%s\n", $line_counter, $3 );
+                            #~ $line_counter++;
+                        #~ }
+                    #~ }
 #~
-					#~ close OUT;
-					#~ close PSF;
+                    #~ close OUT;
+                    #~ close PSF;
 
                 $top_fit -> withdraw;
                 }
@@ -5398,17 +5512,17 @@ sub fit_window {
 
                 if ( $fit_plot ) {
 
-					&plot ( 'carma.fit-rms.dat' );
-					$fit_plot = 0;
-				}
+                    &plot ( 'carma.fit-rms.dat' );
+                    $fit_plot = 0;
+                }
             }
-			else {
+            else {
 
-				$top_fit -> withdraw;
-				$text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
-				$text -> insert( 'end', getcwd . "\n", 'info', );
-				$text -> see( 'end', );
-			}
+                $top_fit -> withdraw;
+                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                $text -> insert( 'end', getcwd . "\n", 'info', );
+                $text -> see( 'end', );
+            }
         }, )
         -> pack( -side => 'right', );
     }
@@ -5493,11 +5607,22 @@ sub create_dir {
 
 sub radiobuttons {
 
-	our $dist_list1;
-	our $dist_list2;
-	our $frame_dis2;
+    our $dist_list1;
+    our $dist_list2;
+    our $frame_dis2;
+    
+    our $bend_list1;
+    our $bend_list2;
+    our $bend_list3;
+    our $frame_bnd2;
+    
+    our $tors_list1;
+    our $tors_list2;
+    our $tors_list3;
+    our $tors_list4;
+    our $frame_tor2;
 
-	my $input = shift;
+    my $input = shift;
     $input -> Label ( -text => 'Atmid Selection', -font => "$font_20", ) -> pack;
 
     my @radiobuttons = ( 'CA', 'Backbone', 'Heavy', 'All atoms', 'Custom selection', );
@@ -5514,44 +5639,70 @@ sub radiobuttons {
                                              -variable => \$atm_id,
                                              -command => sub {
 
-			# If the above variable equals any of  #
-			# the @radiobuttons entries specify    #
-			# atmid flags for each entry           #
-			if ( $atm_id eq 'CA' ) {
+            # If the above variable equals any of  #
+            # the @radiobuttons entries specify    #
+            # atmid flags for each entry           #
+            if ( $atm_id eq 'CA' ) {
 
-				$atm_id_flag = "";
-				$custom_id_flag = '';
-				$custom_selection = 0;
-			}
-			elsif ( $atm_id eq 'Backbone' ) {
+                $atm_id_flag = "";
+                $custom_id_flag = '';
+                $custom_selection = 0;
+            }
+            elsif ( $atm_id eq 'Backbone' ) {
 
-				$atm_id_flag = " -atmid C -atmid CA -atmid N -atmid O";
-				$custom_id_flag = '';
-				$custom_selection = 0;
-			}
-			elsif ( $atm_id eq 'Heavy' ) {
+                $atm_id_flag = " -atmid C -atmid CA -atmid N -atmid O";
+                $custom_id_flag = '';
+                $custom_selection = 0;
+            }
+            elsif ( $atm_id eq 'Heavy' ) {
 
-				$atm_id_flag = " -atmid HEAVY";
-				$custom_id_flag = '';
-				$custom_selection = 0;
-			}
-			elsif ( $atm_id eq 'All atoms' ) {
+                $atm_id_flag = " -atmid HEAVY";
+                $custom_id_flag = '';
+                $custom_selection = 0;
+            }
+            elsif ( $atm_id eq 'All atoms' ) {
 
-				$atm_id_flag = " -atmid ALLID";
-				$custom_id_flag = '';
-				$custom_selection = 0;
-			}
+                $atm_id_flag = " -atmid ALLID";
+                $custom_id_flag = '';
+                $custom_selection = 0;
+            }
 
-			if ( ( $frame_dis2 ) and $input eq $frame_dis2  ) {
+            if ( ( $frame_dis2 ) and $input eq $frame_dis2  ) {
 
-				my ( @temp_list, ) = helper_function();
+                my ( @temp_list, ) = helper_function();
 
-				$dist_list1 -> delete( 0, 'end' );
-				$dist_list2 -> delete( 0, 'end' );
+                $dist_list1 -> delete( 0, 'end' );
+                $dist_list2 -> delete( 0, 'end' );
 
-				$dist_list1 -> insert( 'end', @temp_list );
-				$dist_list2 -> insert( 'end', @temp_list );
-			}
+                $dist_list1 -> insert( 'end', @temp_list );
+                $dist_list2 -> insert( 'end', @temp_list );
+            }
+            if ( ( $frame_bnd2 ) and $input eq $frame_bnd2  ) {
+
+                my ( @temp_list, ) = helper_function();
+
+                $bend_list1 -> delete( 0, 'end' );
+                $bend_list2 -> delete( 0, 'end' );
+                $bend_list3 -> delete( 0, 'end' );
+
+                $bend_list1 -> insert( 'end', @temp_list );
+                $bend_list2 -> insert( 'end', @temp_list );
+                $bend_list3 -> insert( 'end', @temp_list );
+            }
+            if ( ( $frame_tor2 ) and $input eq $frame_tor2  ) {
+
+                my ( @temp_list, ) = helper_function();
+
+                $tors_list1 -> delete( 0, 'end' );
+                $tors_list2 -> delete( 0, 'end' );
+                $tors_list3 -> delete( 0, 'end' );
+                $tors_list4 -> delete( 0, 'end' );
+
+                $tors_list1 -> insert( 'end', @temp_list );
+                $tors_list2 -> insert( 'end', @temp_list );
+                $tors_list3 -> insert( 'end', @temp_list );
+                $tors_list4 -> insert( 'end', @temp_list );
+            }
         }, );
         if ( $input eq $f2 ) {
 
@@ -5596,37 +5747,37 @@ sub checkbuttons {
                                              -onvalue => " -segid $unique_chain_ids[$i]",
                                              -command => sub {
 
-			 if ( $seg_ids[$i] ne '' ) {
+             if ( $seg_ids[$i] ne '' ) {
 
-				 $count++;
-			 }
-			 else {
+                 $count++;
+             }
+             else {
 
-				 $count--;
-			 }
+                 $count--;
+             }
 
-			 if ( $seg_ids[$i] ne '' ) {
+             if ( $seg_ids[$i] ne '' ) {
 
-				 $active_run_buttons = 1;
-				 $dpca_run_button -> configure( -state => 'normal', ) if ( $dpca_run_button );
-			 }
-			 elsif ( $count < 1 ) {
+                 $active_run_buttons = 1;
+                 $dpca_run_button -> configure( -state => 'normal', ) if ( $dpca_run_button );
+             }
+             elsif ( $count < 1 ) {
 
-				 $active_run_buttons = 0;
-				 $dpca_run_button -> configure( -state => 'disabled', ) if ( $dpca_run_button );
-			 }
+                 $active_run_buttons = 0;
+                 $dpca_run_button -> configure( -state => 'disabled', ) if ( $dpca_run_button );
+             }
 
-			 if (  $count == 1 ) {
+             if (  $count == 1 ) {
 
-				 $active_run_buttons_qfract = 1;
-				 $qfract_run_button -> configure( -state => 'normal', ) if ( $qfract_run_button );
-			 }
-			 elsif ( $count != 1 ) {
+                 $active_run_buttons_qfract = 1;
+                 $qfract_run_button -> configure( -state => 'normal', ) if ( $qfract_run_button );
+             }
+             elsif ( $count != 1 ) {
 
-				 $active_run_buttons_qfract = 0;
-				 $qfract_run_button -> configure( -state => 'disabled', ) if ( $qfract_run_button );
-			 }
-		 }, );
+                 $active_run_buttons_qfract = 0;
+                 $qfract_run_button -> configure( -state => 'disabled', ) if ( $qfract_run_button );
+             }
+         }, );
 
         if ( $_[0] eq $f3 ) {
 
@@ -5700,195 +5851,195 @@ sub plot {
 
     our $image_top;
 
-	my $mw = MainWindow -> new( -title => "Results Plot", );
+    my $mw = MainWindow -> new( -title => "Results Plot", );
 
-	my $screenwidth = $mw -> screenwidth;
+    my $screenwidth = $mw -> screenwidth;
     my $interval;
 
-	$interval = ( ( $screenwidth <= $header ) ? int ( $header / $screenwidth + 0.5 ) : 1 );
+    $interval = ( ( $screenwidth <= $header ) ? int ( $header / $screenwidth + 0.5 ) : 1 );
 
     for ( 1 .. $screenwidth ) {
 
-		push ( @step, $interval * $_ );
-	}
+        push ( @step, $interval * $_ );
+    }
 
     open IN, '<', $input || die "Cannot open $input for reading: $!";
 
     if ( -z $input ) {
 
-		close IN;
-		$image_top -> messageBox( -message => 'The file you are trying to plot seems to be empty. The file is located in ' . getcwd,
-								  -icon => 'warning', );
-		$image_top -> destroy;
-	}
-	else {
+        close IN;
+        $image_top -> messageBox( -message => 'The file you are trying to plot seems to be empty. The file is located in ' . getcwd,
+                                  -icon => 'warning', );
+        $image_top -> destroy;
+    }
+    else {
 
-		my $i = 0;
-		while ( <IN> ) {
+        my $i = 0;
+        while ( <IN> ) {
 
-			if ( defined $step[$i] && $input =~ /qfract/i && /\s+($step[$i])\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
+            if ( defined $step[$i] && $input =~ /qfract/i && /\s+($step[$i])\s+(\S+)\s+(\S+)\s+(\S+)/ ) {
 
-				$frames[$i] = $1;
-				$Q[$i] = $2;
-				$Qs[$i] = $3;
-				$q[$i] = $4;
-				$i++;
-			}
-			elsif ( defined $step[$i] && $input =~ /entropy/i && /\s+(\S+?)\s+(\S+)\s*(\S*)/ ) {
+                $frames[$i] = $1;
+                $Q[$i] = $2;
+                $Qs[$i] = $3;
+                $q[$i] = $4;
+                $i++;
+            }
+            elsif ( defined $step[$i] && $input =~ /entropy/i && /\s+(\S+?)\s+(\S+)\s*(\S*)/ ) {
 
-				$frames[$i] = $1;
-				$Andricioaei[$i] = $2;
-				$Schlitter[$i] = $3 if ( $3 );
-				$i++;
-			}
-			elsif ( defined $step[$i] && $input =~ /fit|rgyr|bend|tors|dist|rms-av|surf/i && /\s+($step[$i])\s+([+-]?\d+\.?\d*)/ ) {
+                $frames[$i] = $1;
+                $Andricioaei[$i] = $2;
+                $Schlitter[$i] = $3 if ( $3 );
+                $i++;
+            }
+            elsif ( defined $step[$i] && $input =~ /fit|rgyr|bend|tors|dist|rms-av|surf/i && /\s+($step[$i])\s+([+-]?\d+\.?\d*)/ ) {
 
-				$frames[$i] = $1;
-				$values[$i] = $2;
-				$i++;
-			}
-			elsif ( $input =~ /variance/ && /^\s+(\d+)\s+(\d+\.?\d*)\s+(\d+\.?\d*)$/ ) {
+                $frames[$i] = $1;
+                $values[$i] = $2;
+                $i++;
+            }
+            elsif ( $input =~ /variance/ && /^\s+(\d+)\s+(\d+\.?\d*)\s+(\d+\.?\d*)$/ ) {
 
-				$frames[$i] = $1;
-				$values[$i] = $2;
-				$i++;
-			}
-		}
+                $frames[$i] = $1;
+                $values[$i] = $2;
+                $i++;
+            }
+        }
 
-		close IN;
+        close IN;
 
-		if ( $linux || $mac ) {
+        if ( $linux || $mac ) {
 
-			my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6,);
+            my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6,);
 
-			my $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
-											-height => $mw -> screenheight,
-											-background => 'snow',
-											-xlabel => 'Frame',
-											-ylabel => 'Value',
-											-plotTitle => [ $input, 20, ] )
-											-> pack( qw/ -fill both -expand 1/ );
+            my $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
+                                            -height => $mw -> screenheight,
+                                            -background => 'snow',
+                                            -xlabel => 'Frame',
+                                            -ylabel => 'Value',
+                                            -plotTitle => [ $input, 20, ] )
+                                            -> pack( qw/ -fill both -expand 1/ );
 
-			if ( $input =~ /qfract/i ) {
+            if ( $input =~ /qfract/i ) {
 
-				$dataset1 = LineGraphDataset -> new( -name => 'Q',
-													 -xData => \@frames,
-													 -yData => \@Q,
-													 -color => 'blue', );
-				$dataset2 = LineGraphDataset -> new( -name => 'Qs',
-													 -xData => \@frames,
-													 -yData => \@Qs,
-													 -color => 'green', );
-				$dataset3 = LineGraphDataset -> new( -name => 'q',
-													 -xData => \@frames,
-													 -yData => \@q,
-													 -color => 'purple', );
+                $dataset1 = LineGraphDataset -> new( -name => 'Q',
+                                                     -xData => \@frames,
+                                                     -yData => \@Q,
+                                                     -color => 'blue', );
+                $dataset2 = LineGraphDataset -> new( -name => 'Qs',
+                                                     -xData => \@frames,
+                                                     -yData => \@Qs,
+                                                     -color => 'green', );
+                $dataset3 = LineGraphDataset -> new( -name => 'q',
+                                                     -xData => \@frames,
+                                                     -yData => \@q,
+                                                     -color => 'purple', );
 
-				$graph -> addDatasets( $dataset1, $dataset2, $dataset3, );
-			}
-			elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
+                $graph -> addDatasets( $dataset1, $dataset2, $dataset3, );
+            }
+            elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
 
-				$dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
-													 -xData => \@frames,
-													 -yData => \@Andricioaei,
-													 -color => 'blue', );
-				$dataset5 = LineGraphDataset -> new( -name => 'Schlitter',
-													 -xData => \@frames,
-													 -yData => \@Schlitter,
-													 -color => 'green', );
+                $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
+                                                     -xData => \@frames,
+                                                     -yData => \@Andricioaei,
+                                                     -color => 'blue', );
+                $dataset5 = LineGraphDataset -> new( -name => 'Schlitter',
+                                                     -xData => \@frames,
+                                                     -yData => \@Schlitter,
+                                                     -color => 'green', );
 
-				$graph -> addDatasets( $dataset4, $dataset5, );
-			}
-			elsif ( $input =~ /entropy/i ) {
+                $graph -> addDatasets( $dataset4, $dataset5, );
+            }
+            elsif ( $input =~ /entropy/i ) {
 
-				$dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
-													 -xData => \@frames,
-													 -yData => \@Andricioaei,
-													 -color => 'blue', );
+                $dataset4 = LineGraphDataset -> new( -name => 'Andricioaei',
+                                                     -xData => \@frames,
+                                                     -yData => \@Andricioaei,
+                                                     -color => 'blue', );
 
-				$graph -> addDatasets( $dataset4, );
-			}
-			else {
+                $graph -> addDatasets( $dataset4, );
+            }
+            else {
 
-				$dataset6 = LineGraphDataset -> new( -name => $input,
-													 -xData => \@frames,
-													 -yData => \@values,
-													 -color => 'blue', );
+                $dataset6 = LineGraphDataset -> new( -name => $input,
+                                                     -xData => \@frames,
+                                                     -yData => \@values,
+                                                     -color => 'blue', );
 
-				$graph -> addDatasets( $dataset6, );
-			}
+                $graph -> addDatasets( $dataset6, );
+            }
 
-			$graph -> plot;
-		}
-		else {
+            $graph -> plot;
+        }
+        else {
 
-			my $tick = 0;
-			if ( $header < 1000 ) {
+            my $tick = 0;
+            if ( $header < 1000 ) {
 
-				$tick = 1;
-			}
-			elsif ( $header >= 1000 && $header < 10000 ) {
+                $tick = 1;
+            }
+            elsif ( $header >= 1000 && $header < 10000 ) {
 
-				$tick = 9;
-			}
-			elsif ( $header >= 10000 && $header < 100000 ) {
+                $tick = 9;
+            }
+            elsif ( $header >= 10000 && $header < 100000 ) {
 
-				$tick = 99;
-			}
-			elsif ( $header >= 100000 && $header < 1000000 ) {
+                $tick = 99;
+            }
+            elsif ( $header >= 100000 && $header < 1000000 ) {
 
-				$tick = 999;
-			}
-			elsif ( $header >= 1000000 && $header < 10000000 ) {
+                $tick = 999;
+            }
+            elsif ( $header >= 1000000 && $header < 10000000 ) {
 
-				$tick = 9999;
-			}
-			else {
+                $tick = 9999;
+            }
+            else {
 
-				$tick = 99999;
-			}
+                $tick = 99999;
+            }
 
-			my $chart = $mw -> Lines( -background => 'snow',
-									  -xlabel => 'Frame',
-									  -ylabel => 'Value',
-									  -title => $input,
-									  -xlabelskip => $tick,
-									  -interval => 1,
-									  -linewidth => 1, )
-									  -> pack( -fill => 'both', -expand => 1, );
+            my $chart = $mw -> Lines( -background => 'snow',
+                                      -xlabel => 'Frame',
+                                      -ylabel => 'Value',
+                                      -title => $input,
+                                      -xlabelskip => $tick,
+                                      -interval => 1,
+                                      -linewidth => 1, )
+                                      -> pack( -fill => 'both', -expand => 1, );
 
-			if ( $input =~ /qfract/i ) {
+            if ( $input =~ /qfract/i ) {
 
-				@data = ( [ @frames ], [ @Q ], [ @Qs ], [ @q ], );
-				@legends = ( 'Q', 'Qs', 'q', );
-			}
-			elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
+                @data = ( [ @frames ], [ @Q ], [ @Qs ], [ @q ], );
+                @legends = ( 'Q', 'Qs', 'q', );
+            }
+            elsif ( $input =~ /entropy/i && @Andricioaei && @Schlitter ) {
 
-				@data = ( [ @frames ], [ @Andricioaei ], [ @Schlitter ], );
-				@legends = ( 'Andricioaei', 'Schlitter', );
-			}
-			elsif ( $input =~ /entropy/i ) {
+                @data = ( [ @frames ], [ @Andricioaei ], [ @Schlitter ], );
+                @legends = ( 'Andricioaei', 'Schlitter', );
+            }
+            elsif ( $input =~ /entropy/i ) {
 
-				@data = ( [ @frames ], [ @Andricioaei ], );
-				@legends = ( 'Andricioaei', );
-			}
-			else {
+                @data = ( [ @frames ], [ @Andricioaei ], );
+                @legends = ( 'Andricioaei', );
+            }
+            else {
 
-				@data = ( [ @frames ], [ @values ], );
-				@legends = ( 'Values', );
-			}
+                @data = ( [ @frames ], [ @values ], );
+                @legends = ( 'Values', );
+            }
 
 
-			$chart -> set_legend(
-				-title       => 'Legend',
-				-data        => \@legends,
-				-titlecolors => 'blue',
-			);
+            $chart -> set_legend(
+                -title       => 'Legend',
+                -data        => \@legends,
+                -titlecolors => 'blue',
+            );
 
-			$chart -> set_balloon();
-			$chart -> plot( \@data );
-		}
-	}
+            $chart -> set_balloon();
+            $chart -> plot( \@data );
+        }
+    }
 }
 
 ###################################################################################################
@@ -5897,26 +6048,26 @@ sub plot {
 
 sub about {
 
-	my $top = $mw -> Toplevel( -title => "Help", );
-	$top -> geometry( "$toplevel_position" );
+    my $top = $mw -> Toplevel( -title => "Help", );
+    $top -> geometry( "$toplevel_position" );
 
-	$top -> Label( -text => "This is grcarma v$VERSION", ) -> pack;
-	$top -> Button( -text => "View online documentation",
-					-command => sub {
+    $top -> Label( -text => "This is grcarma v$VERSION", ) -> pack;
+    $top -> Button( -text => "View online documentation",
+                    -command => sub {
 
-		if ( $linux ) {
+        if ( $linux ) {
 
-			system ( "x-www-browser https://github.com/pkoukos/grcarma" );
-		}
-		elsif ( $mac ) {
+            system ( "x-www-browser https://github.com/pkoukos/grcarma" );
+        }
+        elsif ( $mac ) {
 
-			system ( "open https://github.com/pkoukos/grcarma" );
-		}
-		elsif ( $windows ) {
+            system ( "open https://github.com/pkoukos/grcarma" );
+        }
+        elsif ( $windows ) {
 
-			system ( "start https://github.com/pkoukos/grcarma" );
-		}
-	}, ) -> pack;
+            system ( "start https://github.com/pkoukos/grcarma" );
+        }
+    }, ) -> pack;
 }
 
 ###################################################################################################
@@ -5925,27 +6076,27 @@ sub about {
 
 sub folder_size {
 
-	my $input = shift;
-	$input .= '/carma_results*';
+    my $input = shift;
+    $input .= '/carma_results*';
 
-	if ( $linux || $mac ) {
+    if ( $linux || $mac ) {
 
-		$wd_size = `du -hsc $input 2> /dev/null | grep total 2> /dev/null`;
-		chomp $wd_size;
-		if ( $wd_size =~ /(\d+,?\d*)(.?)/ ) {
+        $wd_size = `du -hsc $input 2> /dev/null | grep total 2> /dev/null`;
+        chomp $wd_size;
+        if ( $wd_size =~ /(\d+,?\d*)(.?)/ ) {
 
-			$wd_prefix = $2 . 'B';
-			$wd_size = $1;
-			$wd_size =~ s/\,/\./;
-		}
-	}# TO DO #
-	# else {
+            $wd_prefix = $2 . 'B';
+            $wd_size = $1;
+            $wd_size =~ s/\,/\./;
+        }
+    }# TO DO #
+    # else {
 
-		# my $dir = `dir $input /s /-c | find "File(s)"`;
+        # my $dir = `dir $input /s /-c | find "File(s)"`;
 
-		# if ( $dir !~ /\d* File...\s*(\d*)/ ) {
+        # if ( $dir !~ /\d* File...\s*(\d*)/ ) {
 
-			# $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
-		# }
-	# }
+            # $wd_size = int ( ( $1 / 1000000 ) + 0.5 ) . "MB";
+        # }
+    # }
 }
