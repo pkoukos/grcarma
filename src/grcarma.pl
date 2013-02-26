@@ -196,6 +196,7 @@ my $ps_viewer = '';
 my $pdb_viewer ='';
 my $vmd = 0;
 my $stride = 0;
+my $seqlogo = 0;
 my $count = 0;
 
 if ( $linux || $mac ) {
@@ -242,6 +243,10 @@ if ( $linux || $mac ) {
 
         $stride = 1;
     }
+    if ( `which seqlogo` ) {
+
+		$seqlogo = 1;
+	}
 }
 # Do the same thing for windows        #
 else {
@@ -1621,38 +1626,38 @@ sub dpca_window {
                               -> grid( -row => 1, -column => 1, -sticky => 'w', );
         $dpca_frame -> Entry( -textvariable => \$dpca_temp,)
                               -> grid( -row => 1, -column => 3, );
-        $dpca_frame -> Label( -text => 'Total eigenvectors: ',
+        $dpca_frame -> Label( -text => 'Total principal components to calculate: ',
                               -anchor => 'e',)
                               -> grid( -row => 2, -column => 1, -sticky => 'w', );
         $dpca_frame -> Entry( -textvariable => \$dpca_eigenvectors,)
                               -> grid( -row => 2, -column => 3, );
-        $dpca_frame -> Label( -text => 'Combinations: ',
+        $dpca_frame -> Label( -text => 'Number of components to use in PC(i)-PC(j) plots: ',
                               -anchor => 'e', )
                               -> grid( -row => 3, -column => 1, -sticky => 'w', );
         $dpca_frame -> Entry( -textvariable => \$dpca_combinations,)
                               -> grid( -row => 3, -column => 3, );
-        $dpca_frame -> Label( -text => "Sigma cutoff ( automatically\ndetermined if left undefined ): ",
+        $dpca_frame -> Label( -text => "Sigma cutoff ( automatically determined if left undefined ): ",
                               -anchor => 'e',)
                               -> grid( -row => 4, -column => 1, -sticky => 'w', );
         $dpca_frame -> Entry( -textvariable => \$dpca_cutoff,)
                               -> grid( -row => 4, -column => 3, );
-        $dpca_frame -> Label( -text => 'First: ',
+        $dpca_frame -> Label( -text => 'First frame to use: ',
                               -anchor => 'w', )
-                              -> grid( -row => 5, -column => 1, );
+                              -> grid( -row => 5, -column => 1, -sticky => 'w',);
         $dpca_frame -> Entry( -textvariable => \$dpca_first, )
                               -> grid( -row => 5, -column => 3, );
-        $dpca_frame -> Label( -text => 'Last: ',
+        $dpca_frame -> Label( -text => 'Last frame to use: ',
                               -anchor => 'w', )
-                              -> grid( -row => 6, -column => 1, );
+                              -> grid( -row => 6, -column => 1, -sticky => 'w',);
         $dpca_frame -> Entry( -textvariable => \$dpca_last, )
                               -> grid( -row => 6, -column => 3, );
-        $dpca_frame -> Label( -text => 'Step: ',
+        $dpca_frame -> Label( -text => 'Stride (step) between frames: ',
                               -anchor => 'w', )
-                              -> grid( -row => 7, -column => 1, );
+                              -> grid( -row => 7, -column => 1, -sticky => 'w',);
         $dpca_frame -> Entry( -textvariable => \$dpca_step, )
                               -> grid( -row => 7, -column => 3, );
 
-        $dpca_frame -> Checkbutton( -text => 'Set limits for principal components: ',
+        $dpca_frame -> Checkbutton( -text => 'Set limits for PC(i)-PC(j) plots: ',
                                     -anchor => 'e',
                                     -variable => \$dpca_dgwidth,
                                     -onvalue => " -dgwidth",
@@ -1661,8 +1666,8 @@ sub dpca_window {
         $dpca_frame -> Entry( -textvariable => \$dpca_dgwidth_num,)
                               -> grid( -row => 8, -column => 3, );
 
-        $dpca_frame -> Label( -text => "For dPCA your atom type selection will be ignored.", )
-                              -> grid( -row => 9, -column => 2, );
+        #~ $dpca_frame -> Label( -text => "For dPCA your atom type selection will be ignored.", )
+                              #~ -> grid( -row => 9, -column => 2, );
 
         $dpca_frame ->Button( -text => 'Return',
                               -command => sub {
@@ -1927,12 +1932,12 @@ sub cpca_window {
         $cpca_frame -> Entry( -textvariable => \$cpca_temp,)
                               -> grid( -row => 1, -column => 3, );
 
-        $cpca_frame -> Label( -text => 'Total eigenvectors: ',
+        $cpca_frame -> Label( -text => 'Total principal components to calculate: ',
                               -anchor => 'e',)
                               -> grid( -row => 2, -column => 1, -sticky => 'w', );
         $cpca_frame -> Entry( -textvariable => \$cpca_eigenvectors,)
                               -> grid( -row => 2, -column => 3, );
-        $cpca_frame -> Label( -text => 'Combinations: ',
+        $cpca_frame -> Label( -text => 'Number of components to use in PC(i)-PC(j) plots: ',
                               -anchor => 'e',)
                               -> grid( -row => 3, -column => 1, -sticky => 'w', );
         $cpca_frame -> Entry( -textvariable => \$cpca_combinations,)
@@ -1942,24 +1947,24 @@ sub cpca_window {
                               -> grid( -row => 4, -column => 1, -sticky => 'w', );
         $cpca_frame -> Entry( -textvariable => \$cpca_cutoff,)
                               -> grid( -row => 4, -column => 3, );
-        $cpca_frame -> Label( -text => 'First: ', )
-                              -> grid( -row => 5, -column => 1, );
+        $cpca_frame -> Label( -text => 'First frame to use: ', )
+                              -> grid( -row => 5, -column => 1, -sticky => 'w',);
         $cpca_frame -> Entry( -textvariable => \$cpca_first, )
                               -> grid( -row => 5, -column => 3, );
-        $cpca_frame -> Label( -text => 'Last: ', )
-                              -> grid( -row => 6, -column => 1, );
+        $cpca_frame -> Label( -text => 'Last frame to use: ', )
+                              -> grid( -row => 6, -column => 1, -sticky => 'w',);
         $cpca_frame -> Entry( -textvariable => \$cpca_last, )
                               -> grid( -row => 6, -column => 3, );
-        $cpca_frame -> Label( -text => 'Step: ', )
-                              -> grid( -row => 7, -column => 1, );
+        $cpca_frame -> Label( -text => 'Stride (step) between frames: ', )
+                              -> grid( -row => 7, -column => 1, -sticky => 'w',);
         $cpca_frame -> Entry( -textvariable => \$cpca_step, )
                               -> grid( -row => 7, -column => 3, );
-        $cpca_frame -> Checkbutton( -text => 'Set limits for principal components: ',
+        $cpca_frame -> Checkbutton( -text => 'Set limits for PC(i)-PC(j) plots: ',
                                     -anchor => 'e',
                                     -variable => \$cpca_dgwidth,
                                     -onvalue => " -dgwidth",
                                     -offvalue => '', )
-                                    -> grid(-row=>8,-column=>1, -sticky => 'w', );
+                                    -> grid( -row => 8, -column => 1, -sticky => 'w', );
         $cpca_frame -> Entry( -textvariable => \$cpca_dgwidth_num,)
                               -> grid( -row => 8, -column => 3, );
 
@@ -3441,6 +3446,17 @@ sub stride_window {
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
             $image_menu -> configure( -state => 'normal', );
+
+            if ( $seqlogo ) {
+
+				$text -> insert( 'end', "Now running seqlogo on carma.stride.dat.", 'valid' );
+				$text -> see( 'end', );
+
+				`seqlogo -f carma.stride.dat -o seq_structure -abcMnY`;
+
+				$text -> insert( 'end', "Done.\n", 'valid' );
+				$text -> see( 'end', );
+			}
         }
         else {
 
@@ -3472,12 +3488,15 @@ sub image_window {
         'carma.Rgyration.dat|' .
         'carma.surface.dat|' .
         'carma.distances|' .
+        'carma.fit-rms.dat|' .
+        'carma.rms-average.dat|' .
         '.PCA.rms_from_*.*.dat|' .
         'carma.torsions|' .
         'carma.bendangles|' .
         '.PCA.rms_from_*.*.dat|' .
         'carma_entropy.dat|' .
-        'carma.variance_explained.dat';
+        'carma.variance_explained.dat|' .
+        'carma.stride.dat';
 
     if ( $vmd ) {
 
@@ -3490,7 +3509,7 @@ sub image_window {
     opendir IMAGE_DIR, getcwd || die "Cannot open " . getcwd . ": $!";
     while ( my $dh = readdir IMAGE_DIR ) {
 
-        if ( $dh =~ /.*\.ps$/ ) {
+        if ( $dh =~ /.*.ps$/ ) {
 
             push @ps, $dh;
         }
@@ -4881,7 +4900,7 @@ sub tor_window {
     my $tor_atom4 = '';
     my $top_tor;
 
-    my @list = helper_function();
+    my @list = helper_function();foreach ( @list ) { print "$_\n";};
 
     if ( !Exists ( $top_tor ) ) {
 
@@ -5041,10 +5060,10 @@ sub helper_function {
 
     my $i = 0;
     while ( <IN> ) {
+				       #segid  #resid          #atom_type
+        if ( /\s+\d+\s+(\w+)\s+(\d+)\s+\w\w\w\s+(\w+)\s+.+/ ) {
 
-        if ( /(\s+\d+)\s+\w+\s+\d+\s+\w\w\w(\s+\w+)\s+.+/ ) {
-
-            $atom_data[$i] = "$1$2";
+            $atom_data[$i] = sprintf ( "%03d %3s %3s", $2, $1, $3, );
             $i++;
         }
     }
@@ -5409,6 +5428,9 @@ sub fit_window {
                     }
                 }
 
+                unlink ( "$dcd_name.dcd.0000001.dat" );
+                unlink ( "$dcd_name.dcd.0000001.ps" );
+
                 &create_fit_index;
                 $index = ' -index';
             }
@@ -5559,12 +5581,12 @@ sub fit_window {
                     $go_back_button -> configure( -state => 'normal', );
 
                     if ( $linux || $mac ) {
-#~ #~
+
                         `mv carma.fitted.dcd carma.fitted_$dcd_count.dcd`;
                         `mv carma.selected_atoms.psf carma.fitted_$dcd_count.psf`;
                     }
                     else {
-#~ #~
+
                         `move carma.fitted.dcd carma.fitted_$dcd_count.dcd`;
                         `move carma.selected_atoms.psf carma.fitted_$dcd_count.psf`;
                     }
@@ -5992,7 +6014,7 @@ sub plot {
                 $Schlitter[$i] = $3 if ( $3 );
                 $i++;
             }
-            elsif ( defined $step[$i] && $input =~ /from\_|rgyr|bend|tors|dist|surf/i && /\s+($step[$i])\s+([+-]?\d+\.?\d*)/ ) {
+            elsif ( defined $step[$i] && $input =~ /rms|rgyr|bend|tors|dist|surf/i && /\s+($step[$i])\s+([+-]?\d+\.?\d*)/ ) {
 
                 $frames[$i] = $1;
                 $values[$i] = $2;
