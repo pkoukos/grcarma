@@ -1733,6 +1733,10 @@ sub dpca_window {
                         $flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
                     }
                 }
+                else {
+                    
+                    $flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
+                }                   
             }
             else {
 
@@ -2031,6 +2035,10 @@ sub cpca_window {
 
                         $flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
                     }
+                }
+                else {
+                    
+                    $flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
                 }
             }
             else {
@@ -5829,7 +5837,7 @@ sub radiobuttons {
         }
     }
 
-	if ( ( $frame_stride1 ) and $input eq $frame_stride1 ) {print "teast";
+	if ( ( $frame_stride1 ) and $input eq $frame_stride1 ) {
 
 		$radio_b[2] -> invoke();
 	} else {
@@ -6032,16 +6040,42 @@ sub plot {
 
         if ( $linux || $mac ) {
 
-            my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6,);
+            my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6, );
+            
+            my $graph;
+            
+            if ( $input =~ /variance/ ) {
+                
+                open VARIANCE, '<', "carma.variance_explained.dat" or die "Cannot open carma.variance_explained.dat for reading : $!\n";
+                
+                my $i = 0;
+                while ( <VARIANCE> ) {
+                    
+                    $i++;
+                }
+                close VARIANCE;
 
-            my $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
-                                            -height => $mw -> screenheight,
-                                            -background => 'snow',
-                                            -xlabel => 'Frame',
-                                            -ylabel => 'Value',
-                                            -plotTitle => [ $input, 20, ] )
-                                            -> pack( qw/ -fill both -expand 1/ );
-
+                $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
+                                             -height => $mw -> screenheight,
+                                             -background => 'snow',
+                                             -xlabel => 'Frame',
+                                             -autoScaleX => 'Off',
+                                             -scale => [ '1', $i, '1', '', '', '', '', '', '', ],
+                                             -ylabel => 'Value',
+                                             -plotTitle => [ $input, 20, ] )
+                                             -> pack( qw/ -fill both -expand 1/ );
+            }
+            else {
+                
+                $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
+                                             -height => $mw -> screenheight,
+                                             -background => 'snow',
+                                             -xlabel => 'Frame',
+                                             -ylabel => 'Value',
+                                             -plotTitle => [ $input, 20, ] )
+                                             -> pack( qw/ -fill both -expand 1/ );
+            }
+            
             if ( $input =~ /qfract/i ) {
 
                 $dataset1 = LineGraphDataset -> new( -name => 'Q',
