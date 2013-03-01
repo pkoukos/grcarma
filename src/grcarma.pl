@@ -84,6 +84,7 @@ require Tk::Chart::Lines if ( $^O eq 'MSWin32' );
 require Tk::PlotDataset if ( $^O ne 'MSWin32' );
 require Tk::LineGraphDataset if ( $^O ne 'MSWin32' );
 require Tk::BrowseEntry;
+require Tk::ROText;
 
 # Import the following core modules    #
 
@@ -144,7 +145,6 @@ our $dcd_count = -1;
 our $atm_id_flag = '';
 our $res_id_flag = '';
 our $header = '';
-our $rmsd_step = '';
 our $atm_id = '';
 our $new_psf;
 our $active_run_buttons = '';
@@ -196,7 +196,7 @@ my $ps_viewer = '';
 my $pdb_viewer ='';
 my $vmd = 0;
 my $stride = 0;
-my $seqlogo = 0;
+my $weblogo = 0;
 my $count = 0;
 
 if ( $linux || $mac ) {
@@ -243,9 +243,9 @@ if ( $linux || $mac ) {
 
         $stride = 1;
     }
-    if ( `which seqlogo` ) {
+    if ( `which weblogo` ) {
 
-		$seqlogo = 1;
+		$weblogo = 1;
 	}
 }
 # Do the same thing for windows        #
@@ -1048,8 +1048,6 @@ sub parser {
 
         &dcd_header_parser;
     }
-
-    unlink ( "carma.fit-rms.dat", "carma.fitted.dcd", );
 }
 
 ###################################################################################################
@@ -1057,15 +1055,37 @@ sub parser {
 ###################################################################################################
 
 sub dcd_header_parser {
+    
+    my $input;
+    $input = shift if ( $_[0] );
+    
+    if ( $input ) {
+    
+        &create_dir;
 
-    if ( $linux || $mac ) {
+        if ( $linux || $mac ) {
 
-        `carma -v -fit -first 1 -last 2 $psf_file $dcd_file > carma.out`;
+            `carma -v -fit -last 1 $active_psf $active_dcd > carma.out`;
+        }
+        else {
+
+            `carma.exe -v -fit -last 1 $active_psf $active_dcd > carma.out`;
+        }
+        
     }
     else {
 
-        `carma.exe -v -fit -first 1 -last 2 $psf_file $dcd_file > carma.out`;
+        if ( $linux || $mac ) {
+
+            `carma -v -fit -last 1 $psf_file $dcd_file > carma.out`;
+        }
+        else {
+
+            `carma.exe -v -fit -last 1 $psf_file $dcd_file > carma.out`;
+        }
     }
+    
+    unlink ( "carma.fit-rms.dat", "carma.fitted.dcd", );
 
     # Extract the number of frames found   #
     # in the .dcd header                   #
@@ -1080,19 +1100,10 @@ sub dcd_header_parser {
 
     close (OUTPUT);
     unlink ( "carma.out", );
-
-    # If the number or frames is greater   #
-    # than 3k set the value of $rmsd_step  #
-    # to $header/3000 rounded up to the    #
-    # nearest integer, otherwise set it to #
-    # 1                                    #
-    if ( $header <= 3000 ) {
-
-        $rmsd_step = 1;
-    }
-    elsif ( $header > 3000 ) {
-
-        $rmsd_step = int ( ( $header / 3000 ) + 0.5 );
+    
+    if ( $input ) {
+        
+        return ( $header );
     }
 
     # At this point every check has been   #
@@ -1294,10 +1305,11 @@ sub raise_custom_window {
 
 sub rmsd_window {
 
-    my $rmsd_first = '';
+    my $rmsd_first = 1;
     my $rmsd_first_flag = '';
-    my $rmsd_last = '';
+    my $rmsd_last = dcd_header_parser( "rmsd" );
     my $rmsd_last_flag = '';
+    my $rmsd_step;
     my $rmsd_step_flag = '';
     my $rmsd_min = '';
     my $rmsd_min_flag = '';
@@ -1309,21 +1321,35 @@ sub rmsd_window {
 
     if ( !Exists( $rmsd_top ) ) {
 
+        # If the number or frames is greater   #
+        # than 3k set the value of $rmsd_step  #
+        # to $header/3000 rounded up to the    #
+        # nearest integer, otherwise set it to #
+        # 1                                    #
+        if ( $rmsd_last <= 3000 ) {
+
+            $rmsd_step = 1;
+        }
+        elsif ( $rmsd_last > 3000 ) {
+
+            $rmsd_step = int ( ( $rmsd_last / 3000 ) + 0.5 );
+        }
+
         $rmsd_top = $mw -> Toplevel( -title => 'RMSD matrix' );
         $rmsd_top -> geometry("$toplevel_position");
 
         my $frame_rmsd1 = $rmsd_top -> Frame() -> pack();
 
         # Create entry boxes for user input    #
-        $frame_rmsd1 -> Label( -text => 'First: ', )
+        $frame_rmsd1 -> Label( -text => 'First frame to use: ', )
                                -> grid( -row => 1, -column => 1, );
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_first, )
                                -> grid( -row => 1, -column => 2, );
-        $frame_rmsd1 -> Label( -text => 'Last: ', )
+        $frame_rmsd1 -> Label( -text => 'Last frame to use: ', )
                                -> grid( -row => 2, -column => 1, );
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_last, )
                                -> grid( -row => 2, -column => 2, );
-        $frame_rmsd1 -> Label( -text => 'Step: ', )
+        $frame_rmsd1 -> Label( -text => 'Stride (step) between frames: ', )
                                -> grid( -row => 3, -column => 1, );
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_step, )
                                -> grid( -row => 3, -column => 2, );
@@ -1351,9 +1377,9 @@ sub rmsd_window {
         $frame_rmsd2 -> Button( -text => 'Run',
                                 -command => sub {
 
-            $rmsd_first_flag = ( $rmsd_first ? " -first $rmsd_first" : '' );
-            $rmsd_last_flag = ( $rmsd_last ? " -last $rmsd_last" : '' );
-            $rmsd_step_flag = ( $rmsd_step ? " -step $rmsd_step" : '' );
+            $rmsd_first_flag = ( ( $rmsd_first != 1 ) ? " -first $rmsd_first" : '' );
+            $rmsd_last_flag = ( ( $rmsd_last != $header ) ? " -last $rmsd_last" : '' );
+            $rmsd_step_flag = ( ( $rmsd_step != 1 ) ? " -step $rmsd_step" : '' );
             $rmsd_min_flag = ( $rmsd_min ? " -min $rmsd_min" : '' );
             $rmsd_max_flag = ( $rmsd_max ? " -max $rmsd_max" : '' );
 
@@ -1512,7 +1538,7 @@ sub qfract_window {
                                                        -state => 'disabled',
                                                        -command => sub {
 
-            $top_qfract -> destroy;
+            $top_qfract -> withdraw;
 
             $seg_id_flag = '' if $seg_id_flag;
 
@@ -1593,11 +1619,11 @@ sub dpca_window {
     my $dpca_dgwidth = '';
     my $dpca_dgwidth_num = '';
     my $dpca_3d = '';
-    my $dpca_first = '';
+    my $dpca_first = 1;
     my $dpca_first_flag = '';
-    my $dpca_last = '';
+    my $dpca_last = dcd_header_parser( "dpca" );
     my $dpca_last_flag = '';
-    my $dpca_step = '';
+    my $dpca_step = 1;
     my $dpca_step_flag = '';
     our $chi1 = '';
     our $include_segid = '';
@@ -1679,9 +1705,9 @@ sub dpca_window {
         $dpca_run_button = $dpca_frame ->Button( -text => 'Run',
                                                  -command => sub {
 
-            $dpca_first_flag = ( $dpca_first ? " -first $dpca_first" : '' );
-            $dpca_last_flag = ( $dpca_last ? " -last $dpca_last" : '' );
-            $dpca_step_flag = ( $dpca_step ? " -step $dpca_step" : '' );
+            $dpca_first_flag = ( ( $dpca_first != 1 ) ? " -first $dpca_first" : '' );
+            $dpca_last_flag = ( ( $dpca_last != $header ) ? " -last $dpca_last" : '' );
+            $dpca_step_flag = ( ( $dpca_step != 1 ) ? " -step $dpca_step" : '' );
 
             $dpca_top -> withdraw;
 
@@ -1874,7 +1900,7 @@ sub dpca_window {
                                       -offvalue => '',
                                       -onvalue => " -3d", )
                                       -> grid( -row => 3, -column => 1, -sticky => 'w', );
-        $dpca_frame_4 -> Checkbutton( -text => 'Chi1',
+        $dpca_frame_4 -> Checkbutton( -text => 'Include chi1 angles in the analysis',
                                       -variable => \$chi1,
                                       -offvalue => '',
                                       -onvalue => " -chi1", )
@@ -1900,11 +1926,11 @@ sub cpca_window {
     my $cpca_cutoff = '';
     my $cpca_dgwidth = '';
     my $cpca_dgwidth_num = '';
-    my $cpca_first = '';
+    my $cpca_first = 1;
     my $cpca_first_flag = '';
-    my $cpca_last = '';
+    my $cpca_last = dcd_header_parser( "cpca" );
     my $cpca_last_flag = '';
-    my $cpca_step = '';
+    my $cpca_step = 1;
     my $cpca_step_flag = '';
     my $cpca_3d = '';
     my $chi1 = '';
@@ -1982,9 +2008,9 @@ sub cpca_window {
         $cpca_frame ->Button( -text => 'Run',
                               -command => sub {
 
-            $cpca_first_flag = ( $cpca_first ? " -first $cpca_first" : '' );
-            $cpca_last_flag = ( $cpca_last ? " -last $cpca_last" : '' );
-            $cpca_step_flag = ( $cpca_step ? " -step $cpca_step" : '' );
+            $cpca_first_flag = ( ( $cpca_first != 1 ) ? " -first $cpca_first" : '' );
+            $cpca_last_flag = ( ( $cpca_last != $header ) ? " -last $cpca_last" : '' );
+            $cpca_step_flag = ( ( $cpca_step != 1 ) ? " -step $cpca_step" : '' );
 
             $cpca_top -> withdraw;
 
@@ -3220,9 +3246,9 @@ sub cov_avg_rep_window {
     my $avg_dot = '';
     my $avg_norm = '';
     my $avg_mass = '';
-    my $avg_first = '';
-    my $avg_last = '';
-    my $avg_step = '';
+    my $avg_first = 1;
+    my $avg_last = dcd_header_parser( "avg" );
+    my $avg_step = 1;
     my $avg_reverse = '';
     my $avg_first_flag = '';
     my $avg_last_flag = '';
@@ -3266,15 +3292,15 @@ sub cov_avg_rep_window {
 
         my $frame_avg5 = $top_avg -> Frame()-> pack( -expand => 0, );
 
-        $frame_avg5 -> Label( -text => 'First: ', )
+        $frame_avg5 -> Label( -text => 'First frame to use: ', )
                               -> grid( -row => 1, -column => 1, );
         $frame_avg5 -> Entry( -textvariable => \$avg_first, )
                               -> grid( -row => 1, -column => 2, );
-        $frame_avg5 -> Label( -text => 'Last: ', )
+        $frame_avg5 -> Label( -text => 'Last frame to use: ', )
                               -> grid( -row => 2, -column => 1, );
         $frame_avg5 -> Entry( -textvariable => \$avg_last, )
                               -> grid( -row => 2, -column => 2, );
-        $frame_avg5 -> Label( -text => 'Step: ', )
+        $frame_avg5 -> Label( -text => 'Stride (step) between frames: ', )
                               -> grid( -row => 3, -column => 1, );
         $frame_avg5 -> Entry( -textvariable => \$avg_step, )
                               -> grid( -row => 3, -column => 2, );
@@ -3290,9 +3316,9 @@ sub cov_avg_rep_window {
 
             $top_avg -> destroy;
 
-            $avg_first_flag = ( $avg_first ? " -first $avg_first" : '' );
-            $avg_last_flag = ( $avg_last ? " -last $avg_last" : '' );
-            $avg_step_flag = ( $avg_step ? " -step $avg_step" : '' );
+            $avg_first_flag = ( ( $avg_first != 1 ) ? " -first $avg_first" : '' );
+            $avg_last_flag = ( ( $avg_last != $header ) ? " -last $avg_last" : '' );
+            $avg_step_flag = ( ( $avg_step != 1 ) ? " -step $avg_step" : '' );
 
             $seg_id_flag = '' if $seg_id_flag;
 
@@ -3434,11 +3460,11 @@ sub stride_window {
 
         if ( $seg_id_flag ) {
 
-            $flag = " -v -pdb -stride $atm_id_flag $res_id_flag $seg_id_flag $custom_id_flag";
+            $flag = " -w -v -pdb -stride $atm_id_flag $res_id_flag $seg_id_flag $custom_id_flag";
         }
         else {
 
-            $flag = " -v -pdb -stride $atm_id_flag $res_id_flag $custom_id_flag";
+            $flag = " -w -v -pdb -stride $atm_id_flag $res_id_flag $custom_id_flag";
         }
 
         &create_dir;
@@ -3450,17 +3476,128 @@ sub stride_window {
         &carma;
 
         if ( $all_done ) {
-
+            
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
             $image_menu -> configure( -state => 'normal', );
 
-            if ( $seqlogo ) {
-
-				$text -> insert( 'end', "Now running seqlogo on carma.stride.dat.", 'valid' );
+            if ( $weblogo ) {
+                
+				$text -> insert( 'end', "Now running weblogo on carma.stride.dat.\n", 'valid' );
 				$text -> see( 'end', );
+                
+                open PSF, '<', 'carma.selected_atoms.psf' or die "Cannot open carma.selected_atoms.psf for reading : $!\n";
+                
+                my $residues = 0;
+                my %residues;
+                my $columns = 0;
+                my @columns;
+                
+                if ( ( $res_id_flag and not $seg_id_flag ) or ( $res_id_flag and $seg_id_flag ) ) {
+                
+                    while ( <PSF> ) {
+                    
+                        if ( /\d+\s+Z\s+(\d+)\s+\w+\s+\w+/ ) {
 
-				`seqlogo -f carma.stride.dat -o seq_structure -abcMnY`;
+                            $residues = $1;
+                        }
+                    }
+                } else {
+                        
+                     while ( <PSF> ) {
+                         
+                       if ( /\d+\s+([A-Z])\s+(\d+)\s+\w+\s+\w+/ ) {
+                            
+                            $residues{$1} = $2;
+                        }
+                    }
+                }
+                
+                close PSF;
+                
+                if ( $residues or scalar ( keys %residues ) == 1 ) {
+                    
+                    if ( $residues ) {
+                        
+                        $columns = $residues;
+                    } else {
+                        
+                         foreach ( keys %residues ) {
+                            
+                            $columns = $residues{$_};
+                        }
+                    }
+                    
+                    open STRIDE, '<', "carma.stride.dat" or die "Cannot open carma.stride.dat for reading : $!\n";
+                    open OUT, '>', "temp.dat" or die "Cannot open temp.dat for writing : $!\n";
+
+                    #~ my $line;
+                    my $new_line;
+                    while ( <STRIDE> ) {
+
+                        $new_line = substr( $_, 0, $columns, '', );
+                        $new_line =~ s/ /C/g;
+                        print OUT "$new_line\n";
+                    }
+
+                    close STRIDE;
+                    close OUT;
+
+                    `weblogo < temp.dat > sec_structure.eps`;
+                    unlink ( "temp.dat" );
+                    
+                } elsif ( scalar ( keys %residues ) > 1 ) {
+                    
+                    my $i = 0;
+                    my $offset = 0;
+                    foreach ( keys %residues ) {
+                        
+                        open STRIDE, '<', "carma.stride.dat" or die "Cannot open carma.stride.dat for reading : $!\n";
+                        open OUT, '>', "stride_chain$_.dat" or die "Cannot open stride_chain$_.dat for reading : $!\n";
+
+                        if ( $i != 0 ) {
+                            
+                            if ( $columns <= 50 ) {
+                                
+                                $offset = 50;
+                            }
+                            elsif ( $columns > 50 and $columns <= 100 ) {
+                                
+                                $offset = 100;
+                            }
+                            elsif ( $columns > 100 and $columns <= 150 ) {
+                                
+                                $offset = 150;
+                            }
+                            elsif ( $columns > 150 and $columns <= 200 ) {
+                                
+                                $offset = 200;
+                            }
+                            
+                            $columns = $residues{$_};
+                        }
+                        else {
+                            
+                            $columns = $residues{$_};
+                        }
+                        
+                        my $line;
+                        my $new_line;
+                        while ( $line = <STRIDE> ) {
+
+                            $new_line = substr( $line, $offset, $columns, '', );
+                            $new_line =~ s/ /C/g;
+                            print OUT "$new_line\n";
+                        }
+                        close OUT;
+                        close STRIDE;
+
+                        `weblogo < stride_chain$_.dat > sec_structure_chain$_.eps`;
+                        #~ unlink ( "stride_chain$_.dat" );
+                        
+                        $i++;
+                    }
+                }
 
 				$text -> insert( 'end', "Done.\n", 'valid' );
 				$text -> see( 'end', );
@@ -3621,6 +3758,19 @@ sub image_window {
         if ( $selection =~ /cns$/ ) {
 
             system ( "vmd $selection" );
+        }
+        elsif ( $selection =~ /stride/ ) {
+            
+            my $temp_w = MainWindow -> new( -title => 'carma.stride.dat', );
+            my $temp_t = $temp_w -> Scrolled( 'ROText', ) -> pack;
+            
+            open STRIDE, '<', "carma.stride.dat" or die "Cannor open carma.stride.dat for reading : $!\n";
+            
+            while ( <STRIDE> ) {
+                
+                $temp_t -> insert( 'end', "$_" );
+            }
+            close STRIDE;
         }
         else {
 
@@ -4043,6 +4193,7 @@ sub entropy_window {
     my $upper_ent_limit = '';
     my $top_ent;
     my $entropy_plot;
+    my $frames = dcd_header_parser( "entropy" );
 
     my @a_entropy;
     my @s_entropy;
@@ -4051,9 +4202,9 @@ sub entropy_window {
 
         # Divide the number of frames in the   #
         # .dcd header by 10 and round it up    #
-        unless ( $ent_step ) {
+        if ( $frames ) {
 
-            $ent_step = int ( ( $header / 10 ) );
+            $ent_step = int ( ( $frames / 10 ) );
         }
 
         $top_ent = $mw -> Toplevel( -title => 'Solute entropy calculation', );
@@ -4071,7 +4222,7 @@ sub entropy_window {
                                                      -> grid( -row => 3, -column => 2, );
         $mass_check -> select;
 
-        $frame_ent1 -> Label( -text => 'Step: ', )
+        $frame_ent1 -> Label( -text => 'Stride (step) between frames: ', )
                               -> grid( -row => 1, -column => 1, );
         $frame_ent1 -> Entry( -textvariable => \$ent_step, )
                               -> grid( -row => 1, -column => 2, );
@@ -4120,12 +4271,12 @@ sub entropy_window {
                     # multiplication is the number of the  #
                     # frame that will be used after the    #
                     # ' -last' flag                        #
-                    for ( my $i = 0 ; ( $i * $ent_step ) < $header ; $i++ ) {
+                    for ( my $i = 0 ; ( $i * $ent_step ) < $frames ; $i++ ) {
 
                         # If that number exceeds the number of #
                         # frames in the .dcd header then that  #
                         # number will be used instead          #
-                        if ( ( $header - ( $i * $ent_step ) ) > $ent_step ) {
+                        if ( ( $frames - ( $i * $ent_step ) ) > $ent_step ) {
 
                             $lower_ent_limit = 1;
                             $upper_ent_limit = ( ( $i + 1 ) * $ent_step );
@@ -4157,7 +4308,7 @@ sub entropy_window {
                         else {
 
                             $lower_ent_limit = 1;
-                            $upper_ent_limit = $header;
+                            $upper_ent_limit = $frames;
                             $text -> insert( 'end', "\nCalculating entropy for frames $lower_ent_limit - $upper_ent_limit :\n", 'valid' );
                             $text -> see( 'end', );
 
@@ -4209,7 +4360,7 @@ sub entropy_window {
                         }
                         close READ_ENTROPY;
 
-                        if ( $upper_ent_limit == $header ) {
+                        if ( $upper_ent_limit == $frames ) {
 
                             if ( $all_done ) {
 
@@ -4277,16 +4428,19 @@ sub pdb_window {
     my $top_pdb;
     my $pdb_step;
     my $pdb_step_flag;
-    my $pdb_first = '';
+    my $pdb_first = 1;
     my $pdb_first_flag = '';
-    my $pdb_last = '';
+    my $pdb_last = dcd_header_parser( "pdb" );
     my $pdb_last_flag = '';
 
     if ( !Exists ( $top_pdb ) ) {
 
-        unless ( $pdb_step ) {
+        if ( $pdb_last > 500 ) {
 
-            $pdb_step = int ( ( $header / 10 ) );
+            $pdb_step = int ( ( $pdb_last / 500 ) + 0.5 );
+        } else {
+            
+            $pdb_step = 1;
         }
 
         $top_pdb = $mw -> Toplevel( -title => 'Extract selected PDB files', );
@@ -4302,15 +4456,15 @@ sub pdb_window {
         &checkbuttons ( $frame_pdb3 );
         &otherbuttons ( $frame_pdb4 );
 
-        $frame_pdb1 -> Label( -text => 'Step: ', )
+        $frame_pdb1 -> Label( -text => 'Stride (step) between frames: ', )
                               -> grid( -row => 1, -column => 1, );
         $frame_pdb1 -> Entry( -textvariable => \$pdb_step, )
                               -> grid( -row => 1, -column => 2, );
-        $frame_pdb1 -> Label( -text => 'First: ', )
+        $frame_pdb1 -> Label( -text => 'First frame to use: ', )
                               -> grid( -row => 2, -column => 1, );
         $frame_pdb1 -> Entry( -textvariable => \$pdb_first, )
                               -> grid( -row => 2, -column => 2, );
-        $frame_pdb1 -> Label( -text => 'Last: ', )
+        $frame_pdb1 -> Label( -text => 'Last frame to use: ', )
                               -> grid( -row => 3, -column => 1, );
         $frame_pdb1 -> Entry( -textvariable => \$pdb_last, )
                               -> grid( -row => 3, -column => 2, );
@@ -4324,9 +4478,9 @@ sub pdb_window {
         $frame_pdb5 -> Button( -text => 'Run',
                                -command => sub {
 
-        $pdb_step_flag = ( $pdb_step ? " -step $pdb_step" : '' );
-        $pdb_first_flag = ( $pdb_first ? " -first $pdb_first" : '' );
-        $pdb_last_flag = ( $pdb_last ? " -last $pdb_last" : '' );
+        $pdb_first_flag = ( ( $pdb_first != 1 ) ? " -first $pdb_first" : '' );
+        $pdb_last_flag = ( ( $pdb_last != $header ) ? " -last $pdb_last" : '' );
+        $pdb_step_flag = ( ( $pdb_step != 1 ) ? " -step $pdb_step" : '' );
 
         $top_pdb -> destroy;
 
@@ -4385,11 +4539,11 @@ sub pdb_window {
 
 sub rms_window {
 
-    my $rms_first = '';
+    my $rms_first = 1;
     my $rms_first_flag = '';
-    my $rms_last = '';
+    my $rms_last = dcd_header_parser( "rms" );
     my $rms_last_flag = '';
-    my $rms_step = '';
+    my $rms_step = 1;
     my $rms_step_flag = '';
     my $rms_min = '';
     my $rms_min_flag = '';
@@ -4403,11 +4557,6 @@ sub rms_window {
     my $top_rms;
 
     if ( !Exists ( $top_rms ) ) {
-
-        unless ( $rms_step ) {
-
-            $rms_step = $rmsd_step;
-        }
 
         $top_rms = $mw -> Toplevel( -title => 'Average distance and rms deviation from them', );
         $top_rms -> geometry("$toplevel_position");
@@ -4423,15 +4572,15 @@ sub rms_window {
 
         my $frame_rms4 = $top_rms -> Frame()-> pack( -expand => 0, );
 
-        $frame_rms4 -> Label( -text => 'First: ', )
+        $frame_rms4 -> Label( -text => 'First frame to use: ', )
                               -> grid( -row => 1, -column => 1, );
         $frame_rms4 -> Entry( -textvariable => \$rms_first, )
                               -> grid( -row => 1, -column => 2, );
-        $frame_rms4 -> Label( -text => 'Last: ', )
+        $frame_rms4 -> Label( -text => 'Last frame to use: ', )
                               -> grid( -row => 2, -column => 1, );
         $frame_rms4 -> Entry( -textvariable => \$rms_last, )
                               -> grid( -row => 2, -column => 2, );
-        $frame_rms4 -> Label( -text => 'Step: ', )
+        $frame_rms4 -> Label( -text => 'Stride (step) between frames: ', )
                               -> grid( -row => 3, -column => 1, );
         $frame_rms4 -> Entry( -textvariable => \$rms_step, )
                               -> grid( -row => 3, -column => 2, );
@@ -4464,9 +4613,9 @@ sub rms_window {
         $frame_rms5 -> Button( -text => 'Run',
                                -command => sub {
 
-        $rms_first_flag = ( $rms_first ? " -first $rms_first" : '' );
-        $rms_last_flag = ( $rms_last ? " -last $rms_last" : '' );
-        $rms_step_flag = ( $rms_step ? " -step $rms_step" : '' );
+        $rms_first_flag = ( ( $rms_first != 1 ) ? " -first $rms_first" : '' );
+        $rms_last_flag = ( ( $rms_last != $header ) ? " -last $rms_last" : '' );
+        $rms_step_flag = ( ( $rms_step != 1 ) ? " -step $rms_step" : '' );
         $rms_min_flag = ( $rms_min ? " -min $rms_min" : '' );
         $rms_max_flag = ( $rms_max ? " -max $rms_max" : '' );
         $rms_mrms_flag = ( $rms_mrms ? " -mrms $rms_mrms" : '' );
@@ -4908,7 +5057,8 @@ sub tor_window {
     my $tor_atom4 = '';
     my $top_tor;
 
-    my @list = helper_function();foreach ( @list ) { print "$_\n";};
+    my @list = helper_function();
+    #~ foreach ( @list ) { print "$_\n";};
 
     if ( !Exists ( $top_tor ) ) {
 
@@ -5071,7 +5221,7 @@ sub helper_function {
 				       #segid  #resid          #atom_type
         if ( /\s+\d+\s+(\w+)\s+(\d+)\s+\w\w\w\s+(\w+)\s+.+/ ) {
 
-            $atom_data[$i] = sprintf ( "%03d %3s %3s", $2, $1, $3, );
+            $atom_data[$i] = sprintf ( "%04d %3s %3s", $2, $1, $3, );
             $i++;
         }
     }
@@ -6054,6 +6204,13 @@ sub plot {
                     $i++;
                 }
                 close VARIANCE;
+                
+                if ( $i < 2 ) {
+                    
+                    $mw -> messageBox( -message => 'Only one line read from the file carma.variance_explained.dat. Will not plot', );
+                    $mw -> destroy;
+                    return;
+                }
 
                 $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
                                              -height => $mw -> screenheight,
