@@ -171,7 +171,9 @@ our $frame_sur2 = '';
 our $cpca_frame = '';
 our $cpca_frame_1 = '';
 our $qfract_run_button;
+our $phi_psi_run_button;
 our $frame_qfract2;
+our $frame_phi_psi1;
 
 # and global arrays and hashes         #
 
@@ -536,10 +538,16 @@ my $ang_menu = $f1 -> Button( -text => 'Bending Angles',
                               -font => "$font_12", ) -> pack;
 
 # ... the torsion angles menu         #
-my $tor_menu = $f1 -> Button( -text => 'Torsion Angles',
+my $tor_menu = $f1 -> Button( -text => 'Torsion Angles ( general )',
                               -command => \&tor_window,
                               -width => 24,
                               -font => "$font_12", ) -> pack;
+
+# ... the phi-psi angles menu         #
+my $phi_psi_menu = $f1 -> Button( -text => 'phi/psi dihedral angles',
+                                  -command => \&phi_psi_window,
+                                  -width => 24,
+                                  -font => "$font_12", ) -> pack;
 
 # ... the index fitting menu           #
 #~ my $_menu = $f1 -> Button( -text => "Average and representative\nstructures",
@@ -1055,12 +1063,12 @@ sub parser {
 ###################################################################################################
 
 sub dcd_header_parser {
-    
+
     my $input;
     $input = shift if ( $_[0] );
-    
+
     if ( $input ) {
-    
+
         &create_dir;
 
         if ( $linux || $mac ) {
@@ -1071,7 +1079,7 @@ sub dcd_header_parser {
 
             `carma.exe -v -fit -last 1 $active_psf $active_dcd > carma.out`;
         }
-        
+
     }
     else {
 
@@ -1084,7 +1092,7 @@ sub dcd_header_parser {
             `carma.exe -v -fit -last 1 $psf_file $dcd_file > carma.out`;
         }
     }
-    
+
     unlink ( "carma.fit-rms.dat", "carma.fitted.dcd", );
 
     # Extract the number of frames found   #
@@ -1100,9 +1108,9 @@ sub dcd_header_parser {
 
     close (OUTPUT);
     unlink ( "carma.out", );
-    
+
     if ( $input ) {
-        
+
         return ( $header );
     }
 
@@ -1354,11 +1362,11 @@ sub rmsd_window {
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_step, )
                                -> grid( -row => 3, -column => 2, );
 
-        $frame_rmsd1 -> Label( -text => 'Min: ', )
+        $frame_rmsd1 -> Label( -text => 'Minimum value for postscript plot (dark blue): ', )
                                -> grid( -row => 1, -column => 3, );
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_min, )
                                -> grid( -row => 1, -column => 4, );
-        $frame_rmsd1 -> Label( -text => 'Max: ', )
+        $frame_rmsd1 -> Label( -text => 'Maximum value for postscript plot (dark red): ', )
                                -> grid( -row => 2, -column => 3, );
         $frame_rmsd1 -> Entry( -textvariable => \$rmsd_max, )
                                -> grid( -row => 2, -column => 4, );
@@ -1424,8 +1432,8 @@ sub rmsd_window {
                 sleep 1;
 
                 my $coloring;
-                $coloring = `carma.exe -reverse -col - < carma.RMSD.matrix` if ( $windows );
-                $coloring = `carma -reverse -col - < carma.RMSD.matrix` if ( $linux || $mac );
+                $coloring = `carma.exe $rmsd_reverse -col - < carma.RMSD.matrix` if ( $windows );
+                $coloring = `carma $rmsd_reverse -col - < carma.RMSD.matrix` if ( $linux || $mac );
 
                 if ( $coloring =~ /(-?\d*)\.(\d*) to (-?\d*)\.(\d*)/ ) {
 
@@ -1760,9 +1768,9 @@ sub dpca_window {
                     }
                 }
                 else {
-                    
+
                     $flag = " -v -w -col $dpca_first_flag $dpca_last_flag $dpca_step_flag $dpca_3d $dpca_dgwidth $dpca_dgwidth_num $chi1 $res_id_flag -dPCA $dpca_eigenvectors $dpca_combinations $dpca_temp $dpca_cutoff";
-                }                   
+                }
             }
             else {
 
@@ -2063,7 +2071,7 @@ sub cpca_window {
                     }
                 }
                 else {
-                    
+
                     $flag = " -v -w -col -cov $cpca_first_flag $cpca_last_flag $cpca_step_flag $res_id_flag $cpca_dgwidth $cpca_dgwidth_num $atm_id_flag $custom_id_flag -eigen -proj $cpca_eigenvectors $cpca_combinations $cpca_temp $cpca_cutoff $cpca_mass $cpca_3d $cpca_use";
                 }
             }
@@ -3467,7 +3475,7 @@ sub stride_window {
             $flag = " -w -v -pdb -stride $atm_id_flag $res_id_flag $custom_id_flag";
         }
 
-        &create_dir;
+        create_dir( 'stride' );
 
         $text -> insert( 'end', "\nNow calculating secondary structure. Running carma with flag :\n", 'valid', );
         $text -> see( 'end', );
@@ -3476,58 +3484,68 @@ sub stride_window {
         &carma;
 
         if ( $all_done ) {
-            
+
             $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
             $text -> see( 'end', );
             $image_menu -> configure( -state => 'normal', );
 
+            opendir TMPDIR, "." or die "Cannot open . for reading : $!\n";
+            while ( my $dh = readdir TMPDIR ) {
+
+                mv ( "$dh", ".." ) unless ( $dh =~ /\.\./ );
+            }
+
+            closedir TMPDIR;
+            chdir ( ".." );
+            rmdir ( "tmp" );
+
             if ( $weblogo ) {
-                
-				$text -> insert( 'end', "Now running weblogo on carma.stride.dat.\n", 'valid' );
+
+				$text -> insert( 'end', "Now running weblogo on carma.stride.dat...", 'valid' );
 				$text -> see( 'end', );
-                
+
                 open PSF, '<', 'carma.selected_atoms.psf' or die "Cannot open carma.selected_atoms.psf for reading : $!\n";
-                
+
                 my $residues = 0;
                 my %residues;
                 my $columns = 0;
                 my @columns;
-                
+
                 if ( ( $res_id_flag and not $seg_id_flag ) or ( $res_id_flag and $seg_id_flag ) ) {
-                
+
                     while ( <PSF> ) {
-                    
+
                         if ( /\d+\s+Z\s+(\d+)\s+\w+\s+\w+/ ) {
 
                             $residues = $1;
                         }
                     }
                 } else {
-                        
+
                      while ( <PSF> ) {
-                         
+
                        if ( /\d+\s+([A-Z])\s+(\d+)\s+\w+\s+\w+/ ) {
-                            
+
                             $residues{$1} = $2;
                         }
                     }
                 }
-                
+
                 close PSF;
-                
+
                 if ( $residues or scalar ( keys %residues ) == 1 ) {
-                    
+
                     if ( $residues ) {
-                        
+
                         $columns = $residues;
                     } else {
-                        
+
                          foreach ( keys %residues ) {
-                            
+
                             $columns = $residues{$_};
                         }
                     }
-                    
+
                     open STRIDE, '<', "carma.stride.dat" or die "Cannot open carma.stride.dat for reading : $!\n";
                     open OUT, '>', "temp.dat" or die "Cannot open temp.dat for writing : $!\n";
 
@@ -3545,42 +3563,42 @@ sub stride_window {
 
                     `weblogo < temp.dat > sec_structure.eps`;
                     unlink ( "temp.dat" );
-                    
+
                 } elsif ( scalar ( keys %residues ) > 1 ) {
-                    
+
                     my $i = 0;
                     my $offset = 0;
                     foreach ( keys %residues ) {
-                        
+
                         open STRIDE, '<', "carma.stride.dat" or die "Cannot open carma.stride.dat for reading : $!\n";
                         open OUT, '>', "stride_chain$_.dat" or die "Cannot open stride_chain$_.dat for reading : $!\n";
 
                         if ( $i != 0 ) {
-                            
+
                             if ( $columns <= 50 ) {
-                                
+
                                 $offset = 50;
                             }
                             elsif ( $columns > 50 and $columns <= 100 ) {
-                                
+
                                 $offset = 100;
                             }
                             elsif ( $columns > 100 and $columns <= 150 ) {
-                                
+
                                 $offset = 150;
                             }
                             elsif ( $columns > 150 and $columns <= 200 ) {
-                                
+
                                 $offset = 200;
                             }
-                            
+
                             $columns = $residues{$_};
                         }
                         else {
-                            
+
                             $columns = $residues{$_};
                         }
-                        
+
                         my $line;
                         my $new_line;
                         while ( $line = <STRIDE> ) {
@@ -3594,7 +3612,7 @@ sub stride_window {
 
                         `weblogo < stride_chain$_.dat > sec_structure_chain$_.eps`;
                         #~ unlink ( "stride_chain$_.dat" );
-                        
+
                         $i++;
                     }
                 }
@@ -3637,6 +3655,7 @@ sub image_window {
         'carma.rms-average.dat|' .
         '.PCA.rms_from_*.*.dat|' .
         'carma.torsions|' .
+        'phi_psi_dihedral_segid.*.dat|' .
         'carma.bendangles|' .
         '.PCA.rms_from_*.*.dat|' .
         'carma_entropy.dat|' .
@@ -3760,17 +3779,111 @@ sub image_window {
             system ( "vmd $selection" );
         }
         elsif ( $selection =~ /stride/ ) {
-            
+
             my $temp_w = MainWindow -> new( -title => 'carma.stride.dat', );
-            my $temp_t = $temp_w -> Scrolled( 'ROText', ) -> pack;
-            
+            my $temp_t = $temp_w -> Scrolled( 'ROText', -wrap => 'none', ) -> pack;
+
             open STRIDE, '<', "carma.stride.dat" or die "Cannor open carma.stride.dat for reading : $!\n";
-            
+
             while ( <STRIDE> ) {
-                
+
                 $temp_t -> insert( 'end', "$_" );
             }
             close STRIDE;
+        }
+        elsif ( $selection =~ /phi_psi/ ) {
+            
+            our ( $first_residue, $last_residue, $number_of_residues, $correction, $temp_segid );
+            
+            my $response = $mw -> messageBox(
+
+                -message => "The file carma.torsions contains the phi/psi angles" .
+                            " for residues $first_residue to $last_residue of chain $temp_segid " .
+                            ". Would you like to view these results in a Ramachandran" .
+                            " plot ?",
+                -icon => 'question',
+                -type => 'yesno', );
+
+            if ( $response =~ /yes/i ) {
+
+                my $entry_var = "$first_residue-$last_residue;";
+                my $top = $mw -> Toplevel( -title => 'phi/psi dihedral angles' );
+                $top -> Label( -text => "$number_of_residues pairs of phi/psi angles detected. In case you would\n" .
+                                        "like to plot only a subset or subsets of those residues,\n" .
+                                        "please define them using the textbox below", ) -> pack;
+
+                $top -> Entry( -textvariable => \$entry_var, ) -> pack;
+
+                my $semicolon_count = 0;
+                my @range_low;
+                my @range_high;
+                $top -> Button( -text => 'Plot',
+                                -command => sub {
+
+                    $top -> destroy;
+
+                    if ( $entry_var =~ /;/ ) {
+
+                        $semicolon_count = $entry_var =~ tr/;//;
+                    }
+
+                    $entry_var =~ s/;/\n/g;
+
+                    open FH, '<', \$entry_var or die "Cannot open $entry_var for reading : $!\n";
+
+                    my $j = 0;
+                    while ( <FH> ) {
+
+                        if ( /(\d+).(\d+)/ ) {
+
+                            $range_low[$j] = $1;
+                            $range_high[$j] = $2;
+                        }
+
+                        $j++;
+                    }
+
+                    close FH;
+
+                    open TORSIONS, '<', "phi_psi_dihedral_segid$temp_segid.dat" or die "Cannot open phi_psi_dihedral_segid$temp_segid.dat for reading : $!\n";
+                    #~ open DEBUG, '>', 'debug.dat' or die "Cannot open carma.torsions for reading : $!\n";
+
+                    my ( @phi_angles, @psi_angles, );
+
+                    for ( my $k = 0 ; $k < scalar ( @range_low ) ; $k++ ) {
+
+                        for ( my $index = $range_low[$k] ; $index <= $range_high[$k] ; $index++ ) {#print DEBUG $index;
+
+                            my $other_index = 0;
+
+                            while ( <TORSIONS> ) {
+
+                                $phi_angles[$other_index] = substr $_, 10 + ( ( $index - ( 2 + $correction ) ) * 20 ), 9;
+                                $psi_angles[$other_index] = substr $_, 20 + ( ( $index - ( 2 + $correction ) ) * 20 ), 9;
+                                $other_index++;
+                            }
+
+                            seek TORSIONS, 0, 0;
+                            $index = sprintf ( "%03d", $index );
+                            
+                            open OUT, '>>', "phi_psi_temp_angles" or die $!;
+                            
+                            while ( my $phi_line = shift @phi_angles, my $psi_line = shift @psi_angles, ) {
+                                
+                                chomp ( $phi_line, $psi_line, );
+                                
+                                print OUT "$phi_line $psi_line\n";
+                            }
+                            
+                            close OUT;
+                        }
+                    }
+
+                    close TORSIONS;
+
+                    scatter_plot ( 'ramachandran' );
+                }, ) -> pack;
+            }
         }
         else {
 
@@ -3796,8 +3909,8 @@ sub select_residues {
     my $prev_line = '';
 
     &create_dir;
-    open PSF_FILE, $psf_file || die "Cannot open $psf_file for reading\n";
-    open OUT, ">selected_residues.psf" || die "Cannot open selected_residues.psf for writing\n";
+    open PSF_FILE, '<', $psf_file || die "Cannot open $psf_file for reading\n";
+    open OUT, '>', "selected_residues.psf" || die "Cannot open selected_residues.psf for writing\n";
 
     # As soon as '!NATOM' is met, reading #
     # of the .psf file and output to the  #
@@ -3887,6 +4000,7 @@ sub select_residues {
 
     $dpca_run_button -> configure( -state => 'normal', ) if ( $dpca_run_button );
     $qfract_run_button -> configure( -state => 'normal', ) if ( $qfract_run_button );
+    $phi_psi_run_button -> configure( -state => 'normal', ) if ( $phi_psi_run_button );
 
     $text -> insert ( 'end', "\nYou have submitted a residue selection which " .
                              "resulted in the creation of a new .psf file." .
@@ -3906,43 +4020,47 @@ sub select_residues {
 
 sub create_fit_index {
 
+    my $atmid = $_[0];
+    my @segids = $_[1];
+
     my $fit_regex = '';
     my @atom_selection;
-    if ( $atm_id_flag ) {
 
-        if ( $atm_id_flag =~ /-atmid C -atmid CA -atmid N -atmid O/ ) {
+    {
+        local $" = '|';
 
-            $fit_regex = qr{^(\s+\d+\s+\w+\s+)(\d+)(\s+\w+\s+)(C|CA|N|O)(.*)$};
+        if ( $atm_id_flag ) {
+
+            if ( $atmid =~ /backbone/i ) {
+
+                $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)(C|CA|N|O)(.*)$};
+            }
+            elsif ( $atmid =~ /heavy/i ) {
+
+                $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)([^H].*)(.*)$};
+            }
+            elsif ( $atmid =~ /allid/i ) {
+
+                $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)(\w+)(.*)$};
+            }
         }
-        elsif ( $atm_id_flag =~ /heavy/i ) {
+        elsif ( $custom_id_flag ) {
 
-            $fit_regex = qr{^(\s+\d+\s+\w+\s+)(\d+)(\s+\w+\s+)([^H].*)(.*)$};
+            @atom_selection = split ' -atmid', $custom_id_flag;
+            shift @atom_selection;
+
+            $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)(@atom_selection)(.*)$};
         }
-        elsif ( $atm_id_flag =~ /allid/i ) {
+        else {
 
-            $fit_regex = qr{^(\s+\d+\s+\w+\s+)(\d+)(\s+\w+\s+)(\w+)(.*)$};
+            $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)(CA)(.*)$};
         }
-    }
-    elsif ( $custom_id_flag ) {
-
-        @atom_selection = split ' -atmid', $custom_id_flag;
-        shift @atom_selection;
-
-        {
-            local $" = '|';
-            $fit_regex = qr{^(\s+\d+\s+\w+\s+)(\d+)(\s+\w+\s+)(@atom_selection)(.*)$};
-        }
-    }
-    else {
-
-        $fit_regex = qr{^(\s+\d+\s+\w+\s+)(\d+)(\s+\w+\s+)(CA)(.*)$};
     }
 
     # The same as above but for the index  #
     # subroutine                           #
 
     open PSF, '<', "carma.selected_atoms.psf" || die "Cannot open carma.selected_atoms.psf for reading:$!\n";
-
     open OUT, '>', "fit.index" || die "Cannot open fit.index for writing: $!\n";
 
     $index_num_atoms = 0;
@@ -3969,15 +4087,15 @@ sub create_fit_index {
 
             if ( $index_line =~ /$fit_regex/ ) {
 
-                if ( $2 > $upper_fit_limit[$i] ) {
+                if ( $4 > $upper_fit_limit[$i] ) {
 
                     $index_pos = tell;
                     last;
                 }
 
-                if ( $2 >= $lower_fit_limit[$i] && $2 <= $upper_fit_limit[$i] ) {
+                if ( $4 >= $lower_fit_limit[$i] && $4 <= $upper_fit_limit[$i] ) {
 
-                    print OUT "$line_count$3$4$5\n";
+                    print OUT "$index_line";
                 }
             }
             $line_count++;
@@ -4156,7 +4274,7 @@ sub add_resid_bar {
 
 sub add_index_bar {
 
-    $index_row++;
+    $index_row = 1;
     $index_column = 1;
 
     $frame_fit6[$index_bar_count] -> Label( -text => 'From: ', )
@@ -4439,7 +4557,7 @@ sub pdb_window {
 
             $pdb_step = int ( ( $pdb_last / 500 ) + 0.5 );
         } else {
-            
+
             $pdb_step = 1;
         }
 
@@ -4585,11 +4703,11 @@ sub rms_window {
         $frame_rms4 -> Entry( -textvariable => \$rms_step, )
                               -> grid( -row => 3, -column => 2, );
 
-        $frame_rms4 -> Label( -text => 'Min: ', )
+        $frame_rms4 -> Label( -text => 'Minimum value for postscript plot (dark blue): ', )
                               -> grid( -row => 1, -column => 3, );
         $frame_rms4 -> Entry( -textvariable => \$rms_min, )
                               -> grid( -row => 1, -column => 4, );
-        $frame_rms4 -> Label( -text => 'Max: ', )
+        $frame_rms4 -> Label( -text => 'Maximum value for postscript plot (dark red): ', )
                               -> grid( -row => 2, -column => 3, );
         $frame_rms4 -> Entry( -textvariable => \$rms_max, )
                               -> grid( -row => 2, -column => 4, );
@@ -5194,6 +5312,379 @@ sub tor_window {
 }
 
 ###################################################################################################
+###   Draw the window for phi/psi dihedral angles                                               ###
+###################################################################################################
+
+sub phi_psi_window {
+
+    my $top_phi_psi;
+
+    my @list = helper_function();
+    #~ foreach ( @list ) { print "$_\n";};
+
+    if ( !Exists ( $top_phi_psi ) ) {
+
+        $top_phi_psi = $mw -> Toplevel( -title => 'phi/psi dihedral angles', );
+        $top_phi_psi -> geometry("$toplevel_position");
+        $top_phi_psi -> protocol( 'WM_DELETE_WINDOW' => sub { $top_phi_psi -> withdraw }, );
+
+        $frame_phi_psi1 = $top_phi_psi -> Frame() -> pack( -fill => 'x', );
+        my $frame_phi_psi2 = $top_phi_psi -> Frame() -> pack( -fill => 'x', );
+        my $frame_phi_psi3 = $top_phi_psi -> Frame() -> pack( -fill => 'x', -expand => 0, );
+        my $frame_phi_psi4 = $top_phi_psi -> Frame() -> pack( -fill => 'x', );
+
+        checkbuttons ( $frame_phi_psi1 );
+        #~ otherbuttons ( $frame_phi_psi2 );
+
+        $frame_phi_psi3 -> Button( -text => 'Return',
+                               -command => [ $top_phi_psi => 'withdraw' ], )
+                               -> pack( -side => 'left', );
+
+        $phi_psi_run_button = $frame_phi_psi3 -> Button( -text => 'Run',
+                                                         -state => 'disabled',
+                                                         -command => sub {
+
+            $top_phi_psi -> destroy;
+
+            $seg_id_flag = '' if $seg_id_flag;
+
+            foreach ( @seg_ids ) {
+
+                if ( defined ( $_ ) ) {
+
+                    $seg_id_flag = $seg_id_flag . $_;
+                }
+            }
+
+            our $temp_segid;
+            if ( $seg_id_flag =~ /([A-Z])/ ) {
+
+                $temp_segid = $1;
+            }
+            our ( $first_residue, $last_residue, $number_of_residues, $correction, ) = indeces ( "$temp_segid" );
+
+            $flag = " -v -atmid ALLID -torsion indeces.dat";
+
+            &create_dir;
+
+            $text -> insert( 'end', "\nNow calculating phi/psi dihedral angles. Running carma with flag :\n", 'valid', );
+            $text -> see( 'end', );
+            $mw -> update;
+
+            &carma;
+
+            if ( $all_done ) {
+                
+                mv ( "carma.torsions", "phi_psi_dihedral_segid$temp_segid.dat" );
+
+                $text -> insert( 'end', "Calculation finished. Use \"View Results\"\n", 'valid' );
+                $text -> see( 'end', );
+                $image_menu -> configure( -state => 'normal', );
+            }
+            else {
+
+                $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
+                $text -> insert( 'end', getcwd . "\n", 'info', );
+                $text -> see( 'end', );
+            }
+        }, )-> pack( -side => 'right', );
+
+        if ( $active_run_buttons_qfract ) {
+
+            $phi_psi_run_button -> configure( -state => 'normal', );
+        }
+        else {
+
+            $phi_psi_run_button -> configure( -state => 'disabled', );
+        }
+    }
+    else {
+
+        $top_phi_psi -> deiconify;
+        $top_phi_psi -> raise;
+    }
+}
+
+###################################################################################################
+### Get the atom indeces for calculating phi/psi angles                                         ###
+###################################################################################################
+
+sub indeces {
+
+    my $input = shift;
+
+    my (
+        $nofatm, $tot, @at,
+        $at1_num, $at1_res, $at1_nam,
+        $at2_num, $at2_res, $at2_nam,
+        $at3_num, $at3_res, $at3_nam,
+        $at4_num, $at4_res, $at4_nam,
+        $is_C, $is_CA, $is_N,
+        $index1, $index2, );
+
+    open OUT, '+>', 'temp.dat' or die "cannot open indeces.dat for writing : $!\n";
+    open IN, '<', $active_psf or die "cannot open $active_psf for reading : $!\n";
+
+    while ( <IN> ) {
+
+        if ( /(\d+) !NATOM/ ) {
+
+            $nofatm = $1;
+            last;
+        }
+    }
+
+    $tot = 0;
+    for ( my $i = 0 ; $i < $nofatm  ; $i++ ) {
+
+        my $line = <IN>;
+        if ( $line =~ /(\d+)\s+$input\s+(\d+)\s+\w+\s+(\w+)/ ) {
+
+            if ( $3 eq "N" || $3 eq "C" || $3 eq "CA" ) {
+
+                $at[ $tot ] = $1 . " " . $2 . " " . $3;
+                $tot++;
+            }
+        }
+        #~ else {
+            #~
+            #~ die "Unexpected line in PSF. Giving up ...\n$line\n";
+        #~ }
+    }
+
+    #~ print "Found $tot N-CA-C atoms ...\n";
+
+    if ( $tot % 3 != 0 ) {
+
+        die "Unexpected number of residues. Abort.\n";
+    }
+    if ( $tot == 0 ) {
+
+        die "No C CA N atoms found in the psf. Abort.\n";
+    }
+
+    for ( my $i=0 ; $i < $tot ; $i += 3 ) {
+
+        if ( $at[ $i ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at1_num = $1;
+            $at1_res = $2;
+            $at1_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        if ( $at[ $i+1 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at2_num = $1;
+            $at2_res = $2;
+            $at2_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        if ( $at[ $i+2 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at3_num = $1;
+            $at3_res = $2;
+            $at3_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        if ( $at2_res ne $at1_res || $at2_res ne $at3_res || $at3_res ne $at1_res ) {
+
+            die "Panic. Get help.\n";
+        }
+
+        if ( $at1_nam ne "N" || $at2_nam ne "CA" || $at3_nam ne "C" ) {
+
+            #~ print "Will change order of atoms for residue $at2_res\n";
+
+            if ( $at1_nam eq "N" ) {
+
+                $is_N = 0;
+            }
+            if ( $at1_nam eq "CA" ) {
+
+                $is_CA = 0;
+            }
+            if ( $at1_nam eq "C" ) {
+
+                $is_C = 0;
+            }
+
+            if ( $at2_nam eq "N" ) {
+
+                $is_N = 1;
+            }
+            if ( $at2_nam eq "CA" ) {
+                $is_CA = 1;
+            }
+            if ( $at2_nam eq "C" ) {
+                $is_C = 1;
+            }
+
+            if ( $at3_nam eq "N" ) {
+                $is_N = 2;
+            }
+            if ( $at3_nam eq "CA" ) {
+                $is_CA = 2;
+            }
+            if ( $at3_nam eq "C" ) {
+                $is_C = 2;
+            }
+
+            my $N_line = $at[ $i + $is_N ];
+            my $C_line = $at[ $i + $is_C ];
+            my $CA_line = $at[ $i + $is_CA ];
+
+            $at[ $i   ] = $N_line;
+            $at[ $i+1 ] = $CA_line;
+            $at[ $i+2 ] = $C_line;
+        }
+    }
+
+    for ( my $i=0 ; $i <= ($tot / 3 - 2) ; $i++ ) {
+
+        $index1 = $i * 3;
+        $index2 = $i * 3 + 2;
+
+        if ( $at[ $index1 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at1_num = $1;
+            $at1_res = $2;
+            $at1_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        if ( $at[ $index1+1 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at2_num = $1;
+            $at2_res = $2;
+            $at2_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        if ( $at[ $index1+2 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at3_num = $1;
+            $at3_res = $2;
+            $at3_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        if ( $at[ $index1+3 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at4_num = $1;
+            $at4_res = $2;
+            $at4_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        printf OUT "%6d %6d %6d %6d  # psi for residue %4d\n", $at1_num, $at2_num, $at3_num, $at4_num, $at3_res;
+
+        if ( $at[ $index2 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at1_num = $1;
+            $at1_res = $2;
+            $at1_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+        if ( $at[ $index2+1 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at2_num = $1;
+            $at2_res = $2;
+            $at2_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+        if ( $at[ $index2+2 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at3_num = $1;
+            $at3_res = $2;
+            $at3_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+        if ( $at[ $index2+3 ] =~ /(\d+) (\d+) (\w+)/ ) {
+
+            $at4_num = $1;
+            $at4_res = $2;
+            $at4_nam = $3;
+        }
+        else {
+
+            die "Something is wrong. Get help.\n";
+        }
+
+        printf OUT "%6d %6d %6d %6d  # phi for residue %4d\n", $at1_num, $at2_num, $at3_num, $at4_num, $at4_res;
+    }
+    seek OUT, 0, 0;
+
+    open OUT2, '+>', 'indeces.dat' or die "Cannot open indeces.dat for writing : $!\n";
+
+    while ( <OUT> ) {
+
+		print OUT2 $_ unless ( $. == 1 or eof );
+	}
+	unlink ( 'temp.dat', );
+
+	seek OUT2, 0, 0;
+
+	my @resid_span;
+	my $i = 0;
+	while ( <OUT2> ) {
+
+		if ( /p.i for residue\s+(\d+)/ ) {
+
+			$resid_span[$i] = $1;
+			$i++;
+		}
+	}
+
+	my $first_residue = $resid_span[0];
+	my $last_residue = $resid_span[scalar @resid_span - 1];
+	my $num_residues = ( scalar @resid_span / 2 );
+	my $correction = 0;
+	if ( $first_residue != 2 ) {
+
+		$correction = $first_residue - 2;
+	}
+
+    close OUT2;
+    close IN;
+    close OUT;
+
+    return ( $first_residue, $last_residue, $num_residues, $correction, );
+}
+
+###################################################################################################
 ###   Helper function for the distances, bending and torsion angles functions                   ###
 ###################################################################################################
 
@@ -5501,6 +5992,12 @@ sub fit_window {
     my $ref_atom_num = '';
     my $fit_plot = '';
     my $index = '';
+    my $index_confirmation = '';
+    my $fit_run_button;
+
+    my $index_atm_id;
+    my $index_atm_id_flag;
+    my @index_seg_ids;
 
     our $top_fit;
 
@@ -5519,12 +6016,91 @@ sub fit_window {
         my $frame_fit2 = $top_fit -> Frame() -> pack( -fill => 'x', );
         my $frame_fit3 = $top_fit -> Frame() -> pack( -fill => 'x', );
         my $frame_fit5 = $top_fit -> Frame() -> pack( -fill => 'x', );
-        my $frame_fit6 = $top_fit -> Frame() -> pack( -fill => 'x', );
 
         $index_bar_count = 0;
         $frame_fit6[$index_bar_count] = $top_fit -> Frame() -> pack();
-        $frame_fit6[0] -> Label( -text => "\n", )
-                                 -> grid ( -row => 0, -column => 3, );
+
+        my $frame_fit6a = $frame_fit6[0] -> Frame() -> grid( -row => 0, -column => 2, -columnspan => 6, );
+
+##########################################################################################################
+        #~ $frame_fit6a -> Label( -text => "\nATOMS TO USE FOR THE FITTING\n", -font => "$font_20", )
+                               #~ -> grid( -row => 0, -column => 2, );
+
+        $frame_fit6a -> Label( -text => 'Atmid Selection' ) -> grid( -row => 1, -column => 2, );
+
+        my @index_radiobuttons = ( 'CA', 'Backbone', 'Heavy', 'All atoms', 'Custom selection', );
+        my @index_radio_b;
+
+        for my $i ( 0 .. $#index_radiobuttons ) {
+
+            $index_radio_b[$i] = $frame_fit6a -> Radiobutton( -text => $index_radiobuttons[$i],
+                                                              -value => $index_radiobuttons[$i],
+                                                              -variable => \$index_atm_id,
+                                                              -command => sub {
+
+                if ( $index_atm_id eq 'CA' ) {
+
+                    $index_atm_id_flag = "";
+                    $custom_selection = 0;
+                }
+                elsif ( $index_atm_id eq 'Backbone' ) {
+
+                    $index_atm_id_flag = " -atmid C -atmid CA -atmid N -atmid O";
+                    $custom_selection = 0;
+                }
+                elsif ( $index_atm_id eq 'Heavy' ) {
+
+                    $index_atm_id_flag = " -atmid HEAVY";
+                    $custom_selection = 0;
+                }
+                elsif ( $index_atm_id eq 'All atoms' ) {
+
+                    $index_atm_id_flag = " -atmid ALLID";
+                    $custom_selection = 0;
+                }
+            }, );
+
+            $index_radio_b[$i] -> grid( -row => 2, -column => $i, );
+        }
+
+        $index_radio_b[4] -> configure( -command => \&raise_custom_window, );
+
+        $frame_fit6a -> Label( -text => "Segid Selection", ) -> grid( -row => 3, -column => 2, );
+
+        my @index_check_b;
+
+        my $index_count = 0;
+
+        for my $j ( 0 .. $#unique_chain_ids ) {
+
+            $index_check_b[$j] = $frame_fit6a -> Checkbutton( -text => $unique_chain_ids[$j],
+                                                              -variable => \$index_seg_ids[$j],
+                                                              -offvalue => '',
+                                                              -onvalue => "$unique_chain_ids[$j]",
+                                                              -command => sub {
+             }, );
+
+            $index_check_b[$j] -> grid( -row => 4, -column => $j, );
+        }
+
+        my @index_otherbuttons = ( 'All', 'Change', );
+        my @index_other;
+
+        $frame_fit6a -> Label( -text => 'Resid Selection', ) -> grid( -row => 5, -column => 2, );
+
+        for my $k ( 0 .. $#index_otherbuttons ) {
+
+            $index_other[$k] = $frame_fit6a -> Radiobutton( -text => "$index_otherbuttons[$k]",
+                                                                 -value => $index_otherbuttons[$k], );
+
+            $index_other[$k] -> grid( -row => 6, -column => $k, );
+        }
+
+        $index_other[0] -> configure( -command => sub { $have_custom_psf = 'no'; } );
+        $index_other[1] -> configure( -command => \&resid_window, );
+####################################################################################################
+        #~ $frame_fit6[0] -> Label( -text => "\n", )
+                                 #~ -> grid ( -row => 0, -column => 3, );
         $frame_fit6[0] -> Button( -text => 'Confirm',
                                   -width => 10,
                                   -command => sub {
@@ -5589,8 +6165,11 @@ sub fit_window {
                 unlink ( "$dcd_name.dcd.0000001.dat" );
                 unlink ( "$dcd_name.dcd.0000001.ps" );
 
-                &create_fit_index;
+                create_fit_index( $index_atm_id, @index_seg_ids, );
                 $index = ' -index';
+                $index_confirmation = 1;
+
+                $fit_run_button -> configure( -state => 'normal', );
             }
             else {
 
@@ -5606,7 +6185,7 @@ sub fit_window {
                                                  -command => sub {
 
             $index_bar_count++;
-            $frame_fit6[$index_bar_count] = $top_fit -> Frame() -> pack( -anchor => 'w', ) unless ( $index_bar_count == 0 );
+            $frame_fit6[$index_bar_count] = $top_fit -> Frame() -> pack( -anchor => 'w', );# unless ( $index_bar_count == 0 );
 
             &add_index_bar;
 
@@ -5647,6 +6226,15 @@ sub fit_window {
         my $index_button = $frame_fit4 -> Checkbutton( -text => 'Perform selective fitting',
                                                        -variable => \$index_bool,
                                                        -command => sub {
+
+            if ( $fit_run_button -> cget( -state, ) eq 'normal' and not $index_confirmation ) {
+
+                $fit_run_button -> configure( -state => 'disabled', );
+            }
+            elsif ( $fit_run_button -> cget( -state, ) eq 'disabled' ) {
+
+                $fit_run_button -> configure( -state => 'normal', );
+            }
 
             if ( $index_bool ) {
 
@@ -5690,8 +6278,10 @@ sub fit_window {
                                -command => sub { $top_fit -> withdraw; }, )
                                -> pack( -side => 'left', );
 
-        $frame_fit7 -> Button( -text => 'Run',
-                               -command => sub {
+        $fit_run_button = $frame_fit7 -> Button( -text => 'Run',
+                                                 -command => sub {
+
+            $top_fit -> destroy;
 
             $seg_id_flag = '' if $seg_id_flag;
 
@@ -5725,9 +6315,9 @@ sub fit_window {
                 $text -> see( 'end', );
                 $image_menu -> configure( -state => 'normal', );
 
-                my $response = $frame_fit1 -> messageBox( -message => "Would you like to use this PSF - DCD pair in other calculations?",
-                                                          -type => 'yesno',
-                                                          -icon => 'question', );
+                my $response = $mw -> messageBox( -message => "Would you like to use this PSF - DCD pair in other calculations?",
+                                                  -type => 'yesno',
+                                                  -icon => 'question', );
 
                 if ( $response eq "Yes" ) {
 
@@ -5773,12 +6363,11 @@ sub fit_window {
                     #~ close OUT;
                     #~ close PSF;
 
-                $top_fit -> withdraw;
                 }
                 else {
 
-                    $frame_fit1 -> messageBox( -type => "ok",
-                                               -message => "These files will not be used in any calculations and will be overwritten next time you perform a fitting", );
+                    $mw -> messageBox( -type => "ok",
+                                       -message => "These files will not be used in any calculations and will be overwritten next time you perform a fitting", );
                 }
 
                 if ( $fit_plot ) {
@@ -5789,7 +6378,7 @@ sub fit_window {
             }
             else {
 
-                $top_fit -> withdraw;
+                $top_fit -> destroy;
                 $text -> insert( 'end', "\nSomething went wrong. For details check carma.out.copy located in :\n", 'error', );
                 $text -> insert( 'end', getcwd . "\n", 'info', );
                 $text -> see( 'end', );
@@ -5810,6 +6399,12 @@ sub fit_window {
 
 sub create_dir {
 
+    my $input;
+    if ( $_[0] and $_[0] eq 'stride' ) {
+
+        $input = shift;
+    }
+
     #~ our $new_psf;
     my $abs_path = abs_path($new_psf) if ( $new_psf );
 
@@ -5820,7 +6415,10 @@ sub create_dir {
     # subroutine with a success status     #
     if ( getcwd =~ /carma_results/ ) {
 
-        return(0);
+        unless ( $input and $input eq 'stride' ) {
+
+            return(0);
+        }
     }
     # If the folder does not exist in the  #
     # Cwd it is created and a subfolder    #
@@ -5833,8 +6431,16 @@ sub create_dir {
 
     if ( -d -w $launch_dir ) {
 
-        mkpath ( "$launch_dir/$timeStamp", 0, 0755, );
-        chdir ( "$launch_dir/$timeStamp" );
+        if ( $input and $input eq 'stride' ) {
+
+            mkpath ( "$launch_dir/$timeStamp/tmp", 0, 0755, );
+            chdir ( "$launch_dir/$timeStamp/tmp" );
+        }
+        else {
+
+            mkpath ( "$launch_dir/$timeStamp", 0, 0755, );
+            chdir ( "$launch_dir/$timeStamp" );
+        }
 
         # After the folder(s) have been made   #
         # they are made the Cwd and links to   #
@@ -6008,9 +6614,9 @@ sub checkbuttons {
 
         $_[0] -> Label( -text => 'At least one segid selection required', -font => "$font_20", ) -> pack;
     }
-    elsif ( $frame_qfract2 && $_[0] eq $frame_qfract2 ) {
+    elsif ( ( $frame_qfract2 && $_[0] eq $frame_qfract2 ) or ( $frame_phi_psi1 and $_[0] eq $frame_phi_psi1 ) ) {
 
-        $_[0] -> Label( -text => 'You must select one segid', -font => "$font_20", ) -> pack;
+        $_[0] -> Label( -text => 'You must select only one segid', -font => "$font_20", ) -> pack;
     }
     else {
 
@@ -6051,11 +6657,13 @@ sub checkbuttons {
 
                  $active_run_buttons_qfract = 1;
                  $qfract_run_button -> configure( -state => 'normal', ) if ( $qfract_run_button );
+                 $phi_psi_run_button -> configure( -state => 'normal', ) if ( $phi_psi_run_button );
              }
              elsif ( $count != 1 ) {
 
                  $active_run_buttons_qfract = 0;
                  $qfract_run_button -> configure( -state => 'disabled', ) if ( $qfract_run_button );
+                 $phi_psi_run_button -> configure( -state => 'disabled', ) if ( $phi_psi_run_button );
              }
          }, );
 
@@ -6119,12 +6727,117 @@ sub otherbuttons {
 }
 
 ###################################################################################################
+###   Create the scatter plot of the input file                                                 ###
+###################################################################################################
+
+sub scatter_plot {
+    
+    open IN, '<', 'phi_psi_temp_angles' or die $!;
+	open CONVERTED_ANGLES, '+>', "converted_angles" or die $!;
+    
+    while ( my $line = <IN> ) {
+        
+        if ( $line =~ /(\s*)(\+|\-)(\d+.\d+)\s+(\s*)(\+|\-)(\d+.\d+)/ ) {
+            
+            chomp $line;
+            
+            my $phi_space = $1;
+            my $phi_sign = $2;
+            my $phi_value = "$2$3";
+            
+            my $psi_space = $4;
+            my $psi_sign = $5;
+            my $psi_value = "$5$6";
+            
+             $line = sprintf "%8.4f %8.4f\n", ( ( ( $phi_value + 180 ) / 0.6 ), ( ( $psi_value - 180 ) / -0.6 ), );
+             
+             print CONVERTED_ANGLES $line;
+         }
+     }
+
+    close IN;
+    unlink ( "phi_psi_temp_angles" ,);
+
+	my $mw = MainWindow -> new( -title => "Results Plot", );
+
+    $mw -> configure( -menu => my $menubar = $mw -> Menu );
+    my $file = $menubar -> cascade( -label => '~File' );
+
+	my $size = 600;
+
+	my $canvas = $mw->Canvas( -cursor=>"crosshair", -background=>"black",
+				  -width=>$size, -height=>$size )->pack;
+
+    $mw -> protocol( 'WM_DELETE_WINDOW' => sub { $canvas -> destroy; $mw -> destroy; });
+    
+    $file -> command(
+        -label       => 'Save As Postscript',
+        -accelerator => 'Ctrl-s',
+        -underline   => 0,
+        -command     => sub {
+
+            $canvas -> update;
+            $canvas -> postscript( -file => "ramaplot.eps", -colormode => 'color', );
+        }
+    );
+    $file->separator;
+    $file->command(
+        -label       => "Close",
+        -accelerator => 'Ctrl-q',
+        -underline   => 0,
+        -command     => sub { $mw -> destroy; },
+    );
+
+    $mw -> bind( $mw, "<Control-s>" => sub {
+
+            $canvas -> update;
+            $canvas -> postscript( -file => "ramaplot.eps", -colormode => 'color', );
+        }
+    );
+
+    $mw -> bind( $mw, "<Control-q>" => sub { $mw -> destroy; }
+    );
+
+	$canvas -> createPolygon( 0, 228.5, 65.33, 273.17, 156.67, 273.17, 176.17, 224, 176.17, 179.17, 226.17, 130, 226.17, 31.5, 221.83, 0.17, 0, 0, -fill => '#252525', );
+	$canvas -> createPolygon( 39.17, 147.83, 182.67, 147.83, 208.83, 112, 208.83, 11.33, 71.75, 11.33, 71.83, 40.33, 39.17, 74, 39.17, 147.83, -fill => '#404040', );
+	$canvas -> createPolygon( 0, 358.17, 26.17, 371.5, 78.33, 371.5, 117.5, 353.67, 121.83, 335.67, 226.17, 335.67, 226.17, 418.5, 0, 418.5, -fill => '#252525', );
+	$canvas -> createPolygon( 39.17, 400.67, 208.63, 400.67, 208.83, 367, 132.67, 367, 93.5, 385, 39.17, 385, 39.17, 400.67, -fill => '#404040', );
+	$canvas -> createPolygon( 0, 573, 174, 573, 221.83, 600, 0, 600, -fill => '#252525', );
+	$canvas -> createPolygon( 404.33, 275.5, 404.33, 138.83, 376, 168, 376, 255.33, 404.33, 275.5, -fill => '#252525', );
+    
+	$canvas -> createLine( 0, 300, 600, 300, -fill => 'white', );
+	$canvas -> createLine( 300, 0, 300, 600, -fill => 'white', );
+    
+    seek CONVERTED_ANGLES, 0, 0;
+    
+    while ( <CONVERTED_ANGLES> ) {
+        
+        my $phi_angle = substr $_, 0, 8;
+        my $psi_angle = substr $_, 9, 8;
+        
+        #~ $phi_angle = int ( $phi_angle + 0.5 );
+        #~ $psi_angle = int ( $psi_angle + 0.5 );
+
+        #~ my $i = $canvas -> Photo( -width => 600, -height => 600, );
+        #~ $canvas -> createImage( 300, 300, -image => $i, );
+
+        #~ $i -> put( '#f3922e', -to => $phi_angle, $psi_angle, $phi_angle + 1, $psi_angle + 1 );
+        
+        $canvas -> createText( $phi_angle, $psi_angle, -fill => '#f3922e', -text => '.', );
+    }
+    
+	close CONVERTED_ANGLES;
+    unlink ( "converted_angles", );
+}
+
+###################################################################################################
 ###   Create the plot of the input matrix                                                       ###
 ###################################################################################################
 
 sub plot {
 
     my $input = shift;
+    my $graph;
     my ( @frames,    @Q,    @Qs,    @q,
          @values,    @data, @step,  @legends,
          @Schlitter, @Andricioaei, );
@@ -6132,6 +6845,36 @@ sub plot {
     our $image_top;
 
     my $mw = MainWindow -> new( -title => "Results Plot", );
+    $mw -> configure( -menu => my $menubar = $mw -> Menu );
+    my $file = $menubar -> cascade( -label => '~File' );
+
+    $file -> command(
+        -label       => 'Save As Postscript',
+        -accelerator => 'Ctrl-s',
+        -underline   => 0,
+        -command     => sub {
+
+            $graph -> update;
+            $graph -> postscript( -file => "$input.eps", -colormode => 'color', );
+        }
+    );
+    $file->separator;
+    $file->command(
+        -label       => "Close",
+        -accelerator => 'Ctrl-q',
+        -underline   => 0,
+        -command     => sub { $mw -> destroy; },
+    );
+
+    $mw -> bind( $mw, "<Control-s>" => sub {
+
+            $graph -> update;
+            $graph -> postscript( -file => "$input.eps", -colormode => 'color', );
+        }
+    );
+
+    $mw -> bind( $mw, "<Control-q>" => sub { $mw -> destroy; }
+    );
 
     my $screenwidth = $mw -> screenwidth;
     my $interval;
@@ -6191,22 +6934,20 @@ sub plot {
         if ( $linux || $mac ) {
 
             my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6, );
-            
-            my $graph;
-            
+
             if ( $input =~ /variance/ ) {
-                
+
                 open VARIANCE, '<', "carma.variance_explained.dat" or die "Cannot open carma.variance_explained.dat for reading : $!\n";
-                
+
                 my $i = 0;
                 while ( <VARIANCE> ) {
-                    
+
                     $i++;
                 }
                 close VARIANCE;
-                
+
                 if ( $i < 2 ) {
-                    
+
                     $mw -> messageBox( -message => 'Only one line read from the file carma.variance_explained.dat. Will not plot', );
                     $mw -> destroy;
                     return;
@@ -6223,7 +6964,7 @@ sub plot {
                                              -> pack( qw/ -fill both -expand 1/ );
             }
             else {
-                
+
                 $graph = $mw -> PlotDataset( -width => $mw -> screenwidth,
                                              -height => $mw -> screenheight,
                                              -background => 'snow',
@@ -6232,7 +6973,7 @@ sub plot {
                                              -plotTitle => [ $input, 20, ] )
                                              -> pack( qw/ -fill both -expand 1/ );
             }
-            
+
             if ( $input =~ /qfract/i ) {
 
                 $dataset1 = LineGraphDataset -> new( -name => 'Q',
@@ -6283,6 +7024,8 @@ sub plot {
             }
 
             $graph -> plot;
+
+
         }
         else {
 
