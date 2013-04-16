@@ -34,4 +34,4 @@ program to the path.
 
 Most of the files that are produced by grcarma are PDB or postscript
 files. grcarma depends on external programs in order to open these
-files. More info is available in the documentation.
+files. More info is available in the [documentation] (https://github.com/pkoukos/grcarma/wiki/grcarma%20documentation#results).
