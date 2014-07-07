@@ -1,3 +1,7 @@
+# **INSTALL**
+
+Make sure you follow the installation [instructions](https://github.com/pkoukos/grcarma/blob/master/INSTALL.md).
+
 # **NAME**
 
 grcarma - GUI to molecular dynamics trajectories analysis program carma
