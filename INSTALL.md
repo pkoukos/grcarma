@@ -11,8 +11,8 @@ files. More info is available in the [documentation]
 ## GNU/Linux ##
 
 In order to obtain the archive specific for your platform you should follow
-this [link](https://github.com/pkoukos/grcarma/blob/master/linux/grcarma_linux.tar.gz)
-and click on __'View raw'__. The file download should begin.
+this [link](https://github.com/pkoukos/grcarma/blob/master/linux/grcarma_linux.tar.gz?raw=true)
+and then save the file. The file download should begin.
 
 After the download is complete you will need to open a terminal to the location the files 
 were downloaded and extract the binary files from their archives.
@@ -46,8 +46,8 @@ provided of course that you copied the executables to that folder.
 ## macOSX ##
 
 In order to obtain the archive specific for your platform you should follow
-this [link](https://github.com/pkoukos/grcarma/blob/master/linux/grcarma_macosx.tar.gz)
-and click on __'View raw'__. The file download should begin.
+this [link](https://github.com/pkoukos/grcarma/blob/master/macosx/grcarma_macosx.tar.gz?raw=true)
+and then save the file. The file download should begin.
 
 After the download is complete you will need to open a terminal to the location the files 
 were downloaded and extract the binary files from their archives.
@@ -81,8 +81,8 @@ provided of course that you copied the executables to that folder.
 
 It is _strongly_ recommended that windows users use the installer located
 in the windows subfolder of the top directory. You can download the installer
-by following this [link] (https://github.com/pkoukos/grcarma/blob/master/windows/grcarma_installer.exe)
-and clicking on __'View raw'__.
+by following this [link] (https://github.com/pkoukos/grcarma/blob/master/windows/grcarma_installer.exe?raw=true)
+and then save the file. The file download should begin.
 
 The installer will guide you through each step of the installation process and automatically
 export the location that will be specified for the installation of the program to the path.
