@@ -1,6 +1,7 @@
 # **INSTALL**
 
-Make sure you follow the installation [instructions](https://github.com/pkoukos/grcarma/blob/master/INSTALL.md).
+Make sure you follow the installation
+[instructions](https://github.com/pkoukos/grcarma/blob/master/INSTALL.md).
 
 # **NAME**
 
@@ -14,7 +15,8 @@ grcarma.exe [ PSF FILE ] [ DCD FILE ]
 
 # **DESCRIPTION**
 
-A paper describing the program in greater detail is available from [JCM](http://dx.doi.org/10.1002/jcc.23381). 
+A paper describing the program in greater detail is available from
+[JCC](http://dx.doi.org/10.1002/jcc.23381). 
 
 grcarma is a GUI to molecular dynamics trajectories analysis program 
 [carma](http://utopia.duth.gr/~glykos/Carma.html). It is written in 
