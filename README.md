@@ -3,6 +3,10 @@
 Make sure you follow the installation
 [instructions](https://github.com/pkoukos/grcarma/blob/master/INSTALL.md).
 
+# **Support**
+
+You can always submit your questions/bug reports etc. and receive mailing list support through [this google group](http://groups.google.com/group/carma-molecular-dynamics "Carma Mailing List").
+
 # **NAME**
 
 grcarma - GUI to molecular dynamics trajectories analysis program carma
