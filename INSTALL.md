@@ -6,7 +6,7 @@ Administator privileges are required for linux, macOSX and windows OS's
 Most of the files that are produced by grcarma are PDB or postscript
 files. grcarma depends on external programs in order to open these
 files. More info is available in the [documentation] 
-(https://github.com/pkoukos/grcarma/wiki/grcarma%20documentation#results).
+(https://github.com/pkoukos/grcarma/wiki/grcarma%20documentation).
 
 ## GNU/Linux ##
 
