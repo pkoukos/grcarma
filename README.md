@@ -31,6 +31,8 @@ with  a .psf / .dcd pair of files as arguments. Alternatively, the
 program can be run without any arguments and the user will be prompted
 to specify the files to use for the analyses, through a graphical interface.
 
+Versions >= 0.2 directly interface with the programs [GoodTuringMD](https://github.com/pkoukos/GoodTuringMD) and [cluster5D](https://github.com/athbaltzis/cluster5D).
+
 # **AUTHOR**
 
 grcarma has been developed by Panagiotis Koukos, under the supervision of 
