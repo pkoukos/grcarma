@@ -29,19 +29,17 @@ Copy the grcarma executable and the carma executable to a location included in t
 
     /usr/local/bin
 
-The terminal command that will accomplish this is :
+Before copying the files make sure that their permissions allow for execution. If you are not sure this then just run
+the following command in the grcarma_linux directory
 
-    sudo cp grcarma /usr/local/bin       , for grcarma and 
+    chmod 755 *
+
+The terminal command that will copy the files to the '/usr/local/bin/' directory is :
+
+    sudo cp grcarma /usr/local/bin       , for grcarma
+    sudo cp cluster5D /usr/local/bin     , for cluster5D and
     sudo cp carma /usr/local/bin         , for 32-bit carma or
     sudo cp carma64 /usr/local/bin/carma , for 64-bit carma
-
-If the file permissions don't allow the execution of the files then you
-need to change their permissions with a command like :
-
-    sudo chmod 755 /usr/local/bin/grcarma , for grcarma and 
-    sudo chmod 755 /usr/local/bin/carma   , for carma
-
-provided of course that you copied the executables to that folder.
 
 ## macOSX ##
 
@@ -64,18 +62,16 @@ Copy the grcarma executable and the carma executable to a location included in t
 
     /usr/local/bin
 
-The terminal command that will accomplish this is :
+Before copying the files make sure that their permissions allow for execution. If you are not sure this then just run
+the following command in the grcarma_linux directory
 
-    sudo cp grcarma /usr/local/bin       , for grcarma and 
+    chmod 755 *
+
+The terminal command that will copy the files to the '/usr/local/bin/' directory is :
+
+    sudo cp grcarma /usr/local/bin       , for grcarma
+    sudo cp cluster5D /usr/local/bin     , for cluster5D and
     sudo cp carma /usr/local/bin         , for carma
-
-If the file permissions don't allow the execution of the files then you
-need to change their permissions with a command like :
-
-    sudo chmod 755 /usr/local/bin/grcarma , for grcarma and 
-    sudo chmod 755 /usr/local/bin/carma   , for carma
-
-provided of course that you copied the executables to that folder.
 
 ## Windows ##
 
