@@ -378,12 +378,12 @@ if ( $linux or $mac ) {
 }
 if ( $linux or $mac ) {
     if ( `carma` =~ /carma v.(\d.\d)/ ) {
-        $carma_version = $1;
+        $carma_version = $1 * 1;
     }
 }
 else {
     if ( `carma.exe` =~ /carma v.(\d.\d)/ ) {
-        $carma_version = $1;
+        $carma_version = $1 * 1;
     }
 }
 
@@ -399,7 +399,7 @@ if ( @ARGV ) {
         }
         else {
             if ( `carma` =~ /carma v.(\d.\d)/ ) {
-                $carma_version = $1;
+                $carma_version = $1 * 1;
             }
         }
     }
@@ -847,7 +847,7 @@ $text -> tagConfigure( 'center', -justify => 'center', -foreground => 'red3', );
 # Also tie the STDOUT to the textbox   #
 #~ tie *STDOUT, 'Tk::Text', $text;
 
-if ( $carma_version and $carma_version ne '1.3' ) {
+if ( $carma_version and $carma_version < 1.3 ) {
     $text -> insert( 'end', "\nDetected old carma version ($carma_version).\ngrcarma is" .
                             " designed to run with the latest version of carma.\nPlease" .
                             " consider upgrading.\n", 'center' );
