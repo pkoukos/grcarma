@@ -40,7 +40,7 @@ For more information, see L<https://github.com/pkoukos/grcarma>
 
 =head1 LICENSE
 
-Copyright (c) 2012-2014, Panagiotis I. Koukos
+Copyright (c) 2012-2016, Panagiotis I. Koukos
 
 All rights reserved.
 
@@ -249,6 +249,9 @@ if ( $linux || $mac ) {
         if ( not $ps_viewer ) {
             if ( `which evince 2> /dev/null` ) {
                 $ps_viewer = "evince";
+            }
+            elsif ( `which xreader 2> /dev/null` ) {
+                $ps_viewer = "xreader";  # mint got rid of evince.
             }
             elsif ( `which gv 2> /dev/null` ) {
                 $ps_viewer = "gv";
@@ -885,7 +888,7 @@ if ( $linux || $mac  ) {
         }
     }
     else {
-        $text -> insert( 'end', "stride executable not located. Secondary structure analysis disabled.\n", 'error' );
+        $text -> insert( 'end', "* stride executable not located. Secondary structure analysis disabled.\n", 'error' );
     }
 
     if ( $terminal and $linux ) {
@@ -4655,6 +4658,8 @@ sub image_window {
                 system ( "$terminal -fg white -bg black -geometry 80x25+800+200 -e sh -c \"sleep 30 | cat last_carma_run.log\"" );
             }
             elsif ( $terminal eq 'gnome-terminal' ) {
+                # Careful. The default behaviour of gnome-terminal wrt the handling of launching it with a
+                # command might have changed recently. Point to xterm if that presents.
                 system ( "$terminal --geometry 80x25+800+200 -x sh -c 'sleep 30 | cat last_carma_run.log'" );
             }
         }, ) -> pack( -side => 'left', );
@@ -5504,9 +5509,9 @@ sub create_fit_index {
                 $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)(C|CA|N|O)(\s+.*)$};
             }
             elsif ( $atmid =~ /heavy/i ) {
-                $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)([^H].*)(\s+.*)$};
+                $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)([^H]+?)(\s+.*)$};
             }
-            elsif ( $atmid =~ /allid/i ) {
+            elsif ( $atmid =~ /all/i ) {
                 $fit_regex = qr{^(\s+\d+\s+)(@segids)(\s+)(\d+)(\s+\w+\s+)(\w+)(\s+.*)$};
             }
             else {
@@ -5529,9 +5534,9 @@ sub create_fit_index {
                 $fit_regex = qr{^(\s+\d+\s+)(\w+)(\s+)(\d+)(\s+\w+\s+)(C|CA|N|O)(\s+.*)$};
             }
             elsif ( $atmid =~ /heavy/i ) {
-                $fit_regex = qr{^(\s+\d+\s+)(\w+)(\s+)(\d+)(\s+\w+\s+)([^H].*)(\s+.*)$};
+                $fit_regex = qr{^(\s+\d+\s+)(\w+)(\s+)(\d+)(\s+\w+\s+)([^H]+?)(\s+.*)$};
             }
-            elsif ( $atmid =~ /allid/i ) {
+            elsif ( $atmid =~ /all/i ) {
                 $fit_regex = qr{^(\s+\d+\s+)(\w+)(\s+)(\d+)(\s+\w+\s+)(\w+)(\s+.*)$};
             }
             else {
