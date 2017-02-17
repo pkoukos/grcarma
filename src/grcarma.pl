@@ -4384,7 +4384,7 @@ sub stride_window {
                 }
 
                 while ( <PSF> ) {
-                    if ( /\d+\s+([A-Z])\s+(\d+)\s+\w+\s+\w+/ ) {
+                    if ( /\d+\s+(\S+)\s+(\d+)\s+\w+\s+\w+/ ) {
                         $residues{$1} = $2;
                     }
                 }
