@@ -110,6 +110,8 @@ use File::Copy 'cp', 'mv';
 use List::MoreUtils 'uniq';
 use List::Util 'min', 'max';
 
+use POSIX;
+
 # Get the absolute path of the directory the script was launched from
 # as well as its permissions along with the permissions of the directory
 # itself.
@@ -8792,26 +8794,10 @@ sub plot {
         close IN;
 
         my $tick;
-        if ( $frames[$i-1] <= 10 ) {
-            $tick = 1;
-        }
-        elsif ( $frames[$i-1] <= 100 ) {
-            $tick = 10;
-        }
-        elsif ( $frames[$i-1] <= 1000 ) {
-            $tick = 100;
-        }
-        elsif ( $frames[$i-1] <= 10000 ) {
-            $tick = 1000;
-        }
-        elsif ( $frames[$i-1] <= 100000 ) {
-            $tick = 10000;
-        }
-        elsif ( $frames[$i-1] <= 1000000 ) {
-            $tick = 100000;
-        }
-        elsif ( $frames[$i-1] <= 10000000 ) {
-            $tick = 1000000;
+        my $number_of_digits = length($frames[$i-1]) - 1;
+        $tick = 10 ** $number_of_digits;
+        if ( $frames[$i-1]/$tick <= 2 ) {
+            $tick = $tick / 10;
         }
 
         my ( $dataset1, $dataset2, $dataset3, $dataset4, $dataset5, $dataset6, );
