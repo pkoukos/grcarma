@@ -4440,7 +4440,7 @@ sub stride_window {
                         `weblogo -C '#600080' I 'pi helix' -C '#6080FF' B 'b turn' -C '#6080FF' T 'b turn' -C '#A00080' G '3-10 helix' -C '#FF0080' H 'a-helix' -C 'green' C 'coil' -C '#FFC800' E 'sheet' --composition none -a 'GTCHEBI' < temp.dat > weblogo.sec_structure_graph.eps`;
                     }
                     elsif ( $seqlogo ) {
-                        `seqlogo -Y -C 40 -w 20 -f temp.dat > weblogo.sec_structure_graph.eps`;
+                        `seqlogo -c -Y -C 40 -w 20 -f temp.dat > weblogo.sec_structure_graph.eps`;
                     }
                 }
 
@@ -4505,7 +4505,7 @@ sub stride_window {
                             `weblogo -C '#600080' I 'pi helix' -C '#6080FF' B 'b turn' -C '#6080FF' T 'b turn' -C '#A00080' G '3-10 helix' -C '#FF0080' H 'a-helix' -C 'green' C 'coil' -C '#FFC800' E 'sheet' --composition none -a 'GTCHEBI' < stride_chain$_.dat > weblogo.sec_structure_graph_chain$_.eps`;
                         }
                         elsif ( $seqlogo ) {
-                            `seqlogo -Y -C 40 -w 20 -f stride_chain$_.dat > weblogo.sec_structure_graph_chain$_.eps`;
+                            `seqlogo -c -Y -C 40 -w 20 -f stride_chain$_.dat > weblogo.sec_structure_graph_chain$_.eps`;
                         }
                     }
 
