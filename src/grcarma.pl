@@ -40,7 +40,7 @@ For more information, see L<https://github.com/pkoukos/grcarma>
 
 =head1 LICENSE
 
-Copyright (c) 2012-2016, Panagiotis I. Koukos
+Copyright (c) 2012-2017, Panagiotis I. Koukos
 
 All rights reserved.
 
