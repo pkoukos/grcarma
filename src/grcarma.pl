@@ -9353,8 +9353,8 @@ PerformNonLinearFitting <- function(samplings, rmsds, mins, rmsd.devs,
 
     max.rmsd.fit    <- nlsLM(rmsds ~
                              I(samplings + a2) *
-                             I((1 + abs((samplings + a2) / a0) ^ a1)^(-1.0/a1)),
-                             start=list(a0=1, a1=1, a2=1),
+                             I((1 + abs((samplings + a2) / a0) ^ a1)^(-a3/a1)),
+                             start=list(a0=1, a1=1, a2=1, a3=1),
                              control=nls.lm.control(maxiter=nls.iter),
                              weights=I(1 / rmsd.variances))
 
@@ -9367,8 +9367,8 @@ PerformNonLinearFitting <- function(samplings, rmsds, mins, rmsd.devs,
   } else {
     max.rmsd.fit    <- nlsLM(rmsds ~
                              I(samplings + a2) *
-                             I((1 + abs((samplings + a2) / a0) ^ a1)^(-1.0/a1)),
-                             start=list(a0=1, a1=1, a2=1),
+                             I((1 + abs((samplings + a2) / a0) ^ a1)^(-a3/a1)),
+                             start=list(a0=1, a1=1, a2=1, a3=1),
                              control=nls.lm.control(maxiter=nls.iter))
 
     max.of.mins.fit <- nlsLM(mins ~
@@ -9387,8 +9387,7 @@ PerformNonLinearFitting <- function(samplings, rmsds, mins, rmsd.devs,
   for (i in 1:length(samplings)) {
   # cat('Sampling is', samplings[i], 'AO is', a0,
       # 'RMSD is', rmsds[i] + 0.5 * rmsd.devs[i], '\n')
-    if ( (rmsds[i] + (sigma.factor * rmsd.devs[i])) >= a0
-        && samplings[i] < cutoff) {
+    if ( summary(max.rmsd.fit)$coefficients[4] >= 1 && samplings[i] < cutoff) {
       return(TRUE)
       break
     }
@@ -9653,6 +9652,128 @@ CreateSubmatrix <- function(my.matrix, sampling, max.rmsd.calc,
     results.y.final)
 }
 
+DetermineXPMDimensions <- function(input.line) {
+# Extract the dimensionality information from the XPM matrix file.
+# Args:
+#   input.line       : The line that contains the dimensionality information.
+  dimensions <- gsub('"', '', input.line)
+  dimensions <- gsub(',', '', dimensions)
+  dimensions <- strsplit(dimensions, '\\s+')
+  return(unlist(dimensions))
+}
+
+ProcessColourToRMSDMapping <- function(pairing.line) {
+# Process a single line of colour to RMSD mappings and return the relevant.
+# Args:
+#   pairing.line     : A single line of Colour -> RMSD value.
+  pairing.line <- gsub('"', '', pairing.line)
+  pairing.values <- unlist(strsplit(pairing.line, '\\s+'))
+  return(c(pairing.values[1], pairing.values[5]))
+}
+
+DetermineColourToRMSDMappings <- function(input.lines) {
+# Read the lines which contain the colour vlues and the numericl values to
+# which they correspond, store them in a hashtable-like structure and return
+# them to the caller.
+# Args:
+#   input.lines      : The lines that contain the information about the colour
+#                      to RMSD pairings.
+  colours <- c()
+  RMSD.values <- c()
+
+  for (input.line in input.lines) {
+    pairing <- ProcessColourToRMSDMapping(input.line)
+    colours <- c(colours, pairing[1])
+    RMSD.values <- c(RMSD.values, as.double(pairing[2]))
+  }
+
+  pairings <- RMSD.values
+  names(pairings) <- colours
+
+  return(pairings)
+}
+
+XPMtoNumericalMatrix <- function(path.to.matrix) {
+# Transform the XPM formatted matrix to a numerical one which is what this
+# software expects as input. See the matrix.error.msg below for more info.
+# Args :
+#   path.to.matrix   : The path to the file as specified during startup.
+
+  # First look for the line which contains "static char * gv_xpm[]" while
+  # ignoring the comment lines.
+  file.connection <- file(path.to.matrix, "r")
+  oneLine <- readLines(file.connection, n=1)
+
+  while (length(grep("static char * gv_xpm[]", oneLine, fixed=T)) == 0) {
+    oneLine <- readLines(file.connection, n=1)
+  }
+
+  # When you find it grab the next line because it contains useful info. This
+  # is what that line contains: "13 13   6 1,", and the numbers mean: number of
+  # rows, number of columns, number of different RMSD values and bits which
+  # represent each colour. So the next n(in this case 6) rows need to be read
+  # and stored. At the end of each of those lines there is the numerical value
+  # that we need in a comment.
+  matrix.dimensions <- DetermineXPMDimensions(readLines(file.connection, n=1))
+
+  col.to.RMSD <- DetermineColourToRMSDMappings(
+    readLines(file.connection, n=as.integer(matrix.dimensions[3]))
+  )
+
+  # Since we made it this far it is time to start writing to the new matrix.
+  # Put it in the working directory and call it good_turing_RMSD.matrix.
+  RMSD.matrix <- file("good_turing_RMSD.matrix", "w")
+
+  for (input.line in readLines(file.connection)) {
+    if (substr(input.line, 1, 2) != '/*') {
+      input.line <- gsub('"', '', input.line)
+      input.line <- gsub(',', '', input.line)
+      input.line <- unlist(strsplit(input.line, ''))
+      data.to.write <- unname(sapply(input.line, function(x) col.to.RMSD[[x]]))
+      write(data.to.write,
+            file=RMSD.matrix,
+            append=T,
+            ncolumns=as.integer(matrix.dimensions[1])
+      )
+    }
+  }
+
+  close(RMSD.matrix)
+  close(file.connection)
+  return("good_turing_RMSD.matrix")
+}
+
+DetermineIfXPM <- function(path.to.file) {
+# Check if the provided matrix is in GROMACS XPM format. Documentation on the
+# format itself can be found here: http://manual.gromacs.org/online/xpm.html
+# Args :
+#   path.to.file     : The path to the file as specified during startup.
+
+  # First check if the file ending is "xpm". If it assume that the matrix
+  # conforms to the standard specified in the page above and treat it as such.
+  library(tools)
+  file.extension <- file_ext(path.to.file)
+  if (tolower(file.extension) == "xpm") {
+    return(T)
+  }
+  # Failing that look for identifying information in the first ten lines of the
+  # file. First look for the "/* XPM */" header in the first line.
+  first.ten.lines <- readLines(input.file, n=10)
+  contains.XPM <- grep("XPM", first.ten.lines)
+  if(length(contains.XPM) >= 1) {
+    return(T)
+  }
+
+  # Finally look for the "static char" line and if that isn't found either
+  # give up.
+  contains.char <- grep("static char", first.ten.lines)
+  if(length(contains.char) >= 1) {
+    return(T)
+  }
+
+  return(F)
+}
+
 ################################################################################
 ##                                                                            ##
 ##                         Main part of the program                           ##
@@ -9728,6 +9849,7 @@ bad.cat.number <- 7  # How many instances of the above cutoff trigger the warnin
 os <- .Platform$OS.type
 
 # Interactive file selection.
+file.is.xpm <- F
 input.file <- file.choose()
 cat('\n\n==================================================\n')
 cat('1. Opening file for reading ...')
@@ -9739,6 +9861,16 @@ if (DetermineIfBinary(input.file) == T) {
       '**************************************************\n\n', sep='')
   cat(matrix.error.msg)
   stop()
+} else if(DetermineIfXPM(input.file) == T) {
+  # Use the newly created file instead of the XPM one.
+  cat('               INFO\n',
+      '\n**************************************************\n',
+      'Matrix  transformed to numerical format. The  file\n',
+      'can   be  found  in   the  CWD   under  the  name:\n',
+      '             good_turing_RMSD.matrix.\n',
+      '**************************************************\n\n', sep='')
+  input.file <- XPMtoNumericalMatrix(input.file)
+  file.is.xpm <- T
 } else {
   header.test <- try(scan(input.file, nmax=10, quiet=T), silent=T)
   if (length(grep('error', header.test, ignore.case=T))) {
@@ -9780,7 +9912,10 @@ if (length(temp.file.var) > 1) {
   }
 }
 
-cat('                 OK\n')
+if (file.is.xpm == F) {
+  cat('                 OK\n')
+}
+
 cat('2. Checking dimensions ...')
 if (os == 'windows') {
   nofrows    <- length(scan(input.file, what='raw', sep='\n', quiet=T))
@@ -10117,8 +10252,8 @@ nofsamplings <- length(samplings)
 if (weighted.fitting == T) {
 custom.regressionA <- nlsLM(max.rmsds ~
                             I(samplings + a2) *
-                            I((1 + abs((samplings + a2) / a0) ^ a1)^(-1.0/a1)),
-                            start=list(a0=1, a1=1, a2=1),
+                            I((1 + abs((samplings + a2) / a0) ^ a1)^(-a3/a1)),
+                            start=list(a0=1, a1=1, a2=1, a3=1),
                             control=nls.lm.control(maxiter=nls.iter),
                             weights=I(1 / max.rmsd.variances))
 
@@ -10131,8 +10266,8 @@ custom.regressionB <- nlsLM(max.of.mins ~
 } else {
 custom.regressionA <- nlsLM(max.rmsds ~
                             I(samplings + a2) *
-                            I((1 + abs((samplings + a2) / a0) ^ a1)^(-1.0/a1)),
-                            start=list(a0=1, a1=1, a2=1),
+                            I((1 + abs((samplings + a2) / a0) ^ a1)^(-a3/a1)),
+                            start=list(a0=1, a1=1, a2=1, a3=1),
                             control=nls.lm.control(maxiter=nls.iter))
 
 custom.regressionB <- nlsLM(max.of.mins ~
@@ -10146,17 +10281,22 @@ custom.regressionB <- nlsLM(max.of.mins ~
 a0 <- summary(custom.regressionA)$coefficients[1]
 a1 <- summary(custom.regressionA)$coefficients[2]
 a2 <- summary(custom.regressionA)$coefficients[3]
+a3 <- summary(custom.regressionA)$coefficients[4]
 
 # Same as above but for the max of mins data.
 b0 <- summary(custom.regressionB)$coefficients[1]
 b1 <- summary(custom.regressionB)$coefficients[2]
 b2 <- summary(custom.regressionB)$coefficients[3]
 
-# This loop is used to determine at which point, if any, the max RMSD is greater
-# than a0, ie at which point the max RMSDs level off. This point is then used to
-# determine which is the smallest sampling that can be used whose max RMSD is
-# greater than a0.
+# If we are utilising the new model we need to find the max value of the curve
+# defined by the regression. Having found that sampling we use it to determine
+# the RMSD to which it corresponds and finally identify the best sampling using
+# both the RMSD and the samping cutoff.
+smax = ( a0 / ( a3 - 1) ^ ( 1 / a1 ) ) - a2
+rmsd.max = ( smax + a2 ) * ( ( 1 + abs((smax + a2) / a0) ^ a1) ^ ( -a3 / a1))
 
+# This is here to check which status message needs to be printed
+went.over.sampling.cutoff <- FALSE
 if (reached.convergence == T) {
   if (went.past.200 == FALSE) {
     cat('   OK\n')
@@ -10169,68 +10309,62 @@ if (reached.convergence == T) {
       }
     }
   }
-
+  
   cat('6. Calculating probability curve ...')
 
-  for (i in 1:nofsamplings) {
-    # If the sampling exceeds sampling.cutoff, then the data are deemed as
-    # unsuitable for prob. of unobserved species vs RMSD analysis due to the
-    # very small size of the resulting matrices [for example, if the value of
-    # the sampling.cutoff is 100, the matrices would be (1/100)th of the original].
-    if (samplings[i] >= sampling.cutoff) {
-      reached.convergence <- FALSE
-      break
-    } else if ( (max.rmsds[i] + (sigma.factor * max.rmsd.devs[i])) >= a0) {
-      if (went.past.200 == FALSE) {
-        top.sampling <- samplings[i]
-        for (j in 1:top.sampling) {
-          if ( ! j %in% samplings) {
-            results <- CreateSubmatrix(rmsd.matrix, j, T, T)
-
-            temp.max.rmsds        <- results[1]
-            temp.max.rmsd.devs    <- results[2]
-            temp.max.of.mins      <- results[3]
-            temp.max.of.mins.devs <- results[4]
-
-            old.samplings <- samplings
-            samplings     <- sort(c(samplings, j))
-
-            sampling.diffs <- samplings %in% old.samplings
-            insert.point   <- max(which(sampling.diffs == FALSE)) - 1
-
-            max.rmsds     <- append(max.rmsds, temp.max.rmsds, after=insert.point)
-            max.rmsd.devs <- append(max.rmsd.devs, temp.max.rmsd.devs,
-                                    after=insert.point)
-            max.of.mins      <- append(max.of.mins, temp.max.of.mins,
-                                       after=insert.point)
-            max.of.mins.devs <- append(max.of.mins.devs, temp.max.of.mins.devs,
-                                       after=insert.point)
-
-            if ( (temp.max.rmsds + (sigma.factor * temp.max.rmsd.devs)) >= a0) {
-              i <- which(samplings == j)
-              break
-            }
-          } else if (j == top.sampling) {
-            i <- which(samplings == j)
-          }
-        }
+  finer.sampling.needed <- FALSE
+  if (rmsd.max <= 0) {
+    reached.convergence <- F
+    cat('           NOK\n')
+  } else if (smax < 1) {
+    i <- 1
+    finer.sampling.needed <- TRUE
+    reached.convergence <- T
+    CreateSubmatrix(rmsd.matrix, i, F, F)
+    cat('            OK\n')
+  } else {
+    if (round(smax) > sampling.cutoff) {
+      reached.convergence = F
+      went.over.sampling.cutoff = T
+    } else {
+      smax = round(smax)
+      if (! smax %in% samplings) {
+        results <- CreateSubmatrix(rmsd.matrix, smax, T, T)
+        
+        temp.max.rmsds        <- results[1]
+        temp.max.rmsd.devs    <- results[2]
+        temp.max.of.mins      <- results[3]
+        temp.max.of.mins.devs <- results[4]
+        
+        old.samplings <- samplings
+        samplings     <- sort(c(samplings, smax))
+        
+        sampling.diffs <- samplings %in% old.samplings
+        insert.point   <- max(which(sampling.diffs == FALSE)) - 1
+        
+        max.rmsds     <- append(max.rmsds, temp.max.rmsds, after=insert.point)
+        max.rmsd.devs <- append(max.rmsd.devs, temp.max.rmsd.devs,
+                                after=insert.point)
+        max.of.mins      <- append(max.of.mins, temp.max.of.mins,
+                                   after=insert.point)
+        max.of.mins.devs <- append(max.of.mins.devs, temp.max.of.mins.devs,
+                                   after=insert.point)
       }
-
-      if (length(samplings) > nofsamplings) {
-        rm(old.samplings, sampling.diffs, insert.point, temp.max.rmsds, j,
-           temp.max.rmsd.devs, temp.max.of.mins, temp.max.of.mins.devs,
-           top.sampling)
-      }
-
+      
+      # In case we want to try out the sampling whose RMSD value is closest
+      # to the rmsd.max calculated from the equation. No new values calculated
+      # for this.
+      # samplings.under.smax <- samplings[samplings<=smax]
+      # rmsds.under.smax <- max.rmsds[1:length(samplings.under.smax)]
+      # i <- which(abs(rmsds.under.smax - rmsd.max)==min(abs(rmsds.under.smax - rmsd.max)))
+      i <- which(samplings==smax)
       CreateSubmatrix(rmsd.matrix, samplings[i], F, F)
-      break
     }
+    cat('            OK\n')
   }
-
-  cat('            OK\n')
 }
 
-if (reached.convergence == T) {
+if (reached.convergence == T || went.over.sampling.cutoff) {
   cat('7. Writing files ...')
 } else {
   cat('6. Writing files ...')
@@ -10436,10 +10570,12 @@ if (reached.convergence == FALSE) {
   }
 }
 
-cat('\n==================================================\n\n\n')
+if (bad.cat.check != TRUE || finer.sampling.needed != TRUE) {
+  cat('\n==================================================\n\n\n')
+}
 
 if (bad.cat.check == TRUE && bad.cat.msg == TRUE) {
-  cat('__________________________________________________\n\n',
+  cat('\n__________________________________________________\n\n',
       'WARNING  :  Is  this   a  merged  ( concatenated )\n',
       'trajectory ? If yes, it appears  likely  that  the\n',
       'individual trajectories are sampled so finely that\n',
@@ -10450,11 +10586,24 @@ if (bad.cat.check == TRUE && bad.cat.msg == TRUE) {
       'merging) is ~1.\n',
       '__________________________________________________\n', sep='')
 
-  cat('\n==================================================\n\n\n')
+  if (finer.sampling.needed != TRUE) {
+    cat('\n==================================================\n\n\n')
+  }
 
   rm(bad.cat.check, bad.cat.msg)
 }
 
+if (finer.sampling.needed == TRUE) {
+  cat('\n__________________________________________________\n\n',
+      'WARNING:  It  appears  that  the  sampling  of the\n',
+      'trajectory  is too  coarse. This  may introduce  a\n',
+      'systematic error in the estimated probabilities.\n',
+      '__________________________________________________\n', sep='')
+  
+  cat('\n==================================================\n\n\n')
+  
+  rm(finer.sampling.needed)
+}
 rm(ComputeClusters, DetermineMinLength, DetermineRmsdStep, CreateSubmatrix,
    DetermineFirstDiagonalMaxRmsd, DetermineIfBinary, i, input.file, os, nofrows,
    results, min.rmsd, nofcols, rmsd.matrix, file.name, rmsd.step, maxs.of.mins,
