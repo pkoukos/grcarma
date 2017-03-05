@@ -42,7 +42,7 @@ of [Democritus University of Thrace](http://duth.gr/index.en.shtml).
 
 # **LICENCE**
 
-Copyright (c) 2012 - 2015, Panagiotis I. Koukos
+Copyright (c) 2012 - 2017, Panagiotis I. Koukos
 
 All rights reserved.
 
